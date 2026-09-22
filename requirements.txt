@@ -1,0 +1,51 @@
+# ============================================================
+# Szakdolgozat: Sentiment Analysis of Customer Reviews
+# Python 3.11 ajanlott (3.10-3.12 is jo)
+# Telepites:  pip install -r requirements.txt
+# ============================================================
+
+# --- Alapok: adatkezeles, numerika ---
+pandas>=2.1
+numpy>=1.26
+pyarrow>=14.0            # gyors parquet olvasas/iras
+
+# --- Klasszikus gepi tanulas ---
+scikit-learn>=1.4
+scipy>=1.11
+
+# --- Szovegfeldolgozas ---
+nltk>=3.8
+regex>=2023.10
+ftfy>=6.1                # elrontott karakterkodolas javitasa
+langdetect>=1.0.9        # nyelvfelismeres (nem angol reviewk kiszurese)
+
+# --- Vizualizacio ---
+matplotlib>=3.8
+seaborn>=0.13
+wordcloud>=1.9
+
+# --- Adatletoltes ---
+datasets>=2.16           # Hugging Face datasets (Booking.com)
+huggingface-hub>=0.20
+kagglehub>=0.2           # Kaggle adathalmazok letoltese
+
+# --- Notebook kornyezet ---
+jupyterlab>=4.0
+ipykernel>=6.29
+ipywidgets>=8.1
+tqdm>=4.66
+
+# --- Kodminoseg (opcionalis, de ajanlott) ---
+black>=24.0
+ruff>=0.3
+
+# ============================================================
+# A TRANSFORMER (BERT) RESZ KULON TELEPUL!
+# Laptopon (CPU) vagy Colabon (GPU) - lasd KORNYEZET.md 5. pont.
+#
+#   pip install torch --index-url https://download.pytorch.org/whl/cpu
+#   pip install transformers>=4.40 accelerate>=0.28 evaluate>=0.4
+#
+# Colabon a torch mar elore telepitve van, csak ez kell:
+#   pip install -q transformers datasets accelerate evaluate
+# ============================================================
