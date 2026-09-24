@@ -118,6 +118,125 @@ def split_sentences(text: str, min_words: int = 3) -> list[str]:
     return [p for p in parts if len(p.split()) >= min_words]
 
 
+def explode_by_polarity(
+    df: pd.DataFrame,
+    pos_col: str = "review_positive",
+    neg_col: str = "review_negative",
+    min_words: int = 3,
+) -> pd.DataFrame:
+    """
+    Mondat-szintű adat a POLARITÁS ISMERETÉBEN — az adathalmaz szerkezetéből.
+
+    Miért sokkal jobb ez, mint a review-szintű címke rávetítése?
+    ------------------------------------------------------------
+    Az `explode_to_sentences()` minden mondatra a REVIEW összpontszámából
+    képzett címkét teszi. Ez közelítés, és pont a dolgozatod kiinduló
+    példájánál bukik el: egy 6,5 pontos ("neutral") review tartalmazhat egy
+    egyértelműen pozitív és egy egyértelműen negatív mondatot is.
+
+    A Booking-adat viszont KÉT KÜLÖN MEZŐBEN tárolja a dicséretet és a
+    panaszt. Ha a `review_positive` mezőből származó mondatot pozitívnak,
+    a `review_negative` mezőből származót negatívnak vesszük, akkor a
+    mondat-szintű címke nem becslés, hanem magából az adatgyűjtés
+    szerkezetéből következik: a vendég maga döntötte el, melyik mezőbe írja.
+
+    Ez ~200 000 reviewból több százezer mondat-szintű, aspektus-annotálható
+    példát ad — nagyságrendekkel többet, mint a HRAST 23 113 mondata.
+
+    ⚠ KORLÁTOK, amiket a dolgozatban le KELL írni:
+      1. Ez a mező eredete, nem emberi annotáció. Előfordul, hogy valaki a
+         pozitív mezőbe ír enyhe kritikát ("great, although a bit small").
+         Zajos címke, de szisztematikusan nem torzít.
+      2. NINCS semleges osztály — a mezőstruktúra bináris. A 3-osztályos
+         feladathoz ez nem elég, a review-szintű címkézés marad.
+      3. A HRAST továbbra is kell: az VALÓDI, emberi aspektus-annotációt
+         tartalmaz, amin a modellt KIÉRTÉKELNI lehet. Ez itt tanításra és
+         nagy mintás elemzésre jó, kiértékelési etalonnak nem.
+
+    Visszatér
+    ---------
+    Soronként egy mondat: sentence_id, review_id, sentence, polarity
+    ("positive" / "negative"), source_field, + a metaadat-oszlopok.
+    """
+    missing = {pos_col, neg_col} - set(df.columns)
+    if missing:
+        raise KeyError(
+            f"Hiányzó oszlop(ok): {sorted(missing)}. Ez a függvény a Booking "
+            "külön pozitív/negatív mezőit igényli — ellenőrizd, hogy a loader "
+            "átvitte-e őket."
+        )
+
+    meta = [c for c in ["review_id", "score", "sentiment", "dataset",
+                        "accommodation_type", "accommodation_country",
+                        "accommodation_star_rating", "guest_type"]
+            if c in df.columns]
+
+    frames = []
+    for col, polarity in [(pos_col, "positive"), (neg_col, "negative")]:
+        part = df[meta + [col]].copy()
+        part["sentence"] = part[col].map(lambda t: split_sentences(t, min_words))
+        part = part.drop(columns=[col]).explode("sentence").dropna(subset=["sentence"])
+        part["polarity"] = polarity
+        part["source_field"] = col
+        frames.append(part)
+
+    out = pd.concat(frames, ignore_index=True)
+    out["sentence"] = out["sentence"].astype(str).str.strip()
+    out = out[out["sentence"].str.len() > 0].reset_index(drop=True)
+
+    if "review_id" in out.columns:
+        out["sentence_id"] = (out["review_id"].astype(str) + "_" +
+                              out["polarity"].str[:3] + "_" +
+                              out.groupby(["review_id", "polarity"]).cumcount().astype(str))
+
+    log.info("Mondatok polaritás szerint: %s",
+             out["polarity"].value_counts().to_dict())
+    return out
+
+
+def aspect_polarity_table(
+    sent_df: pd.DataFrame,
+    polarity_col: str = "polarity",
+    min_count: int = 50,
+) -> pd.DataFrame:
+    """
+    Aspektusonként: hányszor említik dicséretként, hányszor panaszként?
+
+    Ez az RQ3 LEGTISZTÁBB válasza, mert a polaritás nem becsült, hanem az
+    adat szerkezetéből jön (lásd `explode_by_polarity`).
+
+    A `panasz_arány` oszlop: az adott aspektus említéseinek hány százaléka
+    esik a negatív mezőbe. 0,5 felett panaszhajtó, alatta dicsérethajtó.
+    """
+    base = (sent_df[polarity_col].astype(str) == "negative").mean()
+    rows = []
+    for aspect in CFG.aspects:
+        col = f"aspect_{aspect}"
+        if col not in sent_df.columns:
+            continue
+        sub = sent_df[sent_df[col] == 1]
+        if len(sub) < min_count:
+            continue
+        neg = (sub[polarity_col].astype(str) == "negative").mean()
+        rows.append({
+            "aspektus": aspect,
+            "említések": len(sub),
+            "dicséretként": 1 - neg,
+            "panaszként": neg,
+            "panasz_lift": neg / base if base else float("nan"),
+        })
+
+    cols = ["aspektus", "említések", "dicséretként", "panaszként", "panasz_lift"]
+    if not rows:
+        log.warning("Egyetlen aspektus sem érte el a min_count=%d küszöböt.", min_count)
+        return pd.DataFrame(columns=cols).set_index("aspektus")
+
+    return (pd.DataFrame(rows)[cols]
+            .set_index("aspektus")
+            .sort_values("panasz_lift", ascending=False)
+            .round(4))
+
+
 def explode_to_sentences(df: pd.DataFrame, text_col: str = "text") -> pd.DataFrame:
     """
     Review-szintű táblából mondat-szintű táblát csinál.

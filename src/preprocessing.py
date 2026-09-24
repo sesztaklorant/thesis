@@ -283,21 +283,30 @@ def label_distribution_report(
     Visszatér: soronként egy szabály, oszlopokban az osztályarányok, a
     legkisebb osztály mérete és a kiegyensúlyozatlansági arány.
     """
+    # A Booking-pontszám a gyakorlatban EGÉSZ SZÁMOKAT vesz fel (3–10), ezért
+    # csak azok a küszöbpárok különböznek egymástól, amelyek más egész
+    # számokat sorolnak más osztályba. Ez a négy értelmes felosztás:
     schemes = schemes or [
-        ("fix 6,0 / 8,0", 6.0, 8.0),
-        ("fix 7,0 / 9,0", 7.0, 9.0),
-        ("fix 7,5 / 9,0", 7.5, 9.0),
-        ("fix 8,0 / 9,0", 8.0, 9.0),
-        ("fix 8,0 / 9,5", 8.0, 9.5),
+        ("A) 6 / 8   — szigorú",       6.0,  8.0),
+        ("B) 7 / 9   — kiegyensúlyozott", 7.0,  9.0),
+        ("C) 7 / 10  — széles közép",  7.0, 10.0),
+        ("D) 8 / 10  — relatív",       8.0, 10.0),
     ]
-    quantile_schemes = quantile_schemes if quantile_schemes is not None else [
-        ("kvantilis 25% / 60%", 0.25, 0.60),
-        ("kvantilis 33% / 67%", 1 / 3, 2 / 3),
-        ("kvantilis 20% / 55%", 0.20, 0.55),
-    ]
+    quantile_schemes = quantile_schemes if quantile_schemes is not None else []
 
     sm = (scale_max if isinstance(scale_max, pd.Series)
           else pd.Series([float(scale_max)] * len(scores), index=scores.index))
+
+    # Diszkrét-e a pontszám? Ha igen, érdemes kiírni, MELYIK értékek kerülnek
+    # melyik osztályba — enélkül a táblázat félrevezető lehet (két különböző
+    # küszöbpár adhat pontosan ugyanazt az eredményt).
+    uniq = np.sort(pd.to_numeric(scores, errors="coerce").dropna().unique())
+    main_vals = [v for v in uniq if float(v).is_integer()]
+    discrete = len(uniq) <= 25
+    if discrete:
+        log.info("A pontszám diszkrét: %d különböző érték, ebből %d egész szám. "
+                 "Csak az egész számok határán futó küszöbök adnak eltérő "
+                 "felosztást.", len(uniq), len(main_vals))
 
     rows = []
 
@@ -307,13 +316,26 @@ def label_distribution_report(
         neg, neu, pos = (vc.get("negative", 0.0), vc.get("neutral", 0.0),
                          vc.get("positive", 0.0))
         parts = [p for p in (neg, neu, pos) if p > 0]
-        rows.append({
+
+        row = {
             "szabály": name,
-            "küszöbök": f"{t_neg:.2f} / {t_pos:.2f}",
+            "küszöbök": f"{t_neg:g} / {t_pos:g}",
+        }
+        if discrete:
+            def grp(lo_ok, hi_ok):
+                xs = [int(v) for v in main_vals if lo_ok(v) and hi_ok(v)]
+                return "–".join([str(xs[0]), str(xs[-1])]) if len(xs) > 1 else (
+                    str(xs[0]) if xs else "üres!")
+            row["neg pontok"] = grp(lambda v: True, lambda v: v <= t_neg)
+            row["neu pontok"] = grp(lambda v: v > t_neg, lambda v: v < t_pos)
+            row["pos pontok"] = grp(lambda v: v >= t_pos, lambda v: True)
+
+        row.update({
             "negative": neg, "neutral": neu, "positive": pos,
             "legkisebb osztály (db)": int(counts.min()) if len(counts) else 0,
             "kiegyensúlyozatlanság": (max(parts) / min(parts)) if parts else np.nan,
         })
+        rows.append(row)
 
     for name, t_neg, t_pos in schemes:
         labels = pd.Series(
