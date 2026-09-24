@@ -35,6 +35,23 @@ def _cache_path(name: str) -> Path:
     return PATHS.raw / f"{name}.parquet"
 
 
+def _write_cache(df: pd.DataFrame, path: Path) -> None:
+    """
+    Gyorsítótár írása parquet formátumban.
+
+    A parquet gyors és kicsi, de kell hozzá a pyarrow csomag. Ha valamiért
+    nem elérhető, a gyorsítótárazás egyszerűen kimarad — a kód működik
+    tovább, csak minden betöltés újraolvassa a CSV-t.
+    """
+    try:
+        df.to_parquet(path, index=False)
+        log.info("Gyorsítótárba mentve: %s (%d sor)", path.name, len(df))
+    except Exception as e:                                        # noqa: BLE001
+        log.warning("Nem sikerült a gyorsítótárazás (%s). A kód működik "
+                    "tovább, csak lassabb lesz az újratöltés. "
+                    "Megoldás: pip install pyarrow", e.__class__.__name__)
+
+
 def _finalize(df: pd.DataFrame, dataset: str, scale_max: float) -> pd.DataFrame:
     """Egységes oszlopnevek + típusok + sorszámozott azonosító."""
     df = df.copy()
@@ -133,6 +150,177 @@ def load_booking_hf(
     df = _finalize(df, "booking_hf", meta["score_scale"][1])
     df.to_parquet(cache, index=False)
     log.info("Elmentve: %s (%d sor)", cache, len(df))
+    return df
+
+
+# ==========================================================================
+# 1/b) Booking.com — HELYI CSV (a hivatalos train/val/test felosztásból)
+# ==========================================================================
+# A Booking.com adathalmaz három fájlra bontva is letölthető: train.csv,
+# val.csv, test.csv. A témavezetővel egyeztetve először a ~200k soros
+# val.csv-vel dolgozunk.
+#
+# ⚠ NÉVÜTKÖZÉS — ezt a dolgozatban is tisztázni kell:
+#   A "val.csv" a Booking SAJÁT validációs splitje. Nálunk ez a fájl a
+#   TELJES munkaadathalmaz, amit MI osztunk fel 60/20/20 arányban saját
+#   train/validation/test halmazra. A kettőnek semmi köze egymáshoz.
+#   Ezért nevezzük a betöltött adathalmazt "booking_val_split"-nek, nem
+#   "validation"-nek.
+
+# A Booking CSV-k lehetséges oszlopnevei. Több változat is előfordul
+# (HF export, GitHub release), ezért aliasokkal dolgozunk.
+_BOOKING_ALIASES: dict[str, list[str]] = {
+    "review_title":             ["review_title", "title"],
+    "review_positive":          ["review_positive", "positive_review", "positive", "pros"],
+    "review_negative":          ["review_negative", "negative_review", "negative", "cons"],
+    "guest_score":              ["guest_score", "score", "reviewer_score", "rating"],
+    "guest_type":               ["guest_type", "traveller_type", "traveler_type"],
+    "guest_country":            ["guest_country", "reviewer_nationality", "nationality"],
+    "room_nights":              ["room_nights", "nights", "total_number_of_nights"],
+    "month":                    ["month", "review_month", "stay_month"],
+    "accommodation_id":         ["accommodation_id", "hotel_id", "property_id"],
+    "accommodation_type":       ["accommodation_type", "property_type", "hotel_type"],
+    "accommodation_score":      ["accommodation_score", "hotel_score", "average_score"],
+    "accommodation_country":    ["accommodation_country", "hotel_country", "country"],
+    "accommodation_star_rating": ["accommodation_star_rating", "star_rating", "stars"],
+    "location_is_beach":        ["location_is_beach", "is_beach"],
+    "location_is_ski":          ["location_is_ski", "is_ski"],
+    "location_is_city_center":  ["location_is_city_center", "is_city_center", "is_city_centre"],
+    "review_helpful_votes":     ["review_helpful_votes", "helpful_votes"],
+}
+
+# Ezek a mezők a "Nothing"/"n/a" típusú helykitöltőket tartalmazhatják.
+_PLACEHOLDERS = {"nothing", "n/a", "na", "none", "-", "nan", "no negative",
+                 "no positive", "nothing to report", "nothing really"}
+
+
+def _resolve_columns(df_columns) -> dict[str, str]:
+    """
+    Megkeresi, hogy a CSV melyik tényleges oszlopa felel meg a kanonikus
+    mezőknek. Kis-nagybetűre és a szóköz/aláhúzás különbségre érzéketlen.
+
+    Visszatér: {kanonikus_név: tényleges_oszlopnév}
+    """
+    def norm(s: str) -> str:
+        return str(s).strip().lower().replace(" ", "_").replace("-", "_")
+
+    actual = {norm(c): c for c in df_columns}
+    found: dict[str, str] = {}
+    for canonical, aliases in _BOOKING_ALIASES.items():
+        for a in aliases:
+            if a in actual:
+                found[canonical] = actual[a]
+                break
+    return found
+
+
+def _clean_placeholder(s) -> str:
+    """Helykitöltő szöveg -> üres string."""
+    if pd.isna(s):
+        return ""
+    s = str(s).strip()
+    return "" if s.lower() in _PLACEHOLDERS else s
+
+
+def load_booking_local(
+    filename: str | None = None,
+    n_rows: int | None = None,
+    combine_pos_neg: bool = True,
+    use_cache: bool = True,
+    verbose: bool = True,
+) -> pd.DataFrame:
+    """
+    Betölti a data/raw/ mappában lévő Booking.com CSV-t (alapból val.csv).
+
+    Paraméterek
+    -----------
+    filename : a fájl neve a data/raw/ mappában. None esetén CFG.local_csv_name.
+    n_rows   : hány sort olvasson be (None = mind). Fejlesztéshez hasznos.
+    combine_pos_neg : a pozitív és negatív szövegrészt egy mezőbe fűzi-e.
+
+    Visszatér
+    ---------
+    Kanonikus tábla: review_id, text, score, score_scale_max, dataset,
+    + a metaadat-oszlopok, amiket a CSV tartalmaz (ország, szállástípus,
+    vendégtípus, csillagbesorolás, hónap...). Ezekre épülnek a kereszttáblák.
+    """
+    filename = filename or CFG.local_csv_name
+    cache = _cache_path(f"booking_local_{Path(filename).stem}")
+
+    if use_cache and cache.exists() and n_rows is None:
+        try:
+            log.info("Gyorsítótárból töltök: %s", cache.name)
+            return pd.read_parquet(cache)
+        except Exception:                                         # noqa: BLE001
+            log.warning("A gyorsítótár nem olvasható, újraolvasom a CSV-t.")
+
+    PATHS.ensure()
+    csv_path = PATHS.raw / filename
+    if not csv_path.exists():
+        raise FileNotFoundError(
+            f"Nem találom: {csv_path}\n"
+            f"Tedd a CSV-t a data/raw/ mappába, vagy add meg a pontos fájlnevet:\n"
+            f"    load_booking_local(filename='sajat_nevem.csv')"
+        )
+
+    log.info("Olvasás: %s", csv_path)
+    raw = pd.read_csv(csv_path, nrows=n_rows, low_memory=False)
+
+    # --- Oszlopok felismerése ---
+    cols = _resolve_columns(raw.columns)
+    if verbose:
+        log.info("Felismert oszlopok (%d/%d):", len(cols), len(_BOOKING_ALIASES))
+        for k, v in cols.items():
+            log.info("    %-28s <- %s", k, v)
+        missing = set(_BOOKING_ALIASES) - set(cols)
+        if missing:
+            log.warning("Nem találtam: %s", sorted(missing))
+            log.warning("A CSV tényleges oszlopai: %s", list(raw.columns))
+
+    if "guest_score" not in cols:
+        raise KeyError(
+            "Nem találom a pontszám oszlopot. A CSV oszlopai: "
+            f"{list(raw.columns)}\nBővítsd a _BOOKING_ALIASES szótárat a "
+            "data_loading.py-ban a megfelelő névvel."
+        )
+
+    # --- Szöveg összeállítása ---
+    def _get(name: str) -> pd.Series:
+        if name in cols:
+            return raw[cols[name]].map(_clean_placeholder)
+        return pd.Series([""] * len(raw), index=raw.index)
+
+    pos, neg, title = _get("review_positive"), _get("review_negative"), _get("review_title")
+
+    if combine_pos_neg:
+        text = (title + ". " + pos + " " + neg)
+    else:
+        text = (pos + " " + neg)
+    text = (text.str.replace(r"^\.\s*", "", regex=True)      # üres cím miatti vezető pont
+                .str.replace(r"\s+", " ", regex=True)
+                .str.strip())
+
+    out = pd.DataFrame({
+        "text": text,
+        "score": pd.to_numeric(raw[cols["guest_score"]], errors="coerce"),
+        "review_positive": pos,
+        "review_negative": neg,
+    })
+
+    # --- Metaadatok: ezekre épülnek a kereszttáblák ---
+    for meta in ["guest_type", "guest_country", "room_nights", "month",
+                 "accommodation_id", "accommodation_type", "accommodation_score",
+                 "accommodation_country", "accommodation_star_rating",
+                 "location_is_beach", "location_is_ski", "location_is_city_center",
+                 "review_helpful_votes"]:
+        if meta in cols:
+            out[meta] = raw[cols[meta]]
+
+    df = _finalize(out, CFG.source_split_name, DATASETS["booking_hf"]["score_scale"][1])
+
+    if n_rows is None:
+        _write_cache(df, cache)
+
     return df
 
 
@@ -288,9 +476,70 @@ def _kagglehub_download(dataset_id: str, want: str | None) -> Path:
 
 
 # ==========================================================================
+# A felosztott adat mentése és visszaolvasása
+# ==========================================================================
+# A 01-es notebook menti, a 02-es és 03-as olvassa. Parquet formátumban,
+# mert gyors és kicsi — de ha a pyarrow valamiért nem elérhető, CSV-re vált.
+# Így a pipeline akkor sem áll meg, ha a környezet hiányos.
+
+_SPLIT_NAMES = ("train", "val", "test")
+
+
+def save_splits(splits: dict[str, pd.DataFrame], prefix: str = "booking") -> dict[str, Path]:
+    """
+    Elmenti a train/val/test halmazokat a data/processed/ mappába.
+
+        save_splits({"train": train_df, "val": val_df, "test": test_df})
+    """
+    PATHS.ensure()
+    written: dict[str, Path] = {}
+    for name, part in splits.items():
+        pq = PATHS.processed / f"{prefix}_{name}.parquet"
+        try:
+            part.to_parquet(pq, index=False)
+            written[name] = pq
+        except Exception:                                         # noqa: BLE001
+            csv = PATHS.processed / f"{prefix}_{name}.csv"
+            part.to_csv(csv, index=False, encoding="utf-8")
+            written[name] = csv
+            log.warning("Parquet nem elérhető, CSV-be mentettem: %s "
+                        "(gyorsabb lenne: pip install pyarrow)", csv.name)
+        log.info("%-6s -> %-30s (%d sor)", name, written[name].name, len(part))
+    return written
+
+
+def load_split(name: str, prefix: str = "booking") -> pd.DataFrame:
+    """
+    Visszaolvassa az egyik halmazt. Megtalálja parquet és CSV formában is.
+
+        train_df = load_split("train")
+    """
+    if name not in _SPLIT_NAMES:
+        raise ValueError(f"Ismeretlen halmaz: {name}. Választható: {_SPLIT_NAMES}")
+
+    pq = PATHS.processed / f"{prefix}_{name}.parquet"
+    csv = PATHS.processed / f"{prefix}_{name}.csv"
+    if pq.exists():
+        return pd.read_parquet(pq)
+    if csv.exists():
+        return pd.read_csv(csv)
+    raise FileNotFoundError(
+        f"Nem találom sem a {pq.name}, sem a {csv.name} fájlt.\n"
+        "Futtasd le előbb a 01_data_loading_eda.ipynb notebookot végig — "
+        "az utolsó cellája menti ezeket."
+    )
+
+
+def load_all_splits(prefix: str = "booking") -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """train, val, test egy hívással."""
+    return tuple(load_split(n, prefix) for n in _SPLIT_NAMES)   # type: ignore[return-value]
+
+
+# ==========================================================================
 # Egységes belépési pont
 # ==========================================================================
 _LOADERS = {
+    "booking_local": load_booking_local,   # a data/raw/val.csv — EZT használjuk most
     "booking_hf": load_booking_hf,
     "kaggle_515k": load_kaggle_515k,
     "tripadvisor": load_tripadvisor,
