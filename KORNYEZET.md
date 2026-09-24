@@ -1,168 +1,166 @@
-# Környezet beállítása — lépésről lépésre
+# Környezet — beállítás és dokumentáció
 
-Ez az útmutató feltételezi, hogy Windowson vagy macOS-en dolgozol, és most
-állítasz be először Python fejlesztői környezetet. Menj végig rajta sorban;
-minden lépés végén van egy **ellenőrzés**, amivel látod, hogy sikerült-e.
+Ez a fájl két dolgot csinál egyszerre:
 
-**Összesen kb. 30–45 perc**, plusz a letöltési idők.
+1. **Leírja a beállítás lépéseit** — ha új gépre kell átraknod a projektet, vagy ha a
+   környezet valamiért tönkremegy, ez a helyreállítási útmutató.
+2. **Dokumentálja a tényleges kísérleti környezetet** — a szakdolgozat módszertani
+   fejezetébe és a függelékbe ebből tudsz hivatkozni. A reprodukálhatósághoz
+   hozzátartozik, hogy leírod, min futottak a mérések.
 
 ---
 
-## Áttekintés: mi hol fut?
+## Az aktuális környezet (2026. szeptember)
+
+| Komponens | Verzió / érték | Állapot |
+|---|---|---|
+| Operációs rendszer | Windows 11 | — |
+| Python | 3.12.3 | ✅ telepítve |
+| Virtuális környezet | `.venv` a projektmappában | ✅ létrehozva |
+| Projekt útvonala | `C:\Users\seszt\Documents\BCE\7_felev\Szakdolgozat\THESIS\CODE` | ✅ |
+| Csomagok | `requirements.txt` szerint | ✅ telepítve |
+| NLTK erőforrások | stopwords, wordnet, omw-1.4, punkt | ✅ letöltve |
+| Füstteszt | `tests/test_pipeline.py` | ✅ zöld |
+| Git (helyi) | repó inicializálva, első commit kész | ✅ |
+| GitHub | `sesztaklorant/thesis` (privát) | ⏳ push VS Code-ból |
+| GPU | NVIDIA GeForce RTX 3050 Ti Laptop, **4 GB VRAM** | ✅ |
+| NVIDIA driver | **616.92** (Studio Driver) | ✅ frissítve |
+| Driver CUDA-támogatás | **13.4** | ✅ |
+| PyTorch | CUDA-s build, **cu132** csatorna | ✅ telepítve |
+| transformers / accelerate / evaluate | legfrissebb | ✅ telepítve |
+
+> **A dolgozatba:** „A kísérleteket Windows 11 rendszeren, Python 3.12 környezetben
+> futtattam. A transformer-modellek finomhangolása NVIDIA GeForce RTX 3050 Ti
+> Laptop GPU-n (4 GB VRAM) történt, CUDA-gyorsítással."
+
+---
+
+## Hol fut mi?
 
 ```
 ┌──────────────────────────────┐     ┌──────────────────────────────┐
-│  A LAPTOPOD                  │     │  GOOGLE COLAB (ingyenes)     │
+│  A LAPTOP (elsődleges)       │     │  GOOGLE COLAB (tartalék)     │
 │                              │     │                              │
-│  • adatletöltés, tisztítás   │     │  • BERT finomhangolás        │
-│  • feltáró elemzés (EDA)     │ ──▶ │  • transformer ABSA          │
-│  • TF-IDF + NB/LogReg/SVM    │     │                              │
-│  • ábrák, táblázatok         │ ◀── │  T4 GPU, ~15-25 perc/futás   │
+│  • adatletöltés, tisztítás   │     │  • nagy mintás végleges      │
+│  • feltáró elemzés (EDA)     │ ──▶ │    futtatás                  │
+│  • TF-IDF + NB/LogReg/SVM    │     │  • nagyobb modellek          │
+│  • BERT finomhangolás        │ ◀── │    (RoBERTa-large stb.)      │
+│    (RTX 3050 Ti, 4 GB)       │     │                              │
+│  • ábrák, táblázatok         │     │  T4 GPU, 16 GB VRAM          │
 │  • a dolgozat írása          │     │                              │
-│                              │     │  (laptopon CPU-n: 8-15 ÓRA)  │
 └──────────────────────────────┘     └──────────────────────────────┘
-         a parquet fájlokat feltöltöd ──▶
-         a betanított modellt letöltöd ◀──
 ```
 
-A munka **80%-a a laptopon** történik. A Colab csak a GPU-t igénylő
-tanításhoz kell.
+A saját GPU a **fejlesztéshez** jobb: nincs időkorlát, nincs napi kvóta, nem vesznek
+el a fájlok, és nem kell parquetet fel-le tologatni. A Colab akkor jön elő, ha a
+4 GB VRAM kevés — nagyobb modellnél vagy sokkal nagyobb mintánál.
 
 ---
 
-## 1. lépés — Python telepítése
+## 1. lépés — Python
 
-### Windows
+**Telepítve: 3.12.3.** Ez rendben van, nem kell más verzió — a PyTorch, a
+transformers és a scikit-learn mind támogatja.
 
-1. Töltsd le: <https://www.python.org/downloads/> → **Python 3.11.x**
-   (ne a legújabb 3.13/3.14-et — a PyTorch és a transformers néha
-   hetekkel-hónapokkal lemaradva támogatja az új verziókat)
-2. A telepítőben **PIPÁLD BE** legalul: **„Add python.exe to PATH"**
-   ← ez a leggyakoribb hiba forrása, ne hagyd ki
-3. Install Now
+> Ne telepíts párhuzamosan másik Python-verziót. Windowson a többszörös
+> Python-telepítés több bajt okoz, mint amennyi hasznot hoz: összekeverednek a
+> `python` és `pip` parancsok, és nehéz kideríteni, melyik környezetbe ment a csomag.
 
-### macOS
+Ellenőrzés:
 
-```bash
-# Homebrew-val (ha nincs: https://brew.sh)
-brew install python@3.11
+```powershell
+python --version        # Python 3.12.3
 ```
 
-### Ellenőrzés
-
-Nyiss egy **új** terminált (Windows: PowerShell, macOS: Terminal):
-
-```bash
-python --version      # Windowson
-python3 --version     # macOS-en
-```
-
-Ezt kell látnod: `Python 3.11.x`
-Ha „nem található" hibát kapsz Windowson, a PATH pipa maradt ki → telepítsd újra.
+Ha új gépre telepíted: <https://www.python.org/downloads/> → a telepítőben
+**pipáld be** legalul az **„Add python.exe to PATH"** opciót. Ez a leggyakoribb
+hibaforrás Windowson.
 
 ---
 
-## 2. lépés — VS Code telepítése
+## 2. lépés — VS Code
 
-Kódszerkesztő. A notebookokat közvetlenül benne tudod futtatni, ami
-kényelmesebb, mint a böngészős Jupyter.
-
-1. <https://code.visualstudio.com/> → Download → telepítés
-2. Indítsd el, bal oldalon a **Extensions** ikon (négy kocka)
-3. Telepítsd ezt a kettőt:
+1. <https://code.visualstudio.com/> → telepítés
+2. Extensions (bal oldali négy kocka) → telepítsd:
    - **Python** (Microsoft)
    - **Jupyter** (Microsoft)
 
----
-
-## 3. lépés — Git telepítése és a projekt verziókövetése
-
-**Miért kell ez a szakdolgozathoz?** Mert egyszer biztosan elrontasz valamit,
-és vissza akarsz térni a tegnapi működő állapothoz. Plusz a témavezetőnek
-meg tudod mutatni, hogyan haladt a munka — ez komoly pluszpont.
-
-1. <https://git-scm.com/downloads> → telepítés (minden alapbeállítás jó)
-2. Add meg, ki vagy:
-
-```bash
-git config --global user.name "Sesztak Lorant"
-git config --global user.email "sesztaklorant@gmail.com"
-```
-
-### Ellenőrzés
-
-```bash
-git --version     # git version 2.4x.x
-```
+A notebookokat közvetlenül VS Code-ban futtatod, nem böngészőben.
 
 ---
 
-## 4. lépés — A projekt kicsomagolása és a virtuális környezet
+## 3. lépés — Projektmappa és virtuális környezet
 
-### 4.1 Hova tedd a projektet?
+### Miért kell a venv?
 
-Csomagold ki a `hotel-absa` mappát egy **ékezet és szóköz nélküli** útvonalra.
-Ez komolyan számít — a Python egyes könyvtárai megbotlanak az ékezetes
-útvonalakon:
+A `.venv` egy mappa a projekten belül, saját Python-másolattal és saját
+csomagkönyvtárral. Három konkrét haszna van itt:
 
-- Jó: `C:\szakdolgozat\hotel-absa` vagy `~/szakdolgozat/hotel-absa`
-- Rossz: `C:\Users\Lóránt\Dokumentumok\Szakdolgozat 2026\...`
+1. **A PyTorch nagy és ragaszkodó.** A CUDA-s telepítés ~3 GB, és rögzített
+   verziójú függőségeket hoz (numpy, sympy, networkx). Ha ez a rendszer-Pythonba
+   kerül, minden más projekted is ezeket kapja.
+2. **Ha elromlik, 5 perc a javítás.** Törlöd a `.venv` mappát, és
+   `pip install -r requirements.txt`-vel újraépíted. Rendszerszintű telepítésnél
+   ugyanez a *Pythonod* megjavítását jelentené.
+3. **A `requirements.txt` csak így mond igazat** — pontosan az van benne, ami a
+   szakdolgozathoz kell, nem az összes valaha telepített csomagod.
 
-### 4.2 Virtuális környezet (venv)
+Ára: minden új terminálban aktiválni kell. VS Code-ban ez nem érint, mert ott a
+kernelválasztás egyszeri.
 
-**Mi ez?** Egy elkülönített Python-példány, csak ehhez a projekthez. Így a
-projekt csomagjai nem ütköznek más projektek csomagjaival, és a
-`requirements.txt` pontosan leírja, mi kell a futtatáshoz — ez a
-reprodukálhatóság alapja.
+### A mappa helye
 
-Nyisd meg a projektmappát terminálban:
+Ékezet és szóköz nélküli útvonalon legyen — a Python egyes könyvtárai megbotlanak
+az ékezetes elérési utakon. A jelenlegi útvonal ezt teljesíti.
 
-```bash
-# Windows (PowerShell)
-cd C:\szakdolgozat\hotel-absa
+### Létrehozás és aktiválás
+
+```powershell
+cd C:\Users\seszt\Documents\BCE\7_felev\Szakdolgozat\THESIS\CODE
 python -m venv .venv
 .venv\Scripts\Activate.ps1
-
-# macOS / Linux
-cd ~/szakdolgozat/hotel-absa
-python3 -m venv .venv
-source .venv/bin/activate
 ```
 
-> **Windows hiba:** „a szkriptek futtatása le van tiltva"?
-> Futtasd ezt egyszer, majd próbáld újra az aktiválást:
+A terminál elején meg kell jelennie a `(.venv)` előtagnak.
+
+> **Ha „a szkriptek futtatása le van tiltva" hibát kapsz**, futtasd egyszer:
 > ```powershell
 > Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
 > ```
 
-### Ellenőrzés
+> **Fontos:** a `.venv` a projektmappával **egy szinten** legyen, vagyis a
+> `requirements.txt` mellett. Ha egy szinttel feljebb hozod létre, működik ugyan,
+> de a `.gitignore` nem kezeli, és a parancsok is kényelmetlenebbek lesznek.
 
-A terminál sor elején meg kell jelennie: `(.venv)`
-Ha ott van, jó helyen vagy. **Minden alkalommal aktiválnod kell**, amikor új
-terminált nyitsz a projekthez.
+### Csomagok telepítése
 
-### 4.3 Csomagok telepítése
-
-```bash
-pip install --upgrade pip
+```powershell
+python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-Ez 3–6 percig tart, és kb. 800 MB-ot tölt le.
+> **Figyelem a pip frissítésére:** `python -m pip` kell, **nem** `pip install --upgrade pip`.
+> Windowson a `pip.exe` zárolva van futás közben, ezért nem tudja lecserélni saját
+> magát, és hibaüzenettel visszautasítja. A `python -m pip` alak megkerüli ezt,
+> mert a Python futtatja a pip modult.
 
-### 4.4 NLTK nyelvi erőforrások
+### NLTK nyelvi erőforrások
 
-```bash
+```powershell
 python -c "import nltk; nltk.download('stopwords'); nltk.download('wordnet'); nltk.download('omw-1.4'); nltk.download('punkt')"
 ```
 
+Ezek nélkül a kód tartalék megoldásra vált (beépített minimális stopword-lista és
+egyszerűsített lemmatizáló), és figyelmeztetést ír ki. A `preprocessing.py`
+szándékosan így van megírva, de élesben a rendes NLTK-erőforrásokat használd.
+
 ### Ellenőrzés — füstteszt
 
-```bash
-python tests/test_pipeline.py
+```powershell
+python tests\test_pipeline.py
 ```
 
-Ennek kell a végén kiírnia:
+A végén ezt kell látnod:
 
 ```
 ==================================================================
@@ -170,99 +168,250 @@ Ennek kell a végén kiírnia:
 ==================================================================
 ```
 
-**Ha ez lefut, a környezeted kész.** A teszt szintetikus adaton futtatja
-végig a teljes pipeline-t: tisztítás → címkézés → felosztás → három modell
-betanítása → kiértékelés → ABSA.
+A teszt szintetikus adaton futtatja végig a teljes pipeline-t: tisztítás →
+címkézés → 60/20/20 felosztás → három modell tanítása → kiértékelés → ABSA.
 
-### 4.5 Git repó inicializálása
+> **A teszt 1,000-es pontossága nem jelent semmit** a valódi teljesítményre nézve.
+> A szintetikus adat hat fix mondatsablonból áll, tehát triviálisan szétválasztható.
+> A teszt csak azt bizonyítja, hogy a *kód* hibátlanul végigfut. A valódi Booking-adaton
+> 0,70–0,80 körüli macro-F1 a reális tartomány.
 
-```bash
+> Ha a futtatás nem ír ki NLTK-figyelmeztetést, az jó jel: az erőforrások a helyükön
+> vannak, és a valódi WordNet lemmatizáló fut.
+
+---
+
+## 4. lépés — Git és GitHub
+
+### Helyi verziókövetés (GitHub-fiók nélkül is működik)
+
+A Git és a GitHub két külön dolog: a Git a verziókövető a gépeden, a GitHub csak
+tárhely. A helyi commitok az első pillanattól működnek.
+
+```powershell
+git config --global user.name "Sesztak Lorant"
+git config --global user.email "sesztaklorant@gmail.com"
+
 git init
 git add .
-git commit -m "Kezdeti projektvaz: config, src modulok, notebookok"
+git commit -m "Kezdeti projektvaz: config, src modulok, notebookok, fustteszt zold"
 ```
 
-> A `.gitignore` gondoskodik róla, hogy az adatok és a betanított modellek
-> **ne** kerüljenek a repóba (túl nagyok, és licencproblémát okozhatnak).
+A `.gitignore` gondoskodik róla, hogy az adatok (`data/`) és a betanított modellek
+(`results/models/`) **ne** kerüljenek a repóba — méret és licenc miatt egyaránt.
 
-Ha a témavezetőddel is meg akarod osztani: csinálj egy **privát** repót
-GitHubon, és:
+### GitHub-repó összekötése
 
-```bash
-git remote add origin https://github.com/FELHASZNALONEVED/hotel-absa.git
+```powershell
+git remote add origin https://github.com/sesztaklorant/thesis.git
 git branch -M main
 git push -u origin main
 ```
 
+> **A jelszavas belépés nem működik.** A GitHub 2021 óta nem fogad el jelszót
+> Git-műveletekhez. Ha a terminál jelszót kér és beírod a GitHub-jelszavadat,
+> ezt kapod:
+> ```
+> remote: Invalid username or token. Password authentication is not supported.
+> fatal: Authentication failed
+> ```
+
+**A legegyszerűbb megoldás — VS Code:**
+
+1. `code .` a projektmappában
+2. Bal oldalt legalul a **fiók ikon** (emberke) → **Sign in with GitHub**
+3. Böngészőben engedélyezed, visszadob VS Code-ba
+4. **Source Control** panel (`Ctrl+Shift+G`) → **Sync Changes** / push gomb
+
+**Ha parancssorból akarod**, két út van:
+
+*a) Böngészős hitelesítés*
+
+```powershell
+git config --global credential.helper manager
+git push -u origin main
+```
+
+Felugrik egy böngészőablak a GitHub-belépéshez.
+
+*b) Személyes hozzáférési token (PAT)*
+
+GitHub → Settings → Developer settings → Personal access tokens → **Tokens (classic)**
+→ Generate new token → jogosultság: **`repo`** → másold ki azonnal (többé nem látod).
+
+Push-nál: felhasználónév = `sesztaklorant`, jelszó helyett **illeszd be a tokent**.
+A PowerShell nem mutatja a beillesztést — ez normális, nyomj Entert.
+
+> Ha korábban elmentődött a rossz jelszó: Windows **Hitelesítőadat-kezelő** →
+> **Windows hitelesítő adatok** → töröld a `git:https://github.com` bejegyzést.
+
 ---
 
-## 5. lépés — PyTorch (csak ha helyben is akarsz BERT-tel próbálkozni)
+## 5. lépés — GPU és PyTorch
 
-**Ezt nyugodtan kihagyhatod**, ha a BERT-et a Colabon futtatod — ami az
-ajánlott út. Csak akkor telepítsd, ha helyben is szeretnél kísérletezni
-kis mintán.
+### 5.1 A GPU ellenőrzése
 
-```bash
-# CPU-s változat (kisebb, ~200 MB)
-pip install torch --index-url https://download.pytorch.org/whl/cpu
+```powershell
+nvidia-smi
+```
+
+A kimenetből három dolog számít:
+
+- **Memory-Usage jobb oldali száma**: `4096MiB` = 4 GB VRAM. Ez a szűk keresztmetszet.
+- **CUDA Version** (jobb felül): a driver által támogatott **legmagasabb** CUDA-verzió.
+  Nem azt jelenti, hogy az van telepítve.
+- **Processes** lista: mi eszi épp a GPU-t.
+
+### 5.2 Driver
+
+Telepítve: **NVIDIA Studio Driver 616.92**, CUDA-támogatás **13.4**.
+
+**Miért Studio és nem Game Ready?** CUDA szempontból a kettő egyenértékű, a
+PyTorch mindkettővel ugyanúgy fut. A Studio hosszabb tesztelési cikluson megy át
+és a stabilitást helyezi előre, a Game Ready pedig a megjelenésnapi
+játéktámogatást. Számítási munkához a Studio a kényelmesebb.
+
+Frissítés: <https://www.nvidia.com/download/index.aspx> → a telepítőben **Egyéni
+(Custom)** → pipáld be a **„Tiszta telepítés végrehajtása"** opciót. Ez kitakarítja
+a régi driver maradékait. Figyelem: a tiszta telepítés törli az NVIDIA vezérlőpulton
+beállított egyedi profilokat.
+
+### 5.3 PyTorch telepítése
+
+**Ne telepíts CUDA Toolkitet az NVIDIA oldaláról** — erre nincs szükség, és sokan
+feleslegesen végigcsinálják. A pip-es PyTorch-csomagok hozzák magukkal a szükséges
+CUDA-futtatókörnyezetet; a gépre csak a videokártya-driver kell.
+
+**Nem kell a driveréddel pontosan egyező CUDA-build sem.** A driverek visszafelé
+kompatibilisek: egy 13.4-et támogató driver gond nélkül futtat cu12.x-re vagy
+cu13.2-re épült buildeket. A stabil PyTorch-kiadások jellemzően egy-két verzióval
+a legfrissebb CUDA alatt járnak — ez normális.
+
+A telepített parancs (a <https://pytorch.org/get-started/locally/> selectorából,
+Stable / Windows / Pip / Python / CUDA 13.2):
+
+```powershell
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu132
+```
+
+> A `cu132` rész verzióváltáskor változik — új gépen mindig a selectorból vedd a
+> parancsot, ne ebből a fájlból másold. A `torchaudio` nem kell; a `torchvision`
+> szövegfeldolgozáshoz szintén nem, de ártalmatlan.
+>
+> **Az aktivált venv-ben futtasd** (legyen ott a `(.venv)` előtag). ~3 GB letöltés.
+
+### 5.4 Ellenőrzés
+
+```powershell
+python -c "import torch; print(torch.__version__); print(torch.cuda.is_available()); print(torch.cuda.get_device_name(0))"
+```
+
+Helyes kimenet:
+
+```
+2.x.x+cu132        <- a lényeg a +cu rész
+True
+NVIDIA GeForce RTX 3050 Ti Laptop GPU
+```
+
+Ha `False` jön, vagy a verziószámban nincs `+cu`, akkor CPU-s build települt
+(jellemzően azért, mert lemaradt az `--index-url`):
+
+```powershell
+pip uninstall torch torchvision
+```
+
+és telepítsd újra az index-url-lel.
+
+### 5.5 Transformer csomagok
+
+```powershell
 pip install transformers accelerate evaluate
 ```
 
-Ha van NVIDIA GPU-d, a megfelelő CUDA-s parancsot a
-<https://pytorch.org/get-started/locally/> oldalon állítsd össze.
+### 5.6 A 4 GB VRAM kezelése — FONTOS
 
----
+A `03_bert_colab.ipynb` alapértelmezései Colab T4-re (16 GB) vannak hangolva.
+**Helyben ezek elszállnak** `CUDA out of memory` hibával. A beállítási cellában
+írd át:
 
-## 6. lépés — Kaggle API (az 515K / TripAdvisor / HRAST adathoz)
-
-A Booking.com adathalmaz Hugging Face-ről jön, ahhoz nem kell fiók.
-A többihez Kaggle-fiók kell.
-
-1. Regisztrálj: <https://www.kaggle.com>
-2. Jobb felül a profilképed → **Settings** → **API** → **Create New Token**
-3. Letöltődik egy `kaggle.json` fájl. Tedd ide:
-   - Windows: `C:\Users\<neved>\.kaggle\kaggle.json`
-   - macOS/Linux: `~/.kaggle/kaggle.json`
-
-```bash
-# macOS/Linux — jogosultság beállítása (különben figyelmeztet)
-chmod 600 ~/.kaggle/kaggle.json
+```python
+BATCH_SIZE = 8          # 32 helyett
+GRAD_ACCUM = 4          # 8 × 4 = 32 effektív batch
 ```
 
-> **Ha ez bonyolultnak tűnik:** teljesen rendben van kézzel letölteni a
-> CSV-ket a böngészőből, és bemásolni a `data/raw/` mappába. A kód mindkét
-> utat megtalálja.
+és a `TrainingArguments`-ben:
+
+```python
+per_device_train_batch_size=BATCH_SIZE,
+gradient_accumulation_steps=GRAD_ACCUM,
+per_device_eval_batch_size=16,
+fp16=True,
+```
+
+**Miért pont így?** A `gradient_accumulation_steps` négy kis batch gradiensét
+gyűjti össze, mielőtt lép egyet az optimalizáló. Az eredmény matematikailag
+**ugyanaz, mint egy 32-es batch**, csak több lépésben számolja. Ez azért fontos,
+mert így a helyi és a Colabos futtatásod **összehasonlítható marad** — ha a batch
+méretét változtatnád, a tanulási ráta is máshogy viselkedne, és nem lehetne
+megmondani, a modell vagy a hiperparaméter okozta-e a különbséget.
+
+Ha 8-cal is elszáll: `BATCH_SIZE = 4`, `GRAD_ACCUM = 8`.
+
+**Tanítás előtt zárd be a VRAM-fogyasztókat.** 4 GB-nál minden megabájt számít:
+
+- **Epic Games Launcher** — nem elég az ablakot bezárni, a tálca értesítési
+  területén tovább fut; ott kell kilépni belőle
+- **Chrome** — simán elvisz fél gigát
+- **NVIDIA App overlay**, ha telepítve van
+
+Ellenőrzés közvetlenül tanítás előtt:
+
+```powershell
+nvidia-smi
+```
+
+A Memory-Usage bal oldali száma legyen 0 MiB közeli.
 
 ---
 
-## 7. lépés — Google Colab
+## 6. lépés — Kaggle API
 
-1. Menj a <https://colab.research.google.com> oldalra (Google-fiók kell)
-2. **File → Upload notebook** → válaszd a `notebooks/03_bert_colab.ipynb`-t
-3. **Runtime → Change runtime type → Hardware accelerator: T4 GPU** → Save
-4. Az első cella kiírja, hogy tényleg GPU-n futsz-e
+A Booking.com adathalmaz Hugging Face-ről jön, ahhoz nem kell fiók. A TripAdvisor,
+az 515K és a HRAST Kaggle-ről.
 
-### Colab tudnivalók
+1. Regisztrálj: <https://www.kaggle.com>
+2. Profilkép → **Settings** → **API** → **Create New Token**
+3. A letöltött `kaggle.json` helye: `C:\Users\seszt\.kaggle\kaggle.json`
 
-- Az ingyenes verzió ~90 perc inaktivitás után lecsatlakozik → **a fájlok elvesznek**
-- Napi GPU-kvóta van (kb. 3–4 óra); ha elfogy, várj pár órát
-- **Mindig töltsd le, amit előállítasz** (a notebook utolsó cellája ezt megteszi)
-- Ha sokat fogsz futtatni, a Colab Pro (~10 EUR/hó) megéri — de nem kötelező
-
-### Fájlmozgatás laptop ↔ Colab
-
-**Egyszerű út:** a bal oldali mappa ikonra kattintva fel/le tudsz tölteni fájlokat.
-
-**Kényelmesebb út (ajánlott):** Google Drive csatolása. Készíts egy
-`szakdolgozat/data/processed/` mappát a Drive-odon, oda töltsd fel a parquet
-fájlokat, és a notebookban kapcsold be a Drive-cellát.
+> **Ha ez bonyolultnak tűnik:** teljesen rendben van kézzel letölteni a CSV-ket a
+> böngészőből, és bemásolni a `data/raw/` mappába. A `data_loading.py` mindkét
+> utat megtalálja — először a helyi fájlt keresi, és csak utána próbál letölteni.
 
 ---
 
-## 8. lépés — Az első notebook futtatása
+## 7. lépés — Google Colab (tartalék)
 
-```bash
-# A projektmappában, aktivált .venv-vel:
+Saját GPU-val a Colab már nem kötelező, de két esetben jól jön: ha a 4 GB kevés
+(nagyobb modell), vagy ha nagyon nagy mintán futtatnál véglegeset.
+
+1. <https://colab.research.google.com> → **File → Upload notebook** →
+   `notebooks/03_bert_colab.ipynb`
+2. **Runtime → Change runtime type → T4 GPU** → Save
+3. Töltsd fel a `data/processed/` parquet fájljait (bal oldali mappa ikon),
+   vagy csatold a Google Drive-ot
+
+**Colab korlátok:** ~90 perc inaktivitás után lecsatlakozik (és a fájlok elvesznek),
+napi GPU-kvóta kb. 3–4 óra. Mindig töltsd le, amit előállítasz.
+
+Ha Colabon futtatod, a helyi beállításokat **állítsd vissza** `BATCH_SIZE = 32`,
+`GRAD_ACCUM = 1` értékre — ott elfér.
+
+---
+
+## 8. lépés — Az első notebook
+
+```powershell
 code .
 ```
 
@@ -273,34 +422,74 @@ Futtasd a cellákat sorban (`Shift+Enter`).
 
 ---
 
-## Gyakori hibák
+## Hibaelhárítás
 
 | Hiba | Ok és megoldás |
 |---|---|
-| `ModuleNotFoundError: No module named 'src'` | A notebookot nem a `notebooks/` mappából futtatod, vagy kimaradt a `sys.path.insert(0, "..")` cella. Futtasd az első cellát. |
-| `python: command not found` (Windows) | Kimaradt az „Add to PATH" pipa. Telepítsd újra a Pythont. |
+| `ERROR: To modify pip, please run...` | `pip install --upgrade pip` helyett `python -m pip install --upgrade pip` |
+| `ModuleNotFoundError: No module named 'src'` | Nem a projektgyökérből futtatod, vagy kimaradt a notebook első cellája (`sys.path.insert`) |
 | A `(.venv)` nem jelenik meg | Nem aktiváltad. Minden új terminálban újra kell. |
-| VS Code nem találja a csomagokat | Rossz kernel van kiválasztva. Jobb felül Select Kernel → a `.venv`. |
-| `Kaggle: 401 Unauthorized` | Rossz helyen a `kaggle.json`. Vagy töltsd le kézzel a CSV-t. |
-| Kifogy a memória az adatbetöltésnél | Csökkentsd a `CFG.dev_sample_size` értékét a `config.py`-ban. |
-| `CUDA out of memory` (Colab) | `BATCH_SIZE = 16` vagy `8`. |
+| „a szkriptek futtatása le van tiltva" | `Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned` |
+| VS Code nem találja a csomagokat | Rossz kernel. Jobb felül Select Kernel → a `.venv`. |
+| `Password authentication is not supported` | GitHub-jelszó nem jó. VS Code-os belépés vagy PAT — lásd 4. lépés. |
+| `torch.cuda.is_available()` = `False` | CPU-s build települt. `pip uninstall torch torchvision`, majd újra `--index-url`-lel. |
+| `CUDA out of memory` | `BATCH_SIZE = 4`, `GRAD_ACCUM = 8`; zárd be az Epic Launchert és a Chrome-ot |
+| A tanítás órákig tart | Nem a GPU-n fut. Ellenőrizd a `torch.cuda.is_available()`-t. |
+| NLTK-figyelmeztetés a füsttesztben | Futtasd az `nltk.download(...)` parancsot a 3. lépésből. |
+| `Kaggle: 401 Unauthorized` | Rossz helyen a `kaggle.json`, vagy töltsd le kézzel a CSV-t a `data/raw/`-ba. |
+| Kifogy a memória adatbetöltésnél | Csökkentsd a `CFG.dev_sample_size` értékét a `src/config.py`-ban. |
 
 ---
 
-## Napi rutin, ha visszaülsz dolgozni
+## Napi rutin
 
-```bash
-cd ~/szakdolgozat/hotel-absa
-source .venv/bin/activate        # Windowson: .venv\Scripts\Activate.ps1
+Munka elején:
+
+```powershell
+cd C:\Users\seszt\Documents\BCE\7_felev\Szakdolgozat\THESIS\CODE
+.venv\Scripts\Activate.ps1
 code .
 ```
 
 Munka végén:
 
-```bash
+```powershell
 git add .
 git commit -m "EDA abrak elkeszultek, kuszob-erzekenysegi vizsgalat"
+git push
 ```
 
-> **Commitolj minden nap**, rövid, leíró üzenettel. A védés előtt a
-> `git log` egy kész idővonal lesz arról, hogyan haladt a munkád.
+> **Commitolj minden munkanap végén**, rövid, leíró üzenettel. A védés előtt a
+> `git log` kész idővonal lesz arról, hogyan haladt a munkád — és a témavezetőnek
+> is meg tudod mutatni.
+
+---
+
+## Környezet újraépítése nulláról
+
+Ha új gépre viszed, vagy valami menthetetlenül elromlik:
+
+```powershell
+# 1. Projekt letöltése
+git clone https://github.com/sesztaklorant/thesis.git
+cd thesis
+
+# 2. Virtuális környezet
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+
+# 3. Csomagok
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+python -c "import nltk; nltk.download('stopwords'); nltk.download('wordnet'); nltk.download('omw-1.4'); nltk.download('punkt')"
+
+# 4. GPU (opcionális) — a parancsot a pytorch.org selectorából vedd
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cuXXX
+pip install transformers accelerate evaluate
+
+# 5. Ellenőrzés
+python tests\test_pipeline.py
+```
+
+Az adatok nincsenek a repóban — azokat a notebookok újra letöltik, vagy kézzel
+teszed a `data/raw/` mappába.

@@ -133,6 +133,13 @@ class Config:
         "wifi", "value_for_money",
     )
 
+    # --- Helyi adatfájl (a Booking hivatalos train/val/test felosztásából) ---
+    # A témavezetővel egyeztetve először a ~200k soros val.csv-vel dolgozunk.
+    # FONTOS: ez a Booking SAJÁT validációs splitje, nem a mi validációs
+    # halmazunk. Lásd a 01-es notebook 2. szakaszát.
+    local_csv_name: str = "val.csv"
+    source_split_name: str = "booking_val_split"
+
     def to_json(self, path: Path) -> None:
         """Elmenti a konfigot a kísérlet mellé — így minden eredményhez
         tudni fogod, PONTOSAN milyen beállításokkal készült."""
@@ -145,7 +152,89 @@ CFG = Config()
 
 
 # --------------------------------------------------------------------------
-# 3) ADATHALMAZ-REGISZTER
+# 3) SZÍNPALETTA — minden ábra ugyanezt használja
+# --------------------------------------------------------------------------
+# Miért van ez itt és nem minden notebookban külön?
+# 1) Konzisztencia: a dolgozat összes ábrája egy rendszerbe tartozik.
+# 2) SZÍNLÁTÁSI AKADÁLYMENTESSÉG — ez a fontosabb ok.
+#
+# A "piros = rossz, zöld = jó" a legelterjedtebb választás, ÉS a lehető
+# legrosszabb: a vörös-zöld színtévesztés (deuteranopia/protanopia) a
+# férfiak kb. 8%-át érinti, és pont ezt a két színt mossa össze. Egy
+# kinyomtatott szakdolgozatnál ez valós olvashatósági probléma.
+#
+# Helyette PIROS <-> KÉK divergáló pár, semleges szürke középponttal.
+# Ez a polaritást (negatív ... pozitív) fejezi ki, és színtévesztéssel is
+# elkülöníthető marad. Validálva: a két pólus közti eltérés protanopiával
+# szimulálva ΔE 21,6 (a 8-as küszöb bőven felett), normál látással 32,3.
+SENTIMENT_COLORS: dict[str, str] = {
+    "negative": "#e34948",   # piros
+    "neutral":  "#898781",   # semleges szürke (a divergáló skála középpontja)
+    "positive": "#2a78d6",   # kék
+}
+
+# Egyhues szekvenciális skála nagyságrendhez (hőtérkép, gyakoriság).
+# Világostól sötétig — SOHA ne szivárványskála.
+SEQUENTIAL_BLUE: list[str] = [
+    "#cde2fb", "#9ec5f4", "#6da7ec", "#3987e5", "#2a78d6", "#256abf", "#184f95",
+]
+
+# Divergáló skála "átlaghoz képest" típusú mutatókhoz (pl. neg_lift):
+# kék = az átlagnál kevesebb negatív, piros = több. Középen semleges.
+DIVERGING_BLUE_RED: list[str] = [
+    "#184f95", "#3987e5", "#9ec5f4", "#f0efec", "#f3a3a2", "#e34948", "#a82c2b",
+]
+
+# Ábra-kroma: tengelyek, rácsvonalak, feliratok. Visszafogott, nem versenyez
+# az adattal.
+INK = {
+    "primary":   "#0b0b0b",
+    "secondary": "#52514e",
+    "muted":     "#898781",
+    "grid":      "#e1e0d9",
+    "axis":      "#c3c2b7",
+    "surface":   "#ffffff",
+}
+
+
+def sentiment_palette(order: tuple[str, ...] | list[str] | None = None) -> list[str]:
+    """A három sentiment-szín a CFG.labels sorrendjében (vagy megadott sorrendben)."""
+    return [SENTIMENT_COLORS[l] for l in (order or CFG.labels)]
+
+
+def apply_plot_style() -> None:
+    """
+    Egységes matplotlib-stílus az egész dolgozathoz.
+    A notebookok első cellájában hívd meg.
+    """
+    import matplotlib as mpl
+
+    mpl.rcParams.update({
+        "figure.dpi": 110,
+        "savefig.dpi": 300,            # nyomdai minőség
+        "savefig.bbox": "tight",
+        "figure.facecolor": INK["surface"],
+        "axes.facecolor": INK["surface"],
+        "font.size": 11,
+        "axes.titlesize": 12,
+        "axes.labelsize": 11,
+        "axes.labelcolor": INK["secondary"],
+        "axes.edgecolor": INK["axis"],
+        "axes.spines.top": False,      # visszafogott keret
+        "axes.spines.right": False,
+        "axes.grid": True,
+        "grid.color": INK["grid"],
+        "grid.linewidth": 0.8,
+        "xtick.color": INK["muted"],
+        "ytick.color": INK["muted"],
+        "text.color": INK["primary"],
+        "legend.frameon": False,
+        "axes.prop_cycle": mpl.cycler(color=["#2a78d6", "#eb6834", "#1baf7a"]),
+    })
+
+
+# --------------------------------------------------------------------------
+# 4) ADATHALMAZ-REGISZTER
 # --------------------------------------------------------------------------
 # Egy helyen tartjuk, hogy melyik adathalmaz honnan jön és mi a szerepe.
 # A dolgozat "Data Sources" fejezetét ebből tudod majd kitölteni.
