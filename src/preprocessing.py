@@ -22,6 +22,7 @@ KÉT KÜLÖNBÖZŐ előfeldolgozási útvonal van, és ez SZÁNDÉKOS:
 
 from __future__ import annotations
 
+import html
 import logging
 import re
 import unicodedata
@@ -47,12 +48,29 @@ _NON_ALPHA_RE = re.compile(r"[^a-z\s']")
 def clean_text_minimal(text: str) -> str:
     """
     (B) útvonal — BERT-hez. Csak a valódi zajt távolítjuk el.
-    Az írásjelek, a nagybetűk és a tagadószavak MARADNAK.
+    Az írásjelek, a nagybetűk, az emodzsik és a tagadószavak MARADNAK.
+
+    HTML-entitások feloldása
+    ------------------------
+    A Booking.com exportban a szöveg HTML-kódolt aposztrófokat tartalmaz:
+
+        "wouldn&#39;t suggest walking"   ->   "wouldn't suggest walking"
+
+    Ez NEM kozmetikai kérdés. Ha nem oldjuk fel:
+      • a TF-IDF útvonalon a `[^a-z\\s']` szűrő kidobja a `&#39;` karaktereit,
+        és a "wouldn&#39;t" -> "wouldn t" lesz — vagyis ELVESZIK A TAGADÁS,
+        ami sentiment-elemzésnél a legrosszabb, ami történhet;
+      • a BERT tokenizálója külön tokenekre bontja az entitást, és
+        értelmetlen darabokat tanul.
+
+    A `html.unescape` az összes elterjedt entitást kezeli (`&#39;`, `&amp;`,
+    `&quot;`, `&lt;`, `&nbsp;` stb.), nem csak az aposztrófot.
     """
     if not isinstance(text, str):
         return ""
+    text = html.unescape(text)              # &#39; -> '   (EZ AZ ELSŐ LÉPÉS)
     text = unicodedata.normalize("NFKC", text)
-    text = _HTML_RE.sub(" ", text)
+    text = _HTML_RE.sub(" ", text)          # valódi HTML tagek: <br>, <p>
     text = _URL_RE.sub(" ", text)
     text = _EMAIL_RE.sub(" ", text)
     return _MULTISPACE_RE.sub(" ", text).strip()
@@ -200,6 +218,167 @@ def score_to_sentiment(
     return "neutral"
 
 
+def quantile_sentiment_labels(
+    scores: pd.Series,
+    q_neg: float = 0.25,
+    q_pos: float = 0.60,
+) -> tuple[pd.Series, float, float]:
+    """
+    ALTERNATÍV címkézés: a küszöböket nem kézzel adjuk meg, hanem az adat
+    eloszlásából számoljuk (kvantilisek).
+
+    Mikor van erre szükség?
+    -----------------------
+    Ha a pontszámok erősen ferdék. A Booking-adatban az átlag 8,87 és a medián
+    9,0 — a vendégek túlnyomó többsége magas pontot ad. Egy fix "score ≤ 6 =
+    negatív" szabály ilyenkor alig pár száz negatív példát ad, amiből a BERT
+    nem tud tanulni.
+
+    A kvantilis-alapú vágás garantálja a használható osztályméreteket:
+        q_neg=0.25, q_pos=0.60  ->  kb. 25% / 35% / 40%
+
+    ⚠ ÉRTELMEZÉSI KÜLÖNBSÉG, amit a dolgozatban le KELL írni:
+      A fix küszöb ABSZOLÚT elégedettséget mér ("6 alatt = rossz élmény").
+      A kvantilis-alapú RELATÍV elégedettséget ("az alsó negyed").
+      Egy 8,0-s pontszám abszolút mércével jó, ehhez a mintához képest viszont
+      az alsó negyedbe eshet. Mindkettő védhető, de nem ugyanaz az állítás —
+      és a "negative" osztály jelentése is más lesz.
+
+    Visszatér: (címkék, negatív küszöb, pozitív küszöb)
+    """
+    s = pd.to_numeric(scores, errors="coerce")
+    t_neg = float(s.quantile(q_neg))
+    t_pos = float(s.quantile(q_pos))
+
+    if t_neg >= t_pos:
+        raise ValueError(
+            f"A két küszöb egybeesik (neg={t_neg}, pos={t_pos}). A pontszám "
+            "valószínűleg túl kevés különböző értéket vesz fel ezekhez a "
+            "kvantilisekhez. Válassz távolabbi q_neg / q_pos értékeket."
+        )
+
+    labels = pd.Series(
+        np.where(s <= t_neg, "negative",
+                 np.where(s >= t_pos, "positive", "neutral")),
+        index=s.index,
+    )
+    labels[s.isna()] = np.nan
+    return labels, t_neg, t_pos
+
+
+def label_distribution_report(
+    scores: pd.Series,
+    scale_max: pd.Series | float = 10.0,
+    schemes: list[tuple[str, float, float]] | None = None,
+    quantile_schemes: list[tuple[str, float, float]] | None = None,
+) -> pd.DataFrame:
+    """
+    Összehasonlító táblázat: hogyan alakul az osztályeloszlás különböző
+    címkézési szabályokkal?
+
+    Ez a táblázat a dolgozat 6.1 fejezetének egyik kulcsábrája: megmutatja,
+    hogy a küszöbválasztás nem mellékes technikai részlet, hanem érdemben
+    meghatározza a feladat nehézségét.
+
+    Visszatér: soronként egy szabály, oszlopokban az osztályarányok, a
+    legkisebb osztály mérete és a kiegyensúlyozatlansági arány.
+    """
+    schemes = schemes or [
+        ("fix 6,0 / 8,0", 6.0, 8.0),
+        ("fix 7,0 / 9,0", 7.0, 9.0),
+        ("fix 7,5 / 9,0", 7.5, 9.0),
+        ("fix 8,0 / 9,0", 8.0, 9.0),
+        ("fix 8,0 / 9,5", 8.0, 9.5),
+    ]
+    quantile_schemes = quantile_schemes if quantile_schemes is not None else [
+        ("kvantilis 25% / 60%", 0.25, 0.60),
+        ("kvantilis 33% / 67%", 1 / 3, 2 / 3),
+        ("kvantilis 20% / 55%", 0.20, 0.55),
+    ]
+
+    sm = (scale_max if isinstance(scale_max, pd.Series)
+          else pd.Series([float(scale_max)] * len(scores), index=scores.index))
+
+    rows = []
+
+    def _row(name: str, labels: pd.Series, t_neg: float, t_pos: float):
+        vc = labels.value_counts(normalize=True)
+        counts = labels.value_counts()
+        neg, neu, pos = (vc.get("negative", 0.0), vc.get("neutral", 0.0),
+                         vc.get("positive", 0.0))
+        parts = [p for p in (neg, neu, pos) if p > 0]
+        rows.append({
+            "szabály": name,
+            "küszöbök": f"{t_neg:.2f} / {t_pos:.2f}",
+            "negative": neg, "neutral": neu, "positive": pos,
+            "legkisebb osztály (db)": int(counts.min()) if len(counts) else 0,
+            "kiegyensúlyozatlanság": (max(parts) / min(parts)) if parts else np.nan,
+        })
+
+    for name, t_neg, t_pos in schemes:
+        labels = pd.Series(
+            [score_to_sentiment(s, m, neg_threshold=t_neg, pos_threshold=t_pos)
+             for s, m in zip(scores, sm)],
+            index=scores.index,
+        ).dropna()
+        _row(name, labels, t_neg, t_pos)
+
+    for name, q_neg, q_pos in quantile_schemes:
+        try:
+            labels, t_neg, t_pos = quantile_sentiment_labels(scores, q_neg, q_pos)
+            _row(name, labels.dropna(), t_neg, t_pos)
+        except ValueError as e:
+            log.warning("%s kihagyva: %s", name, e)
+
+    return (pd.DataFrame(rows)
+            .set_index("szabály")
+            .round({"negative": 4, "neutral": 4, "positive": 4,
+                    "kiegyensúlyozatlanság": 1}))
+
+
+def truncation_report(
+    df: pd.DataFrame,
+    max_length: int,
+    text_col: str = "text_bert",
+    label_col: str = "sentiment",
+    tokens_per_word: float = 1.3,
+) -> pd.DataFrame:
+    """
+    Hány reviewt vág le a BERT `max_length` korlátja, és TORZÍT-E?
+
+    Miért számít ez ennél az adatnál különösen?
+    -------------------------------------------
+    A szöveg felépítése:  cím . pozitív_rész   negatív_rész
+    A tokenizáló a VÉGÉT vágja le — vagyis elsőként a NEGATÍV tartalmat.
+    Ha ez sok reviewt érint, a modell szisztematikusan kevesebb negatív
+    jelet lát, mint amennyi a szövegben van.
+
+    Ez a függvény megmutatja, hogy a csonkolt reviewk osztályeloszlása
+    eltér-e az egésztől. Ha igen, a max_length-et növelni kell.
+
+    A becslés szóalapú (1 szó ≈ 1,3 token angolban), ami elég pontos ahhoz,
+    hogy döntsünk. A 03-as notebook a valódi tokenizálóval is leméri.
+    """
+    words = df[text_col].fillna("").str.split().str.len()
+    est_tokens = words * tokens_per_word
+    trunc = est_tokens > (max_length - 2)      # [CLS] és [SEP] is elfér
+
+    out = pd.DataFrame({
+        "arány": [(~trunc).mean(), trunc.mean()],
+        "db": [int((~trunc).sum()), int(trunc.sum())],
+    }, index=["elfér", "csonkolva"])
+
+    if label_col in df.columns:
+        for label in df[label_col].astype(str).unique():
+            mask = df[label_col].astype(str) == label
+            out[label] = [
+                (mask & ~trunc).sum() / max((~trunc).sum(), 1),
+                (mask & trunc).sum() / max(trunc.sum(), 1),
+            ]
+
+    return out.round(4)
+
+
 def add_sentiment_labels(df: pd.DataFrame, **kwargs) -> pd.DataFrame:
     """Hozzáadja a 'sentiment' oszlopot a 'score' és 'score_scale_max' alapján."""
     df = df.copy()
@@ -258,16 +437,35 @@ def filter_reviews(
     return df.reset_index(drop=True)
 
 
-def _is_probably_english(texts: pd.Series) -> pd.Series:
+def _is_probably_english(texts: pd.Series, min_ratio: float = 0.90) -> pd.Series:
     """
-    Gyors heurisztika: ha a karakterek döntő többsége ASCII, valószínűleg angol.
-    Olcsóbb, mint a langdetect 1.6M soron, és a hotel-adatokban jól működik.
-    (Ha pontosabb kell, a langdetect-et egy mintán futtasd le ellenőrzésképp.)
+    Gyors heurisztika: ha a BETŰK döntő többsége ASCII, valószínűleg angol.
+
+    Miért csak a betűket nézzük?
+    ----------------------------
+    Az első változat az ÖSSZES karaktert számolta, és ez hibázott az
+    emodzsikon. A hotel-reviewk tele vannak velük:
+
+        "Very close proximity to the famous Florida street👌🏾👌🏾"
+
+    Ez tiszta angol mondat, de a két emodzsi (egyenként több nem-ASCII
+    kódpont) lenyomta az arányt, és a szűrő kidobta volna. Márpedig az
+    emodzsi sentiment-hordozó jel — pont NEM akarjuk elveszíteni.
+
+    Betűkre szűkítve az emodzsi, a számok és az írásjelek nem számítanak:
+    a mérce az lesz, hogy a szöveg betűi latin ábécések-e. Egy görög vagy
+    cirill betűs review továbbra is kiesik, egy emodzsis angol nem.
+
+    (Ha a dolgozatban pontosabbat akarsz állítani, futtasd le a `langdetect`-et
+    egy 1000-es mintán, és közöld, hogy mennyire egyezik ezzel a heurisztikával.)
     """
-    ascii_ratio = texts.map(
-        lambda t: sum(c.isascii() for c in t) / max(len(t), 1)
-    )
-    return ascii_ratio > 0.95
+    def ratio(t: str) -> float:
+        letters = [c for c in t if c.isalpha()]
+        if not letters:
+            return 1.0        # nincs betű — ezen a szűrőn ne bukjon el
+        return sum(c.isascii() for c in letters) / len(letters)
+
+    return texts.map(ratio) > min_ratio
 
 
 def balance_classes(df: pd.DataFrame, strategy: str = "downsample",

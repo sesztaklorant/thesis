@@ -203,7 +203,19 @@ def aspect_sentiment_table(
             "pos_lift": pos / base_pos if base_pos else float("nan"),
         })
 
-    return (pd.DataFrame(rows)
+    cols = ["aspektus", "említések", "említési_arány",
+            "negative", "neutral", "positive", "neg_lift", "pos_lift"]
+
+    if not rows:
+        # Egyetlen aspektus sem érte el a min_count küszöböt. Ne álljon meg a
+        # notebook — üres, de helyes szerkezetű táblát adunk vissza.
+        log.warning(
+            "Egyetlen aspektus sem érte el a min_count=%d küszöböt. "
+            "Csökkentsd a min_count értéket, vagy növeld a mintát.", min_count
+        )
+        return pd.DataFrame(columns=cols).set_index("aspektus")
+
+    return (pd.DataFrame(rows)[cols]
             .set_index("aspektus")
             .sort_values("neg_lift", ascending=False)
             .round(4))
@@ -213,6 +225,10 @@ def plot_aspect_sentiment(table: pd.DataFrame, save_as: str | None = None):
     """Halmozott oszlopdiagram: aspektusonkénti sentiment-megoszlás."""
     import matplotlib.pyplot as plt
     from .evaluation import save_figure
+
+    if table.empty:
+        log.warning("Üres az aspektus-tábla, nincs mit ábrázolni.")
+        return None
 
     data = table[["negative", "neutral", "positive"]].sort_values("negative", ascending=True)
     colors = {"negative": "#c1483b", "neutral": "#b8b4ab", "positive": "#3d7a5a"}

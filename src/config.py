@@ -119,8 +119,28 @@ class Config:
 
     # --- Transformer (BERT) ---
     model_name: str = "bert-base-uncased"
-    max_length: int = 128        # tokenben; hotel reviewkhoz 128 általában elég
-    batch_size: int = 32
+
+    # max_length: hány tokenig nézi a modell a szöveget.
+    #
+    # A val.csv mérése alapján: a reviewk 95%-a 130 szónál rövidebb, a 99%-a
+    # 215 szónál. Angolban 1 szó ≈ 1,3 token, tehát a 95. percentilis kb. 170,
+    # a 99. kb. 280 token. A korábbi 128 tokenes érték a reviewk jóval több
+    # mint 10%-át levágta volna.
+    #
+    # ⚠ A CSONKOLÁS IRÁNYA FONTOS: a szöveg felépítése
+    #       cím . pozitív_rész   negatív_rész
+    # tehát a végét levágva SZISZTEMATIKUSAN a NEGATÍV tartalom vész el.
+    # Ez a modellt a pozitív osztály felé torzítaná — ezért kell a bőven
+    # elégséges max_length. A 03-as notebook külön cellában megméri, hány
+    # reviewt érint a csonkolás és torzítja-e az osztályeloszlást.
+    max_length: int = 256
+
+    # batch_size: a 4 GB-os RTX 3050 Ti-n 256 tokenes hosszal 4 a biztonságos.
+    # A gradient_accumulation_steps=8 visszaállítja a 32-es EFFEKTÍV batchet,
+    # így az eredmény matematikailag ugyanaz, csak több lépésben számol.
+    batch_size: int = 32          # Colab T4 (16 GB) alapérték
+    local_batch_size: int = 4     # saját GPU (4 GB), 256 tokenes hosszal
+    local_grad_accum: int = 8     # 4 × 8 = 32 effektív batch
     learning_rate: float = 2e-5  # a BERT-papír ajánlása: 2e-5 / 3e-5 / 5e-5
     num_epochs: int = 3
     weight_decay: float = 0.01
