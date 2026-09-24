@@ -89,8 +89,8 @@ class Config:
     # 3. fázis). A 6/8 vágás a szakirodalomban gyakori, de érzékenységi
     # vizsgálatot (pl. 5/8 és 7/9 változattal) érdemes mellé tenni.
     score_scale_max: float = 10.0
-    neg_threshold: float = 6.0
-    pos_threshold: float = 8.0
+    neg_threshold: float = 7.0 #6.0
+    pos_threshold: float = 9.0 #8.0
 
     # A három osztály kanonikus sorrendje. MINDENHOL ezt használjuk,
     # hogy a confusion matrix tengelyei konzisztensek legyenek.
