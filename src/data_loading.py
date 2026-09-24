@@ -13,6 +13,7 @@ függvényt hívod más `dataset` paraméterrel.
 
 from __future__ import annotations
 
+import html
 import logging
 from pathlib import Path
 
@@ -29,10 +30,50 @@ CANONICAL_COLUMNS = ["review_id", "text", "score", "score_scale_max", "dataset"]
 # ==========================================================================
 # Segédfüggvények
 # ==========================================================================
+# --------------------------------------------------------------------------
+# GYORSÍTÓTÁR-VERZIÓ
+# --------------------------------------------------------------------------
+# A betöltött adatot parquet fájlba mentjük, hogy másodszorra ne kelljen
+# újraolvasni a CSV-t. Ez gyors, de csapdát rejt: ha a betöltő vagy a
+# szövegösszeállítás logikája megváltozik, a régi gyorsítótár elavul, és
+# csendben a RÉGI adatot adja vissza — miközben a kód már új.
+#
+# Megoldás: a verziószám a fájlnév része. Ha itt növelem a számot, a régi
+# fájlok egyszerűen nem illeszkednek, és a loader újraolvassa a CSV-t.
+# A régi fájlok ott maradnak a lemezen; a clear_cache() takarítja ki őket.
+#
+# Verziótörténet:
+#   1 — kezdeti változat
+#   2 — HTML-entitások feloldása (&#39; -> '), a cím írásjel-kezelése
+_CACHE_VERSION = 2
+
+
 def _cache_path(name: str) -> Path:
-    """Hova mentjük a letöltött, még nyers adatot."""
+    """Hova mentjük a betöltött, még nyers adatot."""
     PATHS.ensure()
-    return PATHS.raw / f"{name}.parquet"
+    return PATHS.raw / f"{name}__v{_CACHE_VERSION}.parquet"
+
+
+def clear_cache(name: str | None = None) -> list[Path]:
+    """
+    Kitörli a gyorsítótár-fájlokat a data/raw/ mappából.
+
+    A letöltött EREDETI CSV-khez nem nyúl — csak a `*__v*.parquet`
+    fájlokhoz, amiket ez a modul hozott létre.
+
+        dl.clear_cache()              # mindet
+        dl.clear_cache("booking_local")  # csak ezt
+    """
+    PATHS.ensure()
+    pattern = f"{name}*__v*.parquet" if name else "*__v*.parquet"
+    removed = []
+    for p in PATHS.raw.glob(pattern):
+        p.unlink()
+        removed.append(p)
+        log.info("Törölve: %s", p.name)
+    if not removed:
+        log.info("Nem találtam törlendő gyorsítótár-fájlt.")
+    return removed
 
 
 def _write_cache(df: pd.DataFrame, path: Path) -> None:
@@ -173,7 +214,8 @@ _BOOKING_ALIASES: dict[str, list[str]] = {
     "review_title":             ["review_title", "title"],
     "review_positive":          ["review_positive", "positive_review", "positive", "pros"],
     "review_negative":          ["review_negative", "negative_review", "negative", "cons"],
-    "guest_score":              ["guest_score", "score", "reviewer_score", "rating"],
+    "guest_score":              ["guest_score", "review_score", "score",
+                                 "reviewer_score", "rating"],
     "guest_type":               ["guest_type", "traveller_type", "traveler_type"],
     "guest_country":            ["guest_country", "reviewer_nationality", "nationality"],
     "room_nights":              ["room_nights", "nights", "total_number_of_nights"],
@@ -215,10 +257,17 @@ def _resolve_columns(df_columns) -> dict[str, str]:
 
 
 def _clean_placeholder(s) -> str:
-    """Helykitöltő szöveg -> üres string."""
+    """
+    Helykitöltő szöveg -> üres string, és a HTML-entitások feloldása.
+
+    A Booking exportban az aposztróf HTML-kódolva szerepel: `wouldn&#39;t`.
+    Már itt feloldjuk, hogy a nyers `text` oszlop is olvasható legyen —
+    így az EDA-ban kiírt példák és a dolgozatba kerülő idézetek is
+    rendben lesznek, nem csak a tisztított változatok.
+    """
     if pd.isna(s):
         return ""
-    s = str(s).strip()
+    s = html.unescape(str(s)).strip()
     return "" if s.lower() in _PLACEHOLDERS else s
 
 
@@ -293,10 +342,16 @@ def load_booking_local(
     pos, neg, title = _get("review_positive"), _get("review_negative"), _get("review_title")
 
     if combine_pos_neg:
-        text = (title + ". " + pos + " " + neg)
+        # A címhez csak akkor teszünk pontot, ha nem végződik már írásjelre —
+        # különben "Great stay! ... venue.." típusú dupla pontok keletkeznek,
+        # ami csúnyán néz ki a dolgozatba emelt idézetekben.
+        sep = title.map(lambda t: "" if (not t or t[-1] in ".!?…") else ".")
+        text = (title + sep + " " + pos + " " + neg)
     else:
         text = (pos + " " + neg)
-    text = (text.str.replace(r"^\.\s*", "", regex=True)      # üres cím miatti vezető pont
+
+    text = (text.str.replace(r"^[\.\s]+", "", regex=True)     # üres cím miatti vezető pont
+                .str.replace(r"\.{2,}", ".", regex=True)      # maradék dupla pontok
                 .str.replace(r"\s+", " ", regex=True)
                 .str.strip())
 
