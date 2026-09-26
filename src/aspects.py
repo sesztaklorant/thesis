@@ -349,20 +349,30 @@ def plot_aspect_sentiment(table: pd.DataFrame, save_as: str | None = None):
         log.warning("Üres az aspektus-tábla, nincs mit ábrázolni.")
         return None
 
-    data = table[["negative", "neutral", "positive"]].sort_values("negative", ascending=True)
-    colors = {"negative": "#c1483b", "neutral": "#b8b4ab", "positive": "#3d7a5a"}
+    from .config import SENTIMENT_COLORS, INK
 
-    fig, ax = plt.subplots(figsize=(8, 5.5))
+    data = table[["negative", "neutral", "positive"]].sort_values("negative", ascending=True)
+    # A tengely KATEGORIKUS: az indexet stringgé kell alakítani, különben a
+    # matplotlib számértékként helyezi el a sávokat (numerikus indexnél ez
+    # egymásra csúszó oszlopokat okoz).
+    labels = [str(i) for i in data.index]
+
+    fig, ax = plt.subplots(figsize=(8.5, max(3.6, 0.42 * len(data) + 2.2)))
     left = pd.Series(0.0, index=data.index)
     for col in ["negative", "neutral", "positive"]:
-        ax.barh(data.index, data[col], left=left, label=col, color=colors[col])
+        ax.barh(labels, data[col], left=left, label=col,
+                color=SENTIMENT_COLORS[col], height=0.72,
+                edgecolor=INK["surface"], linewidth=1.5)
         left += data[col]
 
     ax.set_xlabel("A sentiment megoszlása az adott aspektust említő mondatokban")
     ax.set_xlim(0, 1)
-    ax.legend(loc="lower right", frameon=False)
-    ax.set_title("Aspektusonkénti sentiment-megoszlás")
-    ax.spines[["top", "right"]].set_visible(False)
+    ax.xaxis.set_major_formatter(lambda v, _: f"{v:.0%}")
+    ax.grid(axis="y", visible=False)
+    ax.set_axisbelow(True)
+    ax.set_title("Aspektusonkénti sentiment-megoszlás", loc="left", pad=34,
+                 color=INK["primary"])
+    ax.legend(loc="lower left", bbox_to_anchor=(0, 1.005), ncol=3, frameon=False)
     plt.tight_layout()
     if save_as:
         save_figure(save_as)

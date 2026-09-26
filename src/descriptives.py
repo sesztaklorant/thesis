@@ -44,6 +44,42 @@ from .evaluation import save_figure, save_table
 log = logging.getLogger(__name__)
 
 
+def _fmt_cat(v) -> str:
+    """
+    Kategórianév ábrázoláshoz. A lebegőpontos egész értékeket (3.0, 4.0)
+    egésszé alakítja, mert a "3.0 csillag" felirat zavaró.
+    """
+    if isinstance(v, float) and float(v).is_integer():
+        return str(int(v))
+    return str(v)
+
+
+def prepare_star_rating(df: pd.DataFrame,
+                        col: str = "accommodation_star_rating") -> pd.DataFrame:
+    """
+    A csillagbesorolás 0 értéke NEM "nulla csillag", hanem "nincs besorolás".
+
+    Ha ezt nem kezeljük, a 0 egy önálló kategóriaként jelenik meg a
+    kereszttáblákban, és a rendezésnél a legrosszabb besorolásnak látszik —
+    miközben valójában hiányzó adat. A te mintádban ez több tízezer sor.
+
+    Ez a függvény külön "n. a." kategóriát csinál belőle, így a
+    besorolás szerinti elemzés csak a ténylegesen besorolt szállásokra
+    vonatkozik, a többi pedig láthatóan elkülönül.
+    """
+    if col not in df.columns:
+        return df
+    out = df.copy()
+    n_zero = int((pd.to_numeric(out[col], errors="coerce") == 0).sum())
+    out[col] = pd.to_numeric(out[col], errors="coerce").map(
+        lambda v: "n. a." if (pd.isna(v) or v == 0) else _fmt_cat(v)
+    )
+    if n_zero:
+        log.info("Csillagbesorolás: %d sor (%.1f%%) 0 értékű volt -> 'n. a.' "
+                 "kategóriába került.", n_zero, 100 * n_zero / len(out))
+    return out
+
+
 # ==========================================================================
 # 1) ÁTTEKINTŐ TÁBLÁZAT
 # ==========================================================================
@@ -186,6 +222,13 @@ def plot_sentiment_by(
     import matplotlib.pyplot as plt
 
     data = table[list(CFG.labels)].sort_values("negative", ascending=True)
+
+    # A tengely KATEGORIKUS. Ha az index numerikus (pl. csillagbesorolás:
+    # 0.0, 2.0, 3.0, 3.5 ...), a matplotlib SZÁMÉRTÉKKÉNT helyezi el a
+    # sávokat a tengelyen — ilyenkor egymásra csúsznak, és a feliratok
+    # elcsúsznak. Stringgé alakítva minden kategória egyenlő sávot kap.
+    ypos = [_fmt_cat(i) for i in data.index]
+
     # A magasság a kategóriák számából jön, de van alsó korlát: a cím és a
     # fölötte ülő jelmagyarázat helyet kér, különben a tight_layout panaszkodik.
     h = figsize[1] or max(3.4, 0.42 * len(data) + 2.2)
@@ -194,7 +237,7 @@ def plot_sentiment_by(
     left = pd.Series(0.0, index=data.index)
     for label in CFG.labels:
         ax.barh(
-            data.index, data[label], left=left, label=label,
+            ypos, data[label], left=left.values, label=label,
             color=SENTIMENT_COLORS[label], height=0.72,
             edgecolor=INK["surface"], linewidth=1.5,   # a 2px-es rés
         )
@@ -324,8 +367,9 @@ def plot_negativity_heatmap(
                                     0.56 * lift.shape[0] + 2.6))
     im = ax.imshow(np.ma.masked_invalid(vals), cmap=cmap, norm=norm, aspect="auto")
 
-    ax.set_xticks(range(lift.shape[1]), lift.columns, rotation=30, ha="right")
-    ax.set_yticks(range(lift.shape[0]), lift.index)
+    ax.set_xticks(range(lift.shape[1]), [_fmt_cat(c) for c in lift.columns],
+                  rotation=30, ha="right")
+    ax.set_yticks(range(lift.shape[0]), [_fmt_cat(i) for i in lift.index])
     ax.set_xlabel(xlabel if xlabel is not None else (lift.columns.name or ""))
     ax.set_ylabel(ylabel if ylabel is not None else (lift.index.name or ""))
     ax.set_title(title, loc="left", pad=12, color=INK["primary"])
