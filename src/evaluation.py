@@ -64,6 +64,77 @@ def compute_metrics(y_true, y_pred) -> dict:
     }
 
 
+def baseline_metrics(y_true, labels: list[str] | None = None) -> pd.DataFrame:
+    """
+    TRIVIÁLIS ALAPMODELLEK — a számok, amiket minden modellednek vernie kell.
+
+    Miért nélkülözhetetlen ez kiegyensúlyozatlan adatnál?
+    ------------------------------------------------------
+    Ha az adatod 64,5%-a pozitív, akkor egy modell, ami MINDENRE pozitívat
+    mond, 64,5%-os pontosságot ér el anélkül, hogy bármit megtanult volna.
+    Ha a dolgozatban 0,70-es accuracy szerepel kontextus nélkül, az
+    lenyűgözően hangzik — pedig alig jobb a semminél.
+
+    Ezért a dolgozat eredménytáblázatának ELSŐ SORA ez legyen. Minden további
+    szám ehhez viszonyítva értelmezendő.
+
+    Három alapmodell:
+      • többségi osztály — mindig a leggyakoribbat tippeli
+      • rétegzett véletlen — az osztályarányok szerint sorsol
+      • egyenletes véletlen — 1/3–1/3–1/3
+    """
+    labels = labels or list(CFG.labels)
+    y = np.asarray(y_true).astype(str)
+    rng = np.random.default_rng(CFG.random_seed)
+
+    props = pd.Series(y).value_counts(normalize=True).reindex(labels, fill_value=0.0)
+    majority = props.idxmax()
+
+    rows = {}
+
+    # 1) Mindig a többségi osztály
+    rows[f"többségi osztály ('{majority}')"] = compute_metrics(
+        y, np.full(len(y), majority))
+
+    # 2) Rétegzett véletlen: az osztályarányok szerint sorsol
+    rows["rétegzett véletlen"] = compute_metrics(
+        y, rng.choice(labels, size=len(y), p=props.to_numpy()))
+
+    # 3) Egyenletes véletlen
+    rows["egyenletes véletlen"] = compute_metrics(
+        y, rng.choice(labels, size=len(y)))
+
+    out = pd.DataFrame(rows).T[["accuracy", "f1_macro", "f1_weighted"]].round(4)
+    out.index.name = "alapmodell"
+
+    log.info("A legerősebb triviális alapmodell: accuracy=%.4f, macro-F1=%.4f",
+             out["accuracy"].max(), out["f1_macro"].max())
+    return out
+
+
+def class_weights(y_train, labels: list[str] | None = None) -> dict[str, float]:
+    """
+    Osztálysúlyok a veszteségfüggvényhez (főleg a BERT-hez).
+
+    Képlet:  súly_c = n_összes / (osztályok_száma * n_c)
+
+    Ez a scikit-learn `class_weight='balanced'` logikája. A ritkább osztály
+    hibái arányosan nagyobb büntetést kapnak, így a modell nem éri be azzal,
+    hogy a többséget tippeli.
+
+    A klasszikus modelleknél ez már be van állítva (`class_weight='balanced'`
+    a models_classical.py-ban). A transformernél KÉZZEL kell átadni a
+    veszteségfüggvénynek — lásd a 03-as notebook WeightedTrainer osztályát.
+    """
+    labels = labels or list(CFG.labels)
+    y = pd.Series(np.asarray(y_train).astype(str))
+    counts = y.value_counts().reindex(labels, fill_value=0)
+    n, k = len(y), (counts > 0).sum()
+    weights = {c: (n / (k * m) if m > 0 else 0.0) for c, m in counts.items()}
+    log.info("Osztálysúlyok: %s", {k2: round(v, 3) for k2, v in weights.items()})
+    return weights
+
+
 def per_class_report(y_true, y_pred, labels: list[str] | None = None) -> pd.DataFrame:
     """Osztályonkénti precision/recall/F1 táblázat — mehet a dolgozatba."""
     labels = labels or list(CFG.labels)
