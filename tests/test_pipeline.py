@@ -134,6 +134,24 @@ def main() -> int:
     errs = ev.error_analysis(te, y_pred, text_col="text", n_examples=3)
     ok(f"hibaelemzés: {len(errs)} mintapélda kigyűjtve")
 
+    # A szintetikus adaton a modell hibátlan, így a fenti hívás üres táblán
+    # fut — ami elrejtette a pandas 3.0-s oszlopvesztést. Ezért SZÁNDÉKOSAN
+    # rossz predikciókkal is lefuttatjuk, és ellenőrizzük az oszlopokat.
+    rng_err = np.random.default_rng(0)
+    bad_pred = rng_err.choice(list(CFG.labels), size=len(te))
+    errs_bad = ev.error_analysis(te, bad_pred, text_col="text", n_examples=3)
+    assert len(errs_bad) > 0, "Szándékos hibáknál üres a hibaelemzés"
+    for col in ("hibatípus", "true", "predicted", "text"):
+        assert col in errs_bad.columns, f"Hiányzó oszlop a hibaelemzésben: {col}"
+    assert errs_bad.groupby("hibatípus").size().max() <= 3, "n_examples nem érvényesül"
+    ok(f"hibaelemzés szándékos hibákkal: {errs_bad['hibatípus'].nunique()} hibatípus, "
+       f"oszlopok rendben")
+
+    bal = pp.balance_classes(df, "downsample")
+    assert "sentiment" in bal.columns, "A kiegyensúlyozás elvesztette a sentiment oszlopot"
+    assert bal["sentiment"].value_counts().nunique() == 1, "Nem egyforma az osztályméret"
+    ok(f"kiegyensúlyozás: {len(bal)} sor, osztályonként {len(bal) // 3}")
+
     # --- 6. Ábra mentése (headless backend) ---
     import matplotlib
     matplotlib.use("Agg")
