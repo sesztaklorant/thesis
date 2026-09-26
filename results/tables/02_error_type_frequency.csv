@@ -1,0 +1,7 @@
+,db,arány_az_összes_hibából
+positive -> neutral,5495,0.374
+neutral -> negative,2627,0.179
+neutral -> positive,2615,0.178
+positive -> negative,1861,0.127
+negative -> neutral,1629,0.111
+negative -> positive,457,0.031
