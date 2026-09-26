@@ -253,8 +253,17 @@ def error_analysis(
     log.info("Leggyakoribb hibatípusok:\n%s",
              errors["hibatípus"].value_counts().to_string())
 
-    samples = (errors.groupby("hibatípus", group_keys=False)
-               .apply(lambda g: g.sample(min(len(g), n_examples), random_state=seed)))
+    # Hibatípusonként legfeljebb n_examples véletlen példa.
+    #
+    # NEM groupby().apply()-jal: a pandas 3.0-tól az apply nem adja tovább a
+    # csoportosító oszlopot, így a "hibatípus" csendben eltűnne. A megoldás:
+    # előbb véletlenszerűen megkeverjük a sorokat (seed-del, reprodukálhatóan),
+    # aztán csoportonként az első n-et vesszük. Ez minden oszlopot megtart,
+    # és a kis csoportokat (n-nél kevesebb hiba) is helyesen kezeli.
+    samples = (errors.sample(frac=1.0, random_state=seed)
+                     .groupby("hibatípus", sort=False)
+                     .head(n_examples)
+                     .sort_values("hibatípus", kind="stable"))
     cols = ["hibatípus", "true", "predicted", "score", text_col]
     return samples[[c for c in cols if c in samples.columns]].reset_index(drop=True)
 

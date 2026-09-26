@@ -503,8 +503,10 @@ def balance_classes(df: pd.DataFrame, strategy: str = "downsample",
     if strategy != "downsample":
         raise ValueError(f"Ismeretlen stratégia: {strategy}")
     n = df["sentiment"].value_counts().min()
-    return (df.groupby("sentiment", observed=True, group_keys=False)
-              .apply(lambda g: g.sample(n=n, random_state=seed))
+    # groupby().sample() és NEM groupby().apply(): a pandas 3.0-tól az apply
+    # elhagyja a csoportosító oszlopot, és a "sentiment" eltűnne.
+    return (df.groupby("sentiment", observed=True)
+              .sample(n=n, random_state=seed)
               .sample(frac=1.0, random_state=seed)
               .reset_index(drop=True))
 
