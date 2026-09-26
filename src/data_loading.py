@@ -593,6 +593,7 @@ def load_all_splits(prefix: str = "booking") -> tuple[pd.DataFrame, pd.DataFrame
 # ==========================================================================
 # Egységes belépési pont
 # ==========================================================================
+
 _LOADERS = {
     "booking_local": load_booking_local,   # a data/raw/val.csv — EZT használjuk most
     "booking_hf": load_booking_hf,
@@ -601,13 +602,21 @@ _LOADERS = {
     "hrast": load_hrast,
 }
 
+_BOOKING_SOURCES = {"booking_local", "booking_hf"}
+
 
 def load_dataset_by_name(name: str, **kwargs) -> pd.DataFrame:
     """
-    Példa:
-        df_train_source = load_dataset_by_name("booking_hf", n_rows=50_000)
-        df_external     = load_dataset_by_name("tripadvisor")
+    A külső adathalmazokat (tripadvisor, kaggle_515k, hrast) csak akkor
+    engedi betölteni, ha a config.py-ban CFG.use_external_datasets = True.
     """
     if name not in _LOADERS:
         raise ValueError(f"Ismeretlen adathalmaz: {name}. Választható: {list(_LOADERS)}")
+    if name not in _BOOKING_SOURCES and not CFG.use_external_datasets:
+        raise PermissionError(
+            f"A(z) '{name}' adathalmaz ki van kapcsolva. Egyelőre csak a "
+            "Booking.com adattal dolgozunk (CFG.use_external_datasets = False "
+            "a config.py-ban). Ha később bevonod, írd át True-ra."
+        )
     return _LOADERS[name](**kwargs)
+

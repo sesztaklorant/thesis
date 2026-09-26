@@ -153,6 +153,13 @@ class Config:
         "wifi", "value_for_money",
     )
 
+    # --- Mely adathalmazok vesznek részt a kísérletekben? ---
+    # A témavezetővel egyeztetve egyelőre CSAK a Booking.com adattal dolgozunk.
+    # A külső adathalmazok (TripAdvisor, 515K, HRAST) betöltő kódja megmarad,
+    # de a load_dataset_by_name() nem engedi betölteni őket, amíg ez False.
+    # Ha később bevonod őket, elég itt True-ra írni.
+    use_external_datasets: bool = False
+
     # --- Helyi adatfájl (a Booking hivatalos train/val/test felosztásából) ---
     # A témavezetővel egyeztetve először a ~200k soros val.csv-vel dolgozunk.
     # FONTOS: ez a Booking SAJÁT validációs splitje, nem a mi validációs
