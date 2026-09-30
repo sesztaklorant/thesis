@@ -1,23 +1,23 @@
 """
-preprocessing.py — Szövegtisztítás, címkézés, adatfelosztás.
+preprocessing.py — Text cleaning, labelling, data splitting.
 
-A dolgozat 6.1. fejezete ("Data Preprocessing") ebből a modulból íródik.
+Chapter 6.1 of the thesis ("Data Preprocessing") is written from this module.
 
-Kulcsfontosságú elvi döntés, amit a dolgozatban is le kell írni:
------------------------------------------------------------------
-KÉT KÜLÖNBÖZŐ előfeldolgozási útvonal van, és ez SZÁNDÉKOS:
+A key design decision that has to be described in the thesis as well:
+---------------------------------------------------------------------
+There are TWO DIFFERENT preprocessing paths, and this is INTENTIONAL:
 
-  (A) Klasszikus ML (TF-IDF + Naive Bayes / LogReg / SVM):
-      agresszív normalizálás — kisbetűsítés, írásjelek eltávolítása,
-      stopword-szűrés, lemmatizálás. A TF-IDF "zsák-a-szavak" modell,
-      nem érti a szórendet, ezért a zaj csökkentése segít.
+  (A) Classical ML (TF-IDF + Naive Bayes / LogReg / SVM):
+      aggressive normalisation — lowercasing, punctuation removal,
+      stopword filtering, lemmatisation. TF-IDF is a "bag-of-words" model,
+      it does not understand word order, so reducing noise helps.
 
   (B) Transformer (BERT):
-      MINIMÁLIS tisztítás. A BERT saját tokenizálót használ, és a
-      kontextusból tanul. Ha eltávolítod a stopwordöket és a tagadást
-      ("not clean" -> "clean"), akkor elrontod a jelentést és ROSSZABB
-      eredményt kapsz. Ez egy gyakori kezdő hiba — és pont ezért jó
-      anyag az RQ2 megválaszolásához.
+      MINIMAL cleaning. BERT uses its own tokenizer and learns from context.
+      If you remove the stopwords and the negations ("not clean" -> "clean"),
+      you destroy the meaning and get WORSE results. This is a common
+      beginner's mistake — and exactly for that reason good material for
+      answering RQ2.
 """
 
 from __future__ import annotations
@@ -36,7 +36,7 @@ log = logging.getLogger(__name__)
 
 
 # ==========================================================================
-# 1) SZÖVEGTISZTÍTÁS
+# 1) TEXT CLEANING
 # ==========================================================================
 _URL_RE = re.compile(r"https?://\S+|www\.\S+")
 _EMAIL_RE = re.compile(r"\S+@\S+\.\S+")
@@ -47,30 +47,30 @@ _NON_ALPHA_RE = re.compile(r"[^a-z\s']")
 
 def clean_text_minimal(text: str) -> str:
     """
-    (B) útvonal — BERT-hez. Csak a valódi zajt távolítjuk el.
-    Az írásjelek, a nagybetűk, az emodzsik és a tagadószavak MARADNAK.
+    Path (B) — for BERT. Only real noise is removed.
+    Punctuation, capital letters, emojis and negation words STAY.
 
-    HTML-entitások feloldása
-    ------------------------
-    A Booking.com exportban a szöveg HTML-kódolt aposztrófokat tartalmaz:
+    Decoding HTML entities
+    ----------------------
+    In the Booking.com export the text contains HTML-encoded apostrophes:
 
         "wouldn&#39;t suggest walking"   ->   "wouldn't suggest walking"
 
-    Ez NEM kozmetikai kérdés. Ha nem oldjuk fel:
-      • a TF-IDF útvonalon a `[^a-z\\s']` szűrő kidobja a `&#39;` karaktereit,
-        és a "wouldn&#39;t" -> "wouldn t" lesz — vagyis ELVESZIK A TAGADÁS,
-        ami sentiment-elemzésnél a legrosszabb, ami történhet;
-      • a BERT tokenizálója külön tokenekre bontja az entitást, és
-        értelmetlen darabokat tanul.
+    This is NOT a cosmetic issue. If it is not decoded:
+      • on the TF-IDF path the `[^a-z\\s']` filter throws out the characters
+        of `&#39;`, and "wouldn&#39;t" becomes "wouldn t" — i.e. THE NEGATION
+        IS LOST, which is the worst thing that can happen in sentiment analysis;
+      • the BERT tokenizer splits the entity into separate tokens and learns
+        meaningless fragments.
 
-    A `html.unescape` az összes elterjedt entitást kezeli (`&#39;`, `&amp;`,
-    `&quot;`, `&lt;`, `&nbsp;` stb.), nem csak az aposztrófot.
+    `html.unescape` handles all common entities (`&#39;`, `&amp;`, `&quot;`,
+    `&lt;`, `&nbsp;` etc.), not only the apostrophe.
     """
     if not isinstance(text, str):
         return ""
-    text = html.unescape(text)              # &#39; -> '   (EZ AZ ELSŐ LÉPÉS)
+    text = html.unescape(text)              # &#39; -> '   (THIS IS THE FIRST STEP)
     text = unicodedata.normalize("NFKC", text)
-    text = _HTML_RE.sub(" ", text)          # valódi HTML tagek: <br>, <p>
+    text = _HTML_RE.sub(" ", text)          # real HTML tags: <br>, <p>
     text = _URL_RE.sub(" ", text)
     text = _EMAIL_RE.sub(" ", text)
     return _MULTISPACE_RE.sub(" ", text).strip()
@@ -85,13 +85,13 @@ def clean_text_classic(
     keep_negations: bool = True,
 ) -> str:
     """
-    (A) útvonal — TF-IDF-hez. Minden lépés külön kapcsolható,
-    hogy az RQ2-höz ABLÁCIÓS vizsgálatot tudj futtatni:
-    "mennyit számít, ha kikapcsolom a lemmatizálást?"
+    Path (A) — for TF-IDF. Every step can be switched separately, so that an
+    ABLATION study can be run for RQ2:
+    "how much does it matter if I switch off lemmatisation?"
 
-    keep_negations: ha True, a tagadószavakat (not, no, never, ...) NEM
-        dobjuk ki a stopword-szűrésnél. Sentiment feladatnál ez általában
-        segít — és önmagában is egy jó kis kísérlet a dolgozatba.
+    keep_negations: if True, the negation words (not, no, never, ...) are NOT
+        thrown out by the stopword filter. For a sentiment task this usually
+        helps — and it is a nice little experiment for the thesis on its own.
     """
     if not isinstance(text, str):
         return ""
@@ -117,7 +117,7 @@ def clean_text_classic(
     return " ".join(tokens)
 
 
-# --- NLTK erőforrások lusta betöltése (csak akkor, ha tényleg kell) ---
+# --- Lazy loading of NLTK resources (only when really needed) ---
 _STOPWORDS_CACHE: dict[bool, set[str]] = {}
 _LEMMATIZER = None
 
@@ -141,7 +141,7 @@ def _get_stopwords(keep_negations: bool = True) -> set[str]:
             nltk.download("stopwords", quiet=True)
             sw = set(stopwords.words("english"))
     except Exception:
-        log.warning("NLTK stopword lista nem elérhető, beépített minimális listát használok.")
+        log.warning("NLTK stopword list not available, using a built-in minimal list.")
         sw = {"the", "a", "an", "and", "or", "of", "to", "in", "is", "was",
               "it", "we", "i", "for", "on", "with", "at", "this", "that"}
     if keep_negations:
@@ -152,11 +152,11 @@ def _get_stopwords(keep_negations: bool = True) -> set[str]:
 
 class _NaiveLemmatizer:
     """
-    Tartalék megoldás, ha az NLTK/WordNet nem elérhető (pl. offline gépen).
-    Csak a leggyakoribb angol többes számú és igei végződéseket kezeli.
+    Fallback if NLTK/WordNet is not available (e.g. on an offline machine).
+    Handles only the most common English plural and verb endings.
 
-    A dolgozatban FONTOS megemlíteni, ha ezt használtad az NLTK helyett —
-    de a normál esetben az NLTK WordNetLemmatizer fut.
+    It is IMPORTANT to mention in the thesis if this was used instead of
+    NLTK — but in the normal case the NLTK WordNetLemmatizer runs.
     """
 
     def lemmatize(self, w: str) -> str:
@@ -181,18 +181,18 @@ def _get_lemmatizer():
                 nltk.download("wordnet", quiet=True)
                 nltk.download("omw-1.4", quiet=True)
             _LEMMATIZER = WordNetLemmatizer()
-            _LEMMATIZER.lemmatize("tests")  # ellenőrzés: tényleg működik-e
+            _LEMMATIZER.lemmatize("tests")  # check: does it really work?
         except Exception:
             log.warning(
-                "NLTK WordNet lemmatizáló nem elérhető — egyszerű tartalék "
-                "lemmatizálót használok. Élesben telepítsd: pip install nltk"
+                "NLTK WordNet lemmatizer not available — using a simple fallback "
+                "lemmatizer. For real runs install it: pip install nltk"
             )
             _LEMMATIZER = _NaiveLemmatizer()
     return _LEMMATIZER
 
 
 # ==========================================================================
-# 2) CÍMKÉZÉS — pontszámból 3 osztály
+# 2) LABELLING — 3 classes from the score
 # ==========================================================================
 def score_to_sentiment(
     score: float,
@@ -201,12 +201,12 @@ def score_to_sentiment(
     pos_threshold: float = CFG.pos_threshold,
 ) -> str | float:
     """
-    Pontszám -> negative / neutral / positive.
+    Score -> negative / neutral / positive.
 
-    A küszöböket a 10-es skálán értelmezzük, és minden más skálát
-    (pl. TripAdvisor 1–5) arra normalizálunk. Így UGYANAZ a címkézési
-    szabály vonatkozik minden adathalmazra — ez alapfeltétele annak,
-    hogy az RQ5 cross-dataset összehasonlítás értelmes legyen.
+    The thresholds are interpreted on the 10-point scale, and every other
+    scale (e.g. TripAdvisor 1–5) is normalised to it. This way the SAME
+    labelling rule applies to every dataset — a precondition for the RQ5
+    cross-dataset comparison to be meaningful.
     """
     if pd.isna(score):
         return np.nan
@@ -224,27 +224,28 @@ def quantile_sentiment_labels(
     q_pos: float = 0.60,
 ) -> tuple[pd.Series, float, float]:
     """
-    ALTERNATÍV címkézés: a küszöböket nem kézzel adjuk meg, hanem az adat
-    eloszlásából számoljuk (kvantilisek).
+    ALTERNATIVE labelling: the thresholds are not set by hand but computed
+    from the distribution of the data (quantiles).
 
-    Mikor van erre szükség?
-    -----------------------
-    Ha a pontszámok erősen ferdék. A Booking-adatban az átlag 8,87 és a medián
-    9,0 — a vendégek túlnyomó többsége magas pontot ad. Egy fix "score ≤ 6 =
-    negatív" szabály ilyenkor alig pár száz negatív példát ad, amiből a BERT
-    nem tud tanulni.
+    When is this needed?
+    --------------------
+    When the scores are strongly skewed. In the Booking data the mean is 8.87
+    and the median 9.0 — the vast majority of guests give high scores. A fixed
+    "score ≤ 6 = negative" rule then yields only a few hundred negative
+    examples, which BERT cannot learn from.
 
-    A kvantilis-alapú vágás garantálja a használható osztályméreteket:
-        q_neg=0.25, q_pos=0.60  ->  kb. 25% / 35% / 40%
+    The quantile-based cut guarantees usable class sizes:
+        q_neg=0.25, q_pos=0.60  ->  about 25% / 35% / 40%
 
-    ⚠ ÉRTELMEZÉSI KÜLÖNBSÉG, amit a dolgozatban le KELL írni:
-      A fix küszöb ABSZOLÚT elégedettséget mér ("6 alatt = rossz élmény").
-      A kvantilis-alapú RELATÍV elégedettséget ("az alsó negyed").
-      Egy 8,0-s pontszám abszolút mércével jó, ehhez a mintához képest viszont
-      az alsó negyedbe eshet. Mindkettő védhető, de nem ugyanaz az állítás —
-      és a "negative" osztály jelentése is más lesz.
+    ⚠ DIFFERENCE IN INTERPRETATION that MUST be described in the thesis:
+      The fixed threshold measures ABSOLUTE satisfaction ("below 6 = bad
+      experience"). The quantile-based one measures RELATIVE satisfaction
+      ("the bottom quarter"). A score of 8.0 is good on an absolute scale,
+      but relative to this sample it may fall into the bottom quarter. Both
+      are defensible, but they are not the same claim — and the meaning of
+      the "negative" class differs too.
 
-    Visszatér: (címkék, negatív küszöb, pozitív küszöb)
+    Returns: (labels, negative threshold, positive threshold)
     """
     s = pd.to_numeric(scores, errors="coerce")
     t_neg = float(s.quantile(q_neg))
@@ -252,9 +253,9 @@ def quantile_sentiment_labels(
 
     if t_neg >= t_pos:
         raise ValueError(
-            f"A két küszöb egybeesik (neg={t_neg}, pos={t_pos}). A pontszám "
-            "valószínűleg túl kevés különböző értéket vesz fel ezekhez a "
-            "kvantilisekhez. Válassz távolabbi q_neg / q_pos értékeket."
+            f"The two thresholds coincide (neg={t_neg}, pos={t_pos}). The score "
+            "probably takes too few distinct values for these quantiles. "
+            "Choose q_neg / q_pos values further apart."
         )
 
     labels = pd.Series(
@@ -273,40 +274,40 @@ def label_distribution_report(
     quantile_schemes: list[tuple[str, float, float]] | None = None,
 ) -> pd.DataFrame:
     """
-    Összehasonlító táblázat: hogyan alakul az osztályeloszlás különböző
-    címkézési szabályokkal?
+    Comparison table: how does the class distribution change under different
+    labelling rules?
 
-    Ez a táblázat a dolgozat 6.1 fejezetének egyik kulcsábrája: megmutatja,
-    hogy a küszöbválasztás nem mellékes technikai részlet, hanem érdemben
-    meghatározza a feladat nehézségét.
+    This table is one of the key exhibits of chapter 6.1 of the thesis: it
+    shows that the choice of threshold is not a minor technical detail but
+    substantially determines the difficulty of the task.
 
-    Visszatér: soronként egy szabály, oszlopokban az osztályarányok, a
-    legkisebb osztály mérete és a kiegyensúlyozatlansági arány.
+    Returns: one rule per row, with the class proportions, the size of the
+    smallest class and the imbalance ratio in the columns.
     """
-    # A Booking-pontszám a gyakorlatban EGÉSZ SZÁMOKAT vesz fel (3–10), ezért
-    # csak azok a küszöbpárok különböznek egymástól, amelyek más egész
-    # számokat sorolnak más osztályba. Ez a négy értelmes felosztás:
+    # In practice the Booking score takes INTEGER values (3–10), so only those
+    # threshold pairs differ from each other that put different integers into
+    # different classes. These are the four meaningful splits:
     schemes = schemes or [
-        ("A) 6 / 8   — szigorú",       6.0,  8.0),
-        ("B) 7 / 9   — kiegyensúlyozott", 7.0,  9.0),
-        ("C) 7 / 10  — széles közép",  7.0, 10.0),
-        ("D) 8 / 10  — relatív",       8.0, 10.0),
+        ("A) 6 / 8   — strict",       6.0,  8.0),
+        ("B) 7 / 9   — balanced",     7.0,  9.0),
+        ("C) 7 / 10  — wide middle",  7.0, 10.0),
+        ("D) 8 / 10  — relative",     8.0, 10.0),
     ]
     quantile_schemes = quantile_schemes if quantile_schemes is not None else []
 
     sm = (scale_max if isinstance(scale_max, pd.Series)
           else pd.Series([float(scale_max)] * len(scores), index=scores.index))
 
-    # Diszkrét-e a pontszám? Ha igen, érdemes kiírni, MELYIK értékek kerülnek
-    # melyik osztályba — enélkül a táblázat félrevezető lehet (két különböző
-    # küszöbpár adhat pontosan ugyanazt az eredményt).
+    # Is the score discrete? If so, it is worth showing WHICH values go into
+    # which class — without this the table can be misleading (two different
+    # threshold pairs can give exactly the same result).
     uniq = np.sort(pd.to_numeric(scores, errors="coerce").dropna().unique())
     main_vals = [v for v in uniq if float(v).is_integer()]
     discrete = len(uniq) <= 25
     if discrete:
-        log.info("A pontszám diszkrét: %d különböző érték, ebből %d egész szám. "
-                 "Csak az egész számok határán futó küszöbök adnak eltérő "
-                 "felosztást.", len(uniq), len(main_vals))
+        log.info("The score is discrete: %d distinct values, %d of them integers. "
+                 "Only thresholds on integer boundaries give a different split.",
+                 len(uniq), len(main_vals))
 
     rows = []
 
@@ -318,22 +319,22 @@ def label_distribution_report(
         parts = [p for p in (neg, neu, pos) if p > 0]
 
         row = {
-            "szabály": name,
-            "küszöbök": f"{t_neg:g} / {t_pos:g}",
+            "scheme": name,
+            "thresholds": f"{t_neg:g} / {t_pos:g}",
         }
         if discrete:
             def grp(lo_ok, hi_ok):
                 xs = [int(v) for v in main_vals if lo_ok(v) and hi_ok(v)]
                 return "–".join([str(xs[0]), str(xs[-1])]) if len(xs) > 1 else (
-                    str(xs[0]) if xs else "üres!")
-            row["neg pontok"] = grp(lambda v: True, lambda v: v <= t_neg)
-            row["neu pontok"] = grp(lambda v: v > t_neg, lambda v: v < t_pos)
-            row["pos pontok"] = grp(lambda v: v >= t_pos, lambda v: True)
+                    str(xs[0]) if xs else "empty!")
+            row["neg scores"] = grp(lambda v: True, lambda v: v <= t_neg)
+            row["neu scores"] = grp(lambda v: v > t_neg, lambda v: v < t_pos)
+            row["pos scores"] = grp(lambda v: v >= t_pos, lambda v: True)
 
         row.update({
             "negative": neg, "neutral": neu, "positive": pos,
-            "legkisebb osztály (db)": int(counts.min()) if len(counts) else 0,
-            "kiegyensúlyozatlanság": (max(parts) / min(parts)) if parts else np.nan,
+            "smallest class (n)": int(counts.min()) if len(counts) else 0,
+            "imbalance ratio": (max(parts) / min(parts)) if parts else np.nan,
         })
         rows.append(row)
 
@@ -350,12 +351,12 @@ def label_distribution_report(
             labels, t_neg, t_pos = quantile_sentiment_labels(scores, q_neg, q_pos)
             _row(name, labels.dropna(), t_neg, t_pos)
         except ValueError as e:
-            log.warning("%s kihagyva: %s", name, e)
+            log.warning("%s skipped: %s", name, e)
 
     return (pd.DataFrame(rows)
-            .set_index("szabály")
+            .set_index("scheme")
             .round({"negative": 4, "neutral": 4, "positive": 4,
-                    "kiegyensúlyozatlanság": 1}))
+                    "imbalance ratio": 1}))
 
 
 def truncation_report(
@@ -366,29 +367,31 @@ def truncation_report(
     tokens_per_word: float = 1.3,
 ) -> pd.DataFrame:
     """
-    Hány reviewt vág le a BERT `max_length` korlátja, és TORZÍT-E?
+    How many reviews does BERT's `max_length` limit cut off, and does it BIAS
+    the data?
 
-    Miért számít ez ennél az adatnál különösen?
-    -------------------------------------------
-    A szöveg felépítése:  cím . pozitív_rész   negatív_rész
-    A tokenizáló a VÉGÉT vágja le — vagyis elsőként a NEGATÍV tartalmat.
-    Ha ez sok reviewt érint, a modell szisztematikusan kevesebb negatív
-    jelet lát, mint amennyi a szövegben van.
+    Why does this matter especially for this data?
+    ----------------------------------------------
+    The text is built as:  title . positive_part   negative_part
+    The tokenizer cuts off the END — i.e. the NEGATIVE content goes first.
+    If this affects many reviews, the model systematically sees fewer
+    negative signals than the text contains.
 
-    Ez a függvény megmutatja, hogy a csonkolt reviewk osztályeloszlása
-    eltér-e az egésztől. Ha igen, a max_length-et növelni kell.
+    This function shows whether the class distribution of the truncated
+    reviews differs from the whole. If it does, max_length has to be raised.
 
-    A becslés szóalapú (1 szó ≈ 1,3 token angolban), ami elég pontos ahhoz,
-    hogy döntsünk. A 03-as notebook a valódi tokenizálóval is leméri.
+    The estimate is word-based (1 word ≈ 1.3 tokens in English), which is
+    accurate enough for the decision. Notebook 03 also measures it with the
+    real tokenizer.
     """
     words = df[text_col].fillna("").str.split().str.len()
     est_tokens = words * tokens_per_word
-    trunc = est_tokens > (max_length - 2)      # [CLS] és [SEP] is elfér
+    trunc = est_tokens > (max_length - 2)      # [CLS] and [SEP] also have to fit
 
     out = pd.DataFrame({
-        "arány": [(~trunc).mean(), trunc.mean()],
-        "db": [int((~trunc).sum()), int(trunc.sum())],
-    }, index=["elfér", "csonkolva"])
+        "share": [(~trunc).mean(), trunc.mean()],
+        "count": [int((~trunc).sum()), int(trunc.sum())],
+    }, index=["fits", "truncated"])
 
     if label_col in df.columns:
         for label in df[label_col].astype(str).unique():
@@ -402,20 +405,20 @@ def truncation_report(
 
 
 def add_sentiment_labels(df: pd.DataFrame, **kwargs) -> pd.DataFrame:
-    """Hozzáadja a 'sentiment' oszlopot a 'score' és 'score_scale_max' alapján."""
+    """Add the 'sentiment' column based on 'score' and 'score_scale_max'."""
     df = df.copy()
     df["sentiment"] = [
         score_to_sentiment(s, sm, **kwargs)
         for s, sm in zip(df["score"], df["score_scale_max"])
     ]
     df = df.dropna(subset=["sentiment"])
-    # Kategorikus típus a CFG.labels sorrendjével -> konzisztens ábrák
+    # Categorical type in CFG.labels order -> consistent figures
     df["sentiment"] = pd.Categorical(df["sentiment"], categories=list(CFG.labels), ordered=True)
     return df
 
 
 # ==========================================================================
-# 3) SZŰRÉS / TISZTÍTÁS TÁBLASZINTEN
+# 3) TABLE-LEVEL FILTERING / CLEANING
 # ==========================================================================
 def filter_reviews(
     df: pd.DataFrame,
@@ -426,32 +429,32 @@ def filter_reviews(
     verbose: bool = True,
 ) -> pd.DataFrame:
     """
-    Sorszintű szűrés. A `verbose=True` kiírja, hány sort veszítettünk
-    melyik lépésben — ezt a táblázatot TEDD BE A DOLGOZATBA, mert a
-    bírálók szeretik látni az adattisztítás számszerű hatását.
+    Row-level filtering. `verbose=True` prints how many rows were lost in
+    which step — PUT THIS TABLE INTO THE THESIS, reviewers like to see the
+    quantitative effect of the data cleaning.
     """
-    steps: list[tuple[str, int]] = [("kiindulás", len(df))]
+    steps: list[tuple[str, int]] = [("start", len(df))]
     df = df.copy()
 
     df["text"] = df["text"].fillna("").astype(str)
 
     df = df[df["text"].str.len() >= min_chars]
-    steps.append((f"rövid szövegek (<{min_chars} kar.) eltávolítva", len(df)))
+    steps.append((f"short texts (<{min_chars} chars) removed", len(df)))
 
     df = df[df["text"].str.len() <= max_chars]
-    steps.append((f"extrém hosszúak (>{max_chars} kar.) eltávolítva", len(df)))
+    steps.append((f"extremely long texts (>{max_chars} chars) removed", len(df)))
 
     if drop_duplicates:
         df = df.drop_duplicates(subset=["text"])
-        steps.append(("duplikátumok eltávolítva", len(df)))
+        steps.append(("duplicates removed", len(df)))
 
     if keep_english_only:
         df = df[_is_probably_english(df["text"])]
-        steps.append(("nem angol szövegek eltávolítva", len(df)))
+        steps.append(("non-English texts removed", len(df)))
 
     if verbose:
         prev = steps[0][1]
-        log.info("--- Szűrési napló ---")
+        log.info("--- Filtering log ---")
         for name, n in steps:
             log.info("%-45s %8d  (%+d)", name, n, n - prev)
             prev = n
@@ -461,30 +464,32 @@ def filter_reviews(
 
 def _is_probably_english(texts: pd.Series, min_ratio: float = 0.90) -> pd.Series:
     """
-    Gyors heurisztika: ha a BETŰK döntő többsége ASCII, valószínűleg angol.
+    Quick heuristic: if the vast majority of the LETTERS are ASCII, it is
+    probably English.
 
-    Miért csak a betűket nézzük?
-    ----------------------------
-    Az első változat az ÖSSZES karaktert számolta, és ez hibázott az
-    emodzsikon. A hotel-reviewk tele vannak velük:
+    Why look only at letters?
+    -------------------------
+    The first version counted ALL characters, and it failed on emojis.
+    Hotel reviews are full of them:
 
         "Very close proximity to the famous Florida street👌🏾👌🏾"
 
-    Ez tiszta angol mondat, de a két emodzsi (egyenként több nem-ASCII
-    kódpont) lenyomta az arányt, és a szűrő kidobta volna. Márpedig az
-    emodzsi sentiment-hordozó jel — pont NEM akarjuk elveszíteni.
+    This is a plain English sentence, but the two emojis (each several
+    non-ASCII code points) pushed the ratio down, and the filter would have
+    thrown it out. Yet an emoji is a sentiment-bearing signal — exactly what
+    we do NOT want to lose.
 
-    Betűkre szűkítve az emodzsi, a számok és az írásjelek nem számítanak:
-    a mérce az lesz, hogy a szöveg betűi latin ábécések-e. Egy görög vagy
-    cirill betűs review továbbra is kiesik, egy emodzsis angol nem.
+    Restricted to letters, emojis, digits and punctuation do not count: the
+    criterion becomes whether the letters of the text are Latin. A review in
+    Greek or Cyrillic script is still dropped, an English one with emojis is not.
 
-    (Ha a dolgozatban pontosabbat akarsz állítani, futtasd le a `langdetect`-et
-    egy 1000-es mintán, és közöld, hogy mennyire egyezik ezzel a heurisztikával.)
+    (If you want to make a more precise claim in the thesis, run `langdetect`
+    on a sample of 1000 and report how well it agrees with this heuristic.)
     """
     def ratio(t: str) -> float:
         letters = [c for c in t if c.isalpha()]
         if not letters:
-            return 1.0        # nincs betű — ezen a szűrőn ne bukjon el
+            return 1.0        # no letters — it should not fail on this filter
         return sum(c.isascii() for c in letters) / len(letters)
 
     return texts.map(ratio) > min_ratio
@@ -493,18 +498,18 @@ def _is_probably_english(texts: pd.Series, min_ratio: float = 0.90) -> pd.Series
 def balance_classes(df: pd.DataFrame, strategy: str = "downsample",
                     seed: int = CFG.random_seed) -> pd.DataFrame:
     """
-    Osztály-kiegyensúlyozás.
+    Class balancing.
 
-    FONTOS: CSAK a TANÍTÓ halmazon szabad! A validációs és teszt halmaznak
-    a valós eloszlást kell tükröznie, különben a mért pontosság hamis képet ad.
+    IMPORTANT: ONLY on the TRAINING set! The validation and test sets must
+    reflect the real distribution, otherwise the measured accuracy is false.
     """
     if strategy == "none":
         return df
     if strategy != "downsample":
-        raise ValueError(f"Ismeretlen stratégia: {strategy}")
+        raise ValueError(f"Unknown strategy: {strategy}")
     n = df["sentiment"].value_counts().min()
-    # groupby().sample() és NEM groupby().apply(): a pandas 3.0-tól az apply
-    # elhagyja a csoportosító oszlopot, és a "sentiment" eltűnne.
+    # groupby().sample() and NOT groupby().apply(): from pandas 3.0 apply
+    # drops the grouping column, and "sentiment" would disappear.
     return (df.groupby("sentiment", observed=True)
               .sample(n=n, random_state=seed)
               .sample(frac=1.0, random_state=seed)
@@ -512,7 +517,7 @@ def balance_classes(df: pd.DataFrame, strategy: str = "downsample",
 
 
 # ==========================================================================
-# 4) ADATFELOSZTÁS 60 / 20 / 20
+# 4) DATA SPLIT 60 / 20 / 20
 # ==========================================================================
 def train_val_test_split(
     df: pd.DataFrame,
@@ -523,12 +528,12 @@ def train_val_test_split(
     stratify: bool = CFG.stratify,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
-    Két lépésben osztunk: először leválasztjuk a tanítót, majd a maradékot
-    felezzük validációra és tesztre.
+    The split is done in two steps: first the training set is separated,
+    then the rest is halved into validation and test.
 
-    Rétegzett (stratified) felosztás: minden halmazban ugyanaz marad az
-    osztályarány. 3 osztályos, kiegyensúlyozatlan adatnál ez kötelező,
-    különben a teszthalmazba véletlenül kevés neutral kerülhet.
+    Stratified split: the class proportions stay the same in every set.
+    For imbalanced 3-class data this is mandatory, otherwise the test set
+    may by chance get too few neutral examples.
     """
     from sklearn.model_selection import train_test_split
 
@@ -536,21 +541,21 @@ def train_val_test_split(
     train, rest = train_test_split(
         df, train_size=train_size, random_state=seed, stratify=strat, shuffle=True
     )
-    # A maradékból mekkora rész legyen a validáció?
+    # What share of the rest should be the validation set?
     rel_val = val_size / (1.0 - train_size)
     strat_rest = rest[label_col] if stratify else None
     val, test = train_test_split(
         rest, train_size=rel_val, random_state=seed, stratify=strat_rest, shuffle=True
     )
 
-    log.info("Felosztás — train: %d | val: %d | test: %d", len(train), len(val), len(test))
+    log.info("Split — train: %d | val: %d | test: %d", len(train), len(val), len(test))
     return (train.reset_index(drop=True),
             val.reset_index(drop=True),
             test.reset_index(drop=True))
 
 
 # ==========================================================================
-# 5) TELJES PIPELINE EGY HÍVÁSSAL
+# 5) THE FULL PIPELINE IN ONE CALL
 # ==========================================================================
 def build_dataset(
     df_raw: pd.DataFrame,
@@ -559,10 +564,10 @@ def build_dataset(
     balance: str = CFG.balance_strategy,
 ) -> pd.DataFrame:
     """
-    Nyers tábla -> modellezésre kész tábla.
+    Raw table -> table ready for modelling.
 
-    Kimeneti oszlopok:
-        review_id, text, text_clean (TF-IDF-hez), text_bert (BERT-hez),
+    Output columns:
+        review_id, text, text_clean (for TF-IDF), text_bert (for BERT),
         score, sentiment, dataset
     """
     df = filter_reviews(df_raw)
@@ -571,9 +576,9 @@ def build_dataset(
     if minimal_clean:
         df["text_bert"] = df["text"].map(clean_text_minimal)
     if classic_clean:
-        log.info("Klasszikus tisztítás futtatása %d soron (eltarthat egy ideig)...", len(df))
+        log.info("Running classical cleaning on %d rows (this may take a while)...", len(df))
         df["text_clean"] = df["text"].map(clean_text_classic)
-        # Ha a tisztítás után üres lett, azt a sort eldobjuk
+        # Rows that became empty after cleaning are dropped
         df = df[df["text_clean"].str.len() > 0].reset_index(drop=True)
 
     if balance != "none":

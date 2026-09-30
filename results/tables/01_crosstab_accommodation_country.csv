@@ -1,4 +1,4 @@
-accommodation_country,n,részarány,negative,neutral,positive,neg_lift,pos_lift,átlagpont
+accommodation_country,n,share,negative,neutral,positive,neg_lift,pos_lift,mean_score
 United States of America,23651,0.1163,0.1935,0.2294,0.5771,1.4787,0.895,8.6525
 New Zealand,4049,0.0199,0.1687,0.2477,0.5836,1.2889,0.9051,8.6942
 Australia,10742,0.0528,0.1604,0.2712,0.5684,1.2256,0.8816,8.6779

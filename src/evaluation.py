@@ -1,10 +1,10 @@
 """
-evaluation.py — Metrikák, confusion matrix, hibaelemzés.
+evaluation.py — Metrics, confusion matrix, error analysis.
 
-A dolgozat 8. fejezete ("Data Split and Evaluation").
+Chapter 8 of the thesis ("Data Split and Evaluation").
 
-Minden modellt (klasszikus ÉS BERT) UGYANEZEKKEL a függvényekkel értékelünk
-ki — ez az egyetlen módja annak, hogy az RQ1 összehasonlítás korrekt legyen.
+Every model (classical AND BERT) is evaluated with THESE SAME functions —
+this is the only way to make the RQ1 comparison fair.
 """
 
 from __future__ import annotations
@@ -29,20 +29,20 @@ log = logging.getLogger(__name__)
 
 
 # ==========================================================================
-# 1) METRIKÁK
+# 1) METRICS
 # ==========================================================================
 def compute_metrics(y_true, y_pred) -> dict:
     """
-    A dolgozatban megígért metrikák, egy szótárban.
+    The metrics promised in the thesis, in one dictionary.
 
-    Miért macro ÉS weighted F1?
-      - weighted: a gyakori osztályok súlyozottan számítanak. Ha a pozitív
-        osztály az adat 70%-a, egy "mindent pozitívnak mondok" modell is
-        magas weighted értéket kap -> FÉLREVEZETŐ.
-      - macro: minden osztály egyformán számít. Ez mutatja meg, hogy a
-        modell tényleg megtanulta-e a nehéz neutral osztályt.
+    Why macro AND weighted F1?
+      - weighted: frequent classes count proportionally more. If the positive
+        class is 70% of the data, even a "call everything positive" model
+        gets a high weighted score -> MISLEADING.
+      - macro: every class counts equally. This shows whether the model has
+        really learned the hard neutral class.
 
-      A FŐ metrikád a MACRO-F1 legyen, és ezt írd is le a dolgozatban.
+      Your MAIN metric should be MACRO-F1, and say so in the thesis.
     """
     y_true = np.asarray(y_true).astype(str)
     y_pred = np.asarray(y_pred).astype(str)
@@ -66,22 +66,22 @@ def compute_metrics(y_true, y_pred) -> dict:
 
 def baseline_metrics(y_true, labels: list[str] | None = None) -> pd.DataFrame:
     """
-    TRIVIÁLIS ALAPMODELLEK — a számok, amiket minden modellednek vernie kell.
+    TRIVIAL BASELINES — the numbers every one of your models has to beat.
 
-    Miért nélkülözhetetlen ez kiegyensúlyozatlan adatnál?
-    ------------------------------------------------------
-    Ha az adatod 64,5%-a pozitív, akkor egy modell, ami MINDENRE pozitívat
-    mond, 64,5%-os pontosságot ér el anélkül, hogy bármit megtanult volna.
-    Ha a dolgozatban 0,70-es accuracy szerepel kontextus nélkül, az
-    lenyűgözően hangzik — pedig alig jobb a semminél.
+    Why is this indispensable on imbalanced data?
+    ---------------------------------------------
+    If 64.5% of your data is positive, a model that says positive to
+    EVERYTHING reaches 64.5% accuracy without having learned anything.
+    An accuracy of 0.70 in the thesis without context sounds impressive —
+    yet it is barely better than nothing.
 
-    Ezért a dolgozat eredménytáblázatának ELSŐ SORA ez legyen. Minden további
-    szám ehhez viszonyítva értelmezendő.
+    So this should be the FIRST ROW of the results table of the thesis.
+    Every other number is to be interpreted relative to it.
 
-    Három alapmodell:
-      • többségi osztály — mindig a leggyakoribbat tippeli
-      • rétegzett véletlen — az osztályarányok szerint sorsol
-      • egyenletes véletlen — 1/3–1/3–1/3
+    Three baselines:
+      • majority class — always predicts the most frequent class
+      • stratified random — draws according to the class proportions
+      • uniform random — 1/3–1/3–1/3
     """
     labels = labels or list(CFG.labels)
     y = np.asarray(y_true).astype(str)
@@ -92,51 +92,51 @@ def baseline_metrics(y_true, labels: list[str] | None = None) -> pd.DataFrame:
 
     rows = {}
 
-    # 1) Mindig a többségi osztály
-    rows[f"többségi osztály ('{majority}')"] = compute_metrics(
+    # 1) Always the majority class
+    rows[f"majority class ('{majority}')"] = compute_metrics(
         y, np.full(len(y), majority))
 
-    # 2) Rétegzett véletlen: az osztályarányok szerint sorsol
-    rows["rétegzett véletlen"] = compute_metrics(
+    # 2) Stratified random: draws according to the class proportions
+    rows["stratified random"] = compute_metrics(
         y, rng.choice(labels, size=len(y), p=props.to_numpy()))
 
-    # 3) Egyenletes véletlen
-    rows["egyenletes véletlen"] = compute_metrics(
+    # 3) Uniform random
+    rows["uniform random"] = compute_metrics(
         y, rng.choice(labels, size=len(y)))
 
     out = pd.DataFrame(rows).T[["accuracy", "f1_macro", "f1_weighted"]].round(4)
-    out.index.name = "alapmodell"
+    out.index.name = "baseline"
 
-    log.info("A legerősebb triviális alapmodell: accuracy=%.4f, macro-F1=%.4f",
+    log.info("Strongest trivial baseline: accuracy=%.4f, macro-F1=%.4f",
              out["accuracy"].max(), out["f1_macro"].max())
     return out
 
 
 def class_weights(y_train, labels: list[str] | None = None) -> dict[str, float]:
     """
-    Osztálysúlyok a veszteségfüggvényhez (főleg a BERT-hez).
+    Class weights for the loss function (mainly for BERT).
 
-    Képlet:  súly_c = n_összes / (osztályok_száma * n_c)
+    Formula:  weight_c = n_total / (n_classes * n_c)
 
-    Ez a scikit-learn `class_weight='balanced'` logikája. A ritkább osztály
-    hibái arányosan nagyobb büntetést kapnak, így a modell nem éri be azzal,
-    hogy a többséget tippeli.
+    This is the logic of scikit-learn's `class_weight='balanced'`. Errors on
+    the rarer class get a proportionally larger penalty, so the model cannot
+    settle for predicting the majority.
 
-    A klasszikus modelleknél ez már be van állítva (`class_weight='balanced'`
-    a models_classical.py-ban). A transformernél KÉZZEL kell átadni a
-    veszteségfüggvénynek — lásd a 03-as notebook WeightedTrainer osztályát.
+    For the classical models this is already set (`class_weight='balanced'`
+    in models_classical.py). For the transformer it has to be passed to the
+    loss function MANUALLY — see the WeightedTrainer class in notebook 03.
     """
     labels = labels or list(CFG.labels)
     y = pd.Series(np.asarray(y_train).astype(str))
     counts = y.value_counts().reindex(labels, fill_value=0)
     n, k = len(y), (counts > 0).sum()
     weights = {c: (n / (k * m) if m > 0 else 0.0) for c, m in counts.items()}
-    log.info("Osztálysúlyok: %s", {k2: round(v, 3) for k2, v in weights.items()})
+    log.info("Class weights: %s", {k2: round(v, 3) for k2, v in weights.items()})
     return weights
 
 
 def per_class_report(y_true, y_pred, labels: list[str] | None = None) -> pd.DataFrame:
-    """Osztályonkénti precision/recall/F1 táblázat — mehet a dolgozatba."""
+    """Per-class precision/recall/F1 table — can go straight into the thesis."""
     labels = labels or list(CFG.labels)
     rep = classification_report(
         np.asarray(y_true).astype(str), np.asarray(y_pred).astype(str),
@@ -157,12 +157,13 @@ def plot_confusion_matrix(
     ax=None,
 ):
     """
-    Normalizált confusion matrix (soronként = az adott VALÓS osztály hány
-    százalékát tippelte a modell melyik osztálynak).
+    Normalised confusion matrix (per row = what percentage of the given TRUE
+    class the model predicted as which class).
 
-    Erre figyelj a dolgozatban: 3 osztályos sentimentnél szinte mindig azt
-    fogod látni, hogy a neutral osztály "szétfolyik" a másik kettőbe. Ez a
-    legérdekesebb megfigyelésed lesz — és a hibaelemzés fejezet alapja.
+    Watch for this in the thesis: with 3-class sentiment you will almost
+    always see the neutral class "bleeding" into the other two. This will be
+    your most interesting observation — and the basis of the error analysis
+    chapter.
     """
     import matplotlib.pyplot as plt
 
@@ -179,8 +180,8 @@ def plot_confusion_matrix(
     im = ax.imshow(cm_show, cmap="Blues", vmin=0, vmax=cm_show.max())
     ax.set_xticks(range(len(labels)), labels, rotation=20)
     ax.set_yticks(range(len(labels)), labels)
-    ax.set_xlabel("Predikált osztály")
-    ax.set_ylabel("Valós osztály")
+    ax.set_xlabel("Predicted class")
+    ax.set_ylabel("True class")
     ax.set_title(title)
 
     thresh = cm_show.max() / 2
@@ -200,31 +201,31 @@ def plot_confusion_matrix(
 
 def save_figure(name: str, dpi: int = 300) -> Path:
     """
-    Ábra mentése a results/figures/ mappába, 300 DPI-vel.
+    Save a figure to the results/figures/ folder at 300 DPI.
 
-    300 DPI a nyomdai minőség — a szakdolgozatba beillesztve nem lesz
-    pixeles. Mentsd el MINDEN ábrát, amit használni akarsz; sokkal
-    kellemetlenebb három hónap múlva újrafuttatni a notebookot.
+    300 DPI is print quality — it will not look pixelated in the thesis.
+    Save EVERY figure you want to use; re-running the notebook three months
+    later is much more painful.
     """
     import matplotlib.pyplot as plt
     PATHS.ensure()
     path = PATHS.figures / (name if name.endswith((".png", ".pdf")) else f"{name}.png")
     plt.savefig(path, dpi=dpi, bbox_inches="tight")
-    log.info("Ábra elmentve: %s", path)
+    log.info("Figure saved: %s", path)
     return path
 
 
 def save_table(df: pd.DataFrame, name: str) -> Path:
-    """Táblázat mentése CSV-be, hogy a dolgozatba be tudd másolni."""
+    """Save a table to CSV so it can be copied into the thesis."""
     PATHS.ensure()
     path = PATHS.tables / (name if name.endswith(".csv") else f"{name}.csv")
     df.to_csv(path, encoding="utf-8")
-    log.info("Táblázat elmentve: %s", path)
+    log.info("Table saved: %s", path)
     return path
 
 
 # ==========================================================================
-# 3) HIBAELEMZÉS
+# 3) ERROR ANALYSIS
 # ==========================================================================
 def error_analysis(
     df: pd.DataFrame,
@@ -235,43 +236,43 @@ def error_analysis(
     seed: int = CFG.random_seed,
 ) -> pd.DataFrame:
     """
-    Kigyűjti a félreosztályozott reviewkat, hibatípusonként csoportosítva.
+    Collect the misclassified reviews, grouped by error type.
 
-    A dolgozat 8. fejezete kifejezetten kéri a "misclassified reviews"
-    elemzését. Futtasd ezt, olvasd el kézzel 20-30 példát, és írj róluk
-    néhány bekezdést — ez a fajta kvalitatív elemzés sokkal többet ér a
-    bírálónál, mint még egy táblázat.
+    Chapter 8 of the thesis explicitly asks for an analysis of the
+    "misclassified reviews". Run this, read 20-30 examples by hand, and write
+    a few paragraphs about them — this kind of qualitative analysis is worth
+    far more to the reviewer than yet another table.
     """
     out = df.copy()
     out["predicted"] = np.asarray(y_pred).astype(str)
     out["true"] = out[label_col].astype(str)
     errors = out[out["predicted"] != out["true"]].copy()
-    errors["hibatípus"] = errors["true"] + " -> " + errors["predicted"]
+    errors["error_type"] = errors["true"] + " -> " + errors["predicted"]
 
-    log.info("Összes hiba: %d / %d (%.1f%%)",
+    log.info("Total errors: %d / %d (%.1f%%)",
              len(errors), len(out), 100 * len(errors) / max(len(out), 1))
-    log.info("Leggyakoribb hibatípusok:\n%s",
-             errors["hibatípus"].value_counts().to_string())
+    log.info("Most frequent error types:\n%s",
+             errors["error_type"].value_counts().to_string())
 
-    # Hibatípusonként legfeljebb n_examples véletlen példa.
+    # At most n_examples random examples per error type.
     #
-    # NEM groupby().apply()-jal: a pandas 3.0-tól az apply nem adja tovább a
-    # csoportosító oszlopot, így a "hibatípus" csendben eltűnne. A megoldás:
-    # előbb véletlenszerűen megkeverjük a sorokat (seed-del, reprodukálhatóan),
-    # aztán csoportonként az első n-et vesszük. Ez minden oszlopot megtart,
-    # és a kis csoportokat (n-nél kevesebb hiba) is helyesen kezeli.
+    # NOT with groupby().apply(): from pandas 3.0 apply no longer passes on
+    # the grouping column, so "error_type" would silently disappear. The
+    # solution: first shuffle the rows randomly (with the seed, reproducibly),
+    # then take the first n per group. This keeps every column and also
+    # handles small groups (fewer than n errors) correctly.
     samples = (errors.sample(frac=1.0, random_state=seed)
-                     .groupby("hibatípus", sort=False)
+                     .groupby("error_type", sort=False)
                      .head(n_examples)
-                     .sort_values("hibatípus", kind="stable"))
-    cols = ["hibatípus", "true", "predicted", "score", text_col]
+                     .sort_values("error_type", kind="stable"))
+    cols = ["error_type", "true", "predicted", "score", text_col]
     return samples[[c for c in cols if c in samples.columns]].reset_index(drop=True)
 
 
 def compare_models(results: dict[str, dict]) -> pd.DataFrame:
     """
-    Több modell metrikáit egy táblázatba rendezi — ez lesz a dolgozat
-    fő összehasonlító táblázata (RQ1).
+    Arrange the metrics of several models into one table — this will be the
+    main comparison table of the thesis (RQ1).
 
         compare_models({
             "Naive Bayes":  metrics_nb,

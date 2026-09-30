@@ -1,4 +1,4 @@
-aspektus,említések,említési_arány,negative,neutral,positive,neg_lift,pos_lift
+aspect,mentions,mention_share,negative,neutral,positive,neg_lift,pos_lift
 bathroom,6896,0.0543,0.2369,0.2794,0.4836,1.6245,0.7697
 wifi,1073,0.0085,0.2116,0.2526,0.5359,1.4505,0.8529
 value_for_money,6570,0.0517,0.2105,0.2766,0.5129,1.4432,0.8164

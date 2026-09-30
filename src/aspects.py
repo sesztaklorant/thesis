@@ -1,22 +1,22 @@
 """
-aspects.py — Aspektus-alapú sentiment elemzés (ABSA), RQ3 és RQ4.
+aspects.py — Aspect-based sentiment analysis (ABSA), RQ3 and RQ4.
 
-Két szint van, és ezt a dolgozatban is érdemes így felépíteni:
+There are two levels, and it is worth structuring the thesis this way too:
 
-  1. LEXIKON-ALAPÚ ASPEKTUS-DETEKTÁLÁS (ebben a fájlban)
-     Kulcsszólisták aspektusonként + mondatra bontás. Egyszerű, gyors,
-     átlátható, és azonnal ad számokat az RQ3-ra ("mely aspektusok
-     kötődnek leggyakrabban a negatív sentimenthez?").
-     Ez a BASELINE, amihez a transformer modellt hasonlítod.
+  1. LEXICON-BASED ASPECT DETECTION (in this file)
+     Keyword lists per aspect + sentence splitting. Simple, fast,
+     transparent, and gives numbers for RQ3 immediately ("which aspects are
+     most often tied to negative sentiment?").
+     This is the BASELINE the transformer model is compared to.
 
-  2. TRANSFORMER-ALAPÚ ABSA (a 04-es notebookban, HRAST-on tanítva)
-     Az aspektust és a mondatot párba állítva adjuk a BERT-nek:
+  2. TRANSFORMER-BASED ABSA (in notebook 04, trained on HRAST)
+     The aspect and the sentence are given to BERT as a pair:
          [CLS] room [SEP] the room was extremely hot [SEP] -> negative
-     Ez a "sentence-pair" formátum a SemEval-2014 óta bevett módszer.
+     This "sentence-pair" format has been standard since SemEval-2014.
 
-A kettő összehasonlítása önmagában is jó dolgozat-anyag: megmutatod, hogy
-a kulcsszavas megközelítés hol bukik el (tagadás, irónia, implicit
-aspektusok), és hogy a transformer ezt mennyivel oldja meg jobban.
+Comparing the two is good thesis material in itself: you show where the
+keyword approach fails (negation, irony, implicit aspects) and how much
+better the transformer handles it.
 """
 
 from __future__ import annotations
@@ -32,11 +32,12 @@ log = logging.getLogger(__name__)
 
 
 # ==========================================================================
-# 1) ASPEKTUS-LEXIKON
+# 1) ASPECT LEXICON
 # ==========================================================================
-# FONTOS: ezt a listát a DOLGOZATBAN közölni kell (függelékben), mert ez
-# egy módszertani döntés. Bővítsd nyugodtan az adatod alapján — a 01-es
-# notebook gyakorisági elemzése megmutatja, mely szavak hiányoznak.
+# IMPORTANT: this list has to be published IN THE THESIS (in the appendix),
+# because it is a methodological decision. Feel free to extend it based on
+# your data — the frequency analysis in notebook 01 shows which words are
+# missing.
 ASPECT_KEYWORDS: dict[str, list[str]] = {
     "room": [
         "room", "rooms", "bedroom", "suite", "bed", "beds", "mattress",
@@ -86,8 +87,8 @@ ASPECT_KEYWORDS: dict[str, list[str]] = {
     ],
 }
 
-# Előre lefordított regexek — szóhatárral, hogy a "bar" ne találjon a
-# "barely" szóba. Többszavas kifejezéseknél a szóköz is illeszkedik.
+# Pre-compiled regexes — with word boundaries, so that "bar" does not match
+# inside "barely". For multi-word expressions the space matches too.
 _ASPECT_PATTERNS = {
     aspect: re.compile(
         r"\b(" + "|".join(re.escape(k) for k in sorted(kws, key=len, reverse=True)) + r")\b",
@@ -98,17 +99,17 @@ _ASPECT_PATTERNS = {
 
 
 # ==========================================================================
-# 2) MONDATRA BONTÁS
+# 2) SENTENCE SPLITTING
 # ==========================================================================
 _SENT_SPLIT_RE = re.compile(r"(?<=[.!?])\s+|\s*\n+\s*")
 
 
 def split_sentences(text: str, min_words: int = 3) -> list[str]:
     """
-    Egyszerű mondatra bontás. Hotel reviewknál ez általában elég jó, mert
-    a szöveg rövid és egyszerű szerkezetű.
+    Simple sentence splitting. For hotel reviews this is usually good
+    enough, because the texts are short and simply structured.
 
-    Ha pontosabb kell (rövidítések, tizedespontok), használd az NLTK-t:
+    If more precision is needed (abbreviations, decimal points), use NLTK:
         import nltk; nltk.download("punkt")
         from nltk.tokenize import sent_tokenize
     """
@@ -125,45 +126,46 @@ def explode_by_polarity(
     min_words: int = 3,
 ) -> pd.DataFrame:
     """
-    Mondat-szintű adat a POLARITÁS ISMERETÉBEN — az adathalmaz szerkezetéből.
+    Sentence-level data WITH KNOWN POLARITY — from the structure of the dataset.
 
-    Miért sokkal jobb ez, mint a review-szintű címke rávetítése?
-    ------------------------------------------------------------
-    Az `explode_to_sentences()` minden mondatra a REVIEW összpontszámából
-    képzett címkét teszi. Ez közelítés, és pont a dolgozatod kiinduló
-    példájánál bukik el: egy 6,5 pontos ("neutral") review tartalmazhat egy
-    egyértelműen pozitív és egy egyértelműen negatív mondatot is.
+    Why is this much better than projecting the review-level label?
+    ---------------------------------------------------------------
+    `explode_to_sentences()` puts the label derived from the REVIEW's overall
+    score on every sentence. That is an approximation, and it fails exactly
+    on the motivating example of your thesis: a 6.5-point ("neutral") review
+    can contain both a clearly positive and a clearly negative sentence.
 
-    A Booking-adat viszont KÉT KÜLÖN MEZŐBEN tárolja a dicséretet és a
-    panaszt. Ha a `review_positive` mezőből származó mondatot pozitívnak,
-    a `review_negative` mezőből származót negatívnak vesszük, akkor a
-    mondat-szintű címke nem becslés, hanem magából az adatgyűjtés
-    szerkezetéből következik: a vendég maga döntötte el, melyik mezőbe írja.
+    The Booking data, however, stores the praise and the complaint in TWO
+    SEPARATE FIELDS. If a sentence from the `review_positive` field is taken
+    as positive and one from `review_negative` as negative, the
+    sentence-level label is not an estimate — it follows from the structure
+    of the data collection itself: the guest decided which field to write in.
 
-    Ez ~200 000 reviewból több százezer mondat-szintű, aspektus-annotálható
-    példát ad — nagyságrendekkel többet, mint a HRAST 23 113 mondata.
+    From ~200,000 reviews this gives several hundred thousand sentence-level,
+    aspect-annotatable examples — orders of magnitude more than the 23,113
+    sentences of HRAST.
 
-    ⚠ KORLÁTOK, amiket a dolgozatban le KELL írni:
-      1. Ez a mező eredete, nem emberi annotáció. Előfordul, hogy valaki a
-         pozitív mezőbe ír enyhe kritikát ("great, although a bit small").
-         Zajos címke, de szisztematikusan nem torzít.
-      2. NINCS semleges osztály — a mezőstruktúra bináris. A 3-osztályos
-         feladathoz ez nem elég, a review-szintű címkézés marad.
-      3. A HRAST továbbra is kell: az VALÓDI, emberi aspektus-annotációt
-         tartalmaz, amin a modellt KIÉRTÉKELNI lehet. Ez itt tanításra és
-         nagy mintás elemzésre jó, kiértékelési etalonnak nem.
+    ⚠ LIMITATIONS that MUST be described in the thesis:
+      1. This is the origin of the field, not human annotation. Sometimes
+         someone writes mild criticism into the positive field ("great,
+         although a bit small"). A noisy label, but not systematically biased.
+      2. There is NO neutral class — the field structure is binary. For the
+         3-class task this is not enough, the review-level labelling stays.
+      3. HRAST is still needed: it contains REAL, human aspect annotation on
+         which the model can be EVALUATED. This data is good for training and
+         large-sample analysis, not as an evaluation gold standard.
 
-    Visszatér
-    ---------
-    Soronként egy mondat: sentence_id, review_id, sentence, polarity
-    ("positive" / "negative"), source_field, + a metaadat-oszlopok.
+    Returns
+    -------
+    One sentence per row: sentence_id, review_id, sentence, polarity
+    ("positive" / "negative"), source_field, + the metadata columns.
     """
     missing = {pos_col, neg_col} - set(df.columns)
     if missing:
         raise KeyError(
-            f"Hiányzó oszlop(ok): {sorted(missing)}. Ez a függvény a Booking "
-            "külön pozitív/negatív mezőit igényli — ellenőrizd, hogy a loader "
-            "átvitte-e őket."
+            f"Missing column(s): {sorted(missing)}. This function needs the "
+            "separate positive/negative fields of Booking — check that the "
+            "loader carried them over."
         )
 
     meta = [c for c in ["review_id", "score", "sentiment", "dataset",
@@ -189,7 +191,7 @@ def explode_by_polarity(
                               out["polarity"].str[:3] + "_" +
                               out.groupby(["review_id", "polarity"]).cumcount().astype(str))
 
-    log.info("Mondatok polaritás szerint: %s",
+    log.info("Sentences by polarity: %s",
              out["polarity"].value_counts().to_dict())
     return out
 
@@ -200,13 +202,14 @@ def aspect_polarity_table(
     min_count: int = 50,
 ) -> pd.DataFrame:
     """
-    Aspektusonként: hányszor említik dicséretként, hányszor panaszként?
+    Per aspect: how often is it mentioned as praise, how often as a complaint?
 
-    Ez az RQ3 LEGTISZTÁBB válasza, mert a polaritás nem becsült, hanem az
-    adat szerkezetéből jön (lásd `explode_by_polarity`).
+    This is the CLEANEST answer to RQ3, because the polarity is not estimated
+    but comes from the structure of the data (see `explode_by_polarity`).
 
-    A `panasz_arány` oszlop: az adott aspektus említéseinek hány százaléka
-    esik a negatív mezőbe. 0,5 felett panaszhajtó, alatta dicsérethajtó.
+    The `as_complaint` column: what percentage of the mentions of the aspect
+    fall into the negative field. Above 0.5 it drives complaints, below it
+    drives praise. `complaint_lift` compares this to the overall average.
     """
     base = (sent_df[polarity_col].astype(str) == "negative").mean()
     rows = []
@@ -219,31 +222,31 @@ def aspect_polarity_table(
             continue
         neg = (sub[polarity_col].astype(str) == "negative").mean()
         rows.append({
-            "aspektus": aspect,
-            "említések": len(sub),
-            "dicséretként": 1 - neg,
-            "panaszként": neg,
-            "panasz_lift": neg / base if base else float("nan"),
+            "aspect": aspect,
+            "mentions": len(sub),
+            "as_praise": 1 - neg,
+            "as_complaint": neg,
+            "complaint_lift": neg / base if base else float("nan"),
         })
 
-    cols = ["aspektus", "említések", "dicséretként", "panaszként", "panasz_lift"]
+    cols = ["aspect", "mentions", "as_praise", "as_complaint", "complaint_lift"]
     if not rows:
-        log.warning("Egyetlen aspektus sem érte el a min_count=%d küszöböt.", min_count)
-        return pd.DataFrame(columns=cols).set_index("aspektus")
+        log.warning("No aspect reached the min_count=%d threshold.", min_count)
+        return pd.DataFrame(columns=cols).set_index("aspect")
 
     return (pd.DataFrame(rows)[cols]
-            .set_index("aspektus")
-            .sort_values("panasz_lift", ascending=False)
+            .set_index("aspect")
+            .sort_values("complaint_lift", ascending=False)
             .round(4))
 
 
 def explode_to_sentences(df: pd.DataFrame, text_col: str = "text") -> pd.DataFrame:
     """
-    Review-szintű táblából mondat-szintű táblát csinál.
+    Turn a review-level table into a sentence-level table.
 
-    Ez az ABSA első lépése: az aspektus-sentiment párokat mondatszinten
-    értelmezzük, mert egy review több, egymásnak ellentmondó véleményt
-    tartalmazhat (pont ez a dolgozat kiinduló példája!).
+    This is the first step of ABSA: aspect-sentiment pairs are interpreted at
+    sentence level, because one review can contain several contradicting
+    opinions (this is exactly the motivating example of the thesis!).
     """
     out = df.copy()
     out["sentences"] = out[text_col].map(split_sentences)
@@ -254,10 +257,10 @@ def explode_to_sentences(df: pd.DataFrame, text_col: str = "text") -> pd.DataFra
 
 
 # ==========================================================================
-# 3) ASPEKTUS-DETEKTÁLÁS
+# 3) ASPECT DETECTION
 # ==========================================================================
 def detect_aspects(text: str) -> list[str]:
-    """Visszaadja, mely aspektusok kulcsszavai fordulnak elő a szövegben."""
+    """Return the aspects whose keywords occur in the text."""
     if not isinstance(text, str) or not text:
         return []
     return [a for a, pat in _ASPECT_PATTERNS.items() if pat.search(text)]
@@ -265,8 +268,8 @@ def detect_aspects(text: str) -> list[str]:
 
 def add_aspect_columns(df: pd.DataFrame, text_col: str = "sentence") -> pd.DataFrame:
     """
-    Aspektusonként egy 0/1 oszlopot ad hozzá (`aspect_room`, `aspect_staff`, ...),
-    plusz egy listát az összes talált aspektussal.
+    Add one 0/1 column per aspect (`aspect_room`, `aspect_staff`, ...),
+    plus a list of all aspects found.
     """
     out = df.copy()
     out["aspects"] = out[text_col].map(detect_aspects)
@@ -277,7 +280,7 @@ def add_aspect_columns(df: pd.DataFrame, text_col: str = "sentence") -> pd.DataF
 
 
 # ==========================================================================
-# 4) ASPEKTUS × SENTIMENT ELEMZÉS  (RQ3 KÖZVETLEN VÁLASZA)
+# 4) ASPECT × SENTIMENT ANALYSIS  (THE DIRECT ANSWER TO RQ3)
 # ==========================================================================
 def aspect_sentiment_table(
     df: pd.DataFrame,
@@ -285,16 +288,16 @@ def aspect_sentiment_table(
     min_count: int = 30,
 ) -> pd.DataFrame:
     """
-    Aspektusonként megadja, hogy hány mondatban fordul elő, és azokban
-    milyen a sentiment megoszlása.
+    For each aspect: in how many sentences it occurs, and what the sentiment
+    distribution is in those sentences.
 
-    Ez a táblázat a dolgozat egyik LEGFONTOSABB eredménye: ebből derül ki,
-    hogy pl. a 'noise' és a 'cleanliness' aránytalanul gyakran negatív,
-    míg a 'location' túlnyomórészt pozitív.
+    This table is one of the MOST IMPORTANT results of the thesis: it shows
+    that e.g. 'noise' and 'cleanliness' are disproportionately often negative,
+    while 'location' is overwhelmingly positive.
 
-    A "negatív többlet" (neg_lift) oszlop: mennyivel gyakoribb a negatív
-    sentiment ennél az aspektusnál, mint az adathalmaz átlagában.
-    1.0 felett = az aspektus panaszhajtó; 1.0 alatt = elégedettséghajtó.
+    The "negative excess" (neg_lift) column: how much more frequent negative
+    sentiment is for this aspect than on average in the dataset.
+    Above 1.0 = the aspect drives complaints; below 1.0 = it drives satisfaction.
     """
     base_neg = (df[sentiment_col].astype(str) == "negative").mean()
     base_pos = (df[sentiment_col].astype(str) == "positive").mean()
@@ -312,9 +315,9 @@ def aspect_sentiment_table(
                          dist.get("neutral", 0.0),
                          dist.get("positive", 0.0))
         rows.append({
-            "aspektus": aspect,
-            "említések": len(sub),
-            "említési_arány": len(sub) / len(df),
+            "aspect": aspect,
+            "mentions": len(sub),
+            "mention_share": len(sub) / len(df),
             "negative": neg,
             "neutral": neu,
             "positive": pos,
@@ -322,39 +325,39 @@ def aspect_sentiment_table(
             "pos_lift": pos / base_pos if base_pos else float("nan"),
         })
 
-    cols = ["aspektus", "említések", "említési_arány",
+    cols = ["aspect", "mentions", "mention_share",
             "negative", "neutral", "positive", "neg_lift", "pos_lift"]
 
     if not rows:
-        # Egyetlen aspektus sem érte el a min_count küszöböt. Ne álljon meg a
-        # notebook — üres, de helyes szerkezetű táblát adunk vissza.
+        # No aspect reached the min_count threshold. The notebook should not
+        # stop — an empty table with the correct structure is returned.
         log.warning(
-            "Egyetlen aspektus sem érte el a min_count=%d küszöböt. "
-            "Csökkentsd a min_count értéket, vagy növeld a mintát.", min_count
+            "No aspect reached the min_count=%d threshold. "
+            "Lower min_count or increase the sample.", min_count
         )
-        return pd.DataFrame(columns=cols).set_index("aspektus")
+        return pd.DataFrame(columns=cols).set_index("aspect")
 
     return (pd.DataFrame(rows)[cols]
-            .set_index("aspektus")
+            .set_index("aspect")
             .sort_values("neg_lift", ascending=False)
             .round(4))
 
 
 def plot_aspect_sentiment(table: pd.DataFrame, save_as: str | None = None):
-    """Halmozott oszlopdiagram: aspektusonkénti sentiment-megoszlás."""
+    """Stacked bar chart: sentiment distribution per aspect."""
     import matplotlib.pyplot as plt
     from .evaluation import save_figure
 
     if table.empty:
-        log.warning("Üres az aspektus-tábla, nincs mit ábrázolni.")
+        log.warning("The aspect table is empty, nothing to plot.")
         return None
 
     from .config import SENTIMENT_COLORS, INK
 
     data = table[["negative", "neutral", "positive"]].sort_values("negative", ascending=True)
-    # A tengely KATEGORIKUS: az indexet stringgé kell alakítani, különben a
-    # matplotlib számértékként helyezi el a sávokat (numerikus indexnél ez
-    # egymásra csúszó oszlopokat okoz).
+    # The axis is CATEGORICAL: the index has to be converted to strings,
+    # otherwise matplotlib positions the bars as numbers (with a numeric index
+    # this makes the bars overlap).
     labels = [str(i) for i in data.index]
 
     fig, ax = plt.subplots(figsize=(8.5, max(3.6, 0.42 * len(data) + 2.2)))
@@ -365,12 +368,12 @@ def plot_aspect_sentiment(table: pd.DataFrame, save_as: str | None = None):
                 edgecolor=INK["surface"], linewidth=1.5)
         left += data[col]
 
-    ax.set_xlabel("A sentiment megoszlása az adott aspektust említő mondatokban")
+    ax.set_xlabel("Sentiment distribution in the sentences mentioning the aspect")
     ax.set_xlim(0, 1)
     ax.xaxis.set_major_formatter(lambda v, _: f"{v:.0%}")
     ax.grid(axis="y", visible=False)
     ax.set_axisbelow(True)
-    ax.set_title("Aspektusonkénti sentiment-megoszlás", loc="left", pad=34,
+    ax.set_title("Sentiment distribution per aspect", loc="left", pad=34,
                  color=INK["primary"])
     ax.legend(loc="lower left", bbox_to_anchor=(0, 1.005), ncol=3, frameon=False)
     plt.tight_layout()
@@ -380,7 +383,7 @@ def plot_aspect_sentiment(table: pd.DataFrame, save_as: str | None = None):
 
 
 # ==========================================================================
-# 5) TEXTUÁLIS BIZONYÍTÉK (RQ4 baseline)
+# 5) TEXTUAL EVIDENCE (RQ4 baseline)
 # ==========================================================================
 _NEGATORS = {"no", "not", "never", "without", "lack", "lacked", "lacking",
              "n't", "nothing", "none", "hardly", "barely"}
@@ -388,16 +391,16 @@ _NEGATORS = {"no", "not", "never", "without", "lack", "lacked", "lacking",
 
 def extract_evidence(sentence: str, aspect: str, window: int = 4) -> list[str]:
     """
-    Kiemeli az aspektus-kulcsszó körüli szókörnyezetet — ez a legegyszerűbb
-    "textuális bizonyíték" (a dolgozat 10. fejezetének 3. szintje).
+    Extract the word context around the aspect keyword — this is the simplest
+    "textual evidence" (level 3 of chapter 10 of the thesis).
 
-    Példa:
+    Example:
         extract_evidence("the room was extremely hot because there was no air conditioning", "room")
         -> ["the room was extremely hot because"]
 
-    A transformer-alapú változat (04-es notebook) ennél sokkal jobb lesz,
-    mert az attention-súlyokat vagy egy token-osztályozó fejet használ.
-    Ez a függvény a BASELINE, amihez viszonyítasz.
+    The transformer-based version (notebook 04) will be much better, because
+    it uses the attention weights or a token-classification head.
+    This function is the BASELINE to compare against.
     """
     pat = _ASPECT_PATTERNS.get(aspect)
     if pat is None or not isinstance(sentence, str):
@@ -416,7 +419,7 @@ def extract_evidence(sentence: str, aspect: str, window: int = 4) -> list[str]:
 
 
 def has_negation(text: str) -> bool:
-    """Van-e tagadás a szövegrészletben? A kulcsszavas ABSA fő gyengesége."""
+    """Is there a negation in the text snippet? The main weakness of keyword ABSA."""
     if not isinstance(text, str):
         return False
     toks = {t.lower().strip(".,!?;:") for t in text.split()}
@@ -424,7 +427,7 @@ def has_negation(text: str) -> bool:
 
 
 # ==========================================================================
-# 6) SENTENCE-PAIR FORMÁTUM A TRANSFORMER ABSA-HOZ
+# 6) SENTENCE-PAIR FORMAT FOR TRANSFORMER ABSA
 # ==========================================================================
 def build_absa_pairs(
     df: pd.DataFrame,
@@ -432,15 +435,15 @@ def build_absa_pairs(
     aspect_label_col: str | None = None,
 ) -> pd.DataFrame:
     """
-    Előkészíti az adatot a transformer ABSA-hoz (04-es notebook).
+    Prepare the data for transformer ABSA (notebook 04).
 
-    Kimenet soronként: (aspektus, mondat, [címke])
-    A tokenizálás a notebookban így néz majd ki:
+    Output per row: (aspect, sentence, [label])
+    In the notebook the tokenisation will look like this:
 
         tokenizer(batch["aspect"], batch["sentence"], truncation=True)
 
-    A HuggingFace tokenizer két argumentummal automatikusan a
-    [CLS] aspect [SEP] sentence [SEP] formátumot állítja elő.
+    With two arguments the HuggingFace tokenizer automatically produces the
+    [CLS] aspect [SEP] sentence [SEP] format.
     """
     rows = []
     for _, r in df.iterrows():

@@ -1,34 +1,34 @@
 """
-descriptives.py — Leíró statisztikák és kereszttáblák a megtisztított adaton.
+descriptives.py — Descriptive statistics and crosstabs on the cleaned data.
 
-A dolgozat 9. fejezete (Exploratory Data Analysis).
+Chapter 9 of the thesis (Exploratory Data Analysis).
 
-Mire való ez a modul?
----------------------
-Az EDA után jön a kérdés: "mit tudok mondani az adatról azon túl, hogy
-hány sor van benne?" A Booking.com adathalmaz metaadatai (ország,
-szállástípus, vendégtípus, csillagbesorolás) lehetővé teszik, hogy a
-sentimentet ezek MENTÉN vizsgáld. Ez az, amit egy szállodalánc elemzője
-is megcsinálna — és pont ezért érdekes a dolgozatban.
+What is this module for?
+------------------------
+After the EDA comes the question: "what can I say about the data beyond how
+many rows it has?" The metadata of the Booking.com dataset (country,
+accommodation type, guest type, star rating) make it possible to examine
+sentiment ALONG these dimensions. This is what an analyst of a hotel chain
+would do too — and exactly why it is interesting in the thesis.
 
-A központi mutató: LIFT
------------------------
-Nem elég azt mondani, hogy "a hostelek 35%-a negatív". Tudni kell, hogy
-ez sok vagy kevés. A lift ezt adja meg:
+The central measure: LIFT
+-------------------------
+It is not enough to say "35% of hostels are negative". You need to know
+whether that is a lot or a little. Lift tells you:
 
-    lift = az adott csoport negatív aránya / a teljes adathalmaz negatív aránya
+    lift = negative share of the group / negative share of the whole dataset
 
-    lift = 1,0  ->  pontosan átlagos
-    lift = 1,4  ->  40%-kal gyakrabban negatív az átlagnál
-    lift = 0,7  ->  30%-kal ritkábban
+    lift = 1.0  ->  exactly average
+    lift = 1.4  ->  negative 40% more often than average
+    lift = 0.7  ->  30% less often
 
-Ez a mutató összehasonlíthatóvá tesz különböző méretű csoportokat, és
-egyetlen számban mondja meg, hol van a probléma.
+This measure makes groups of very different sizes comparable, and tells in
+a single number where the problem is.
 
-Ábrák
------
-Minden ábra a CFG színpalettáját használja (piros-kék divergáló, nem
-piros-zöld — lásd a config.py indoklását a színtévesztésről).
+Figures
+-------
+Every figure uses the CFG colour palette (red-blue diverging, not
+red-green — see the reasoning about colour blindness in config.py).
 """
 
 from __future__ import annotations
@@ -46,8 +46,8 @@ log = logging.getLogger(__name__)
 
 def _fmt_cat(v) -> str:
     """
-    Kategórianév ábrázoláshoz. A lebegőpontos egész értékeket (3.0, 4.0)
-    egésszé alakítja, mert a "3.0 csillag" felirat zavaró.
+    Category name for plotting. Converts floating-point whole numbers
+    (3.0, 4.0) to integers, because a "3.0 stars" label is distracting.
     """
     if isinstance(v, float) and float(v).is_integer():
         return str(int(v))
@@ -57,79 +57,79 @@ def _fmt_cat(v) -> str:
 def prepare_star_rating(df: pd.DataFrame,
                         col: str = "accommodation_star_rating") -> pd.DataFrame:
     """
-    A csillagbesorolás 0 értéke NEM "nulla csillag", hanem "nincs besorolás".
+    A star rating of 0 is NOT "zero stars" but "no rating".
 
-    Ha ezt nem kezeljük, a 0 egy önálló kategóriaként jelenik meg a
-    kereszttáblákban, és a rendezésnél a legrosszabb besorolásnak látszik —
-    miközben valójában hiányzó adat. A te mintádban ez több tízezer sor.
+    If this is not handled, 0 appears as a category of its own in the
+    crosstabs and looks like the worst rating when sorting — while it is
+    actually missing data. In your sample this is tens of thousands of rows.
 
-    Ez a függvény külön "n. a." kategóriát csinál belőle, így a
-    besorolás szerinti elemzés csak a ténylegesen besorolt szállásokra
-    vonatkozik, a többi pedig láthatóan elkülönül.
+    This function turns it into a separate "n/a" category, so the analysis by
+    rating covers only the properties that actually have a rating, and the
+    rest is visibly kept apart.
     """
     if col not in df.columns:
         return df
     out = df.copy()
     n_zero = int((pd.to_numeric(out[col], errors="coerce") == 0).sum())
     out[col] = pd.to_numeric(out[col], errors="coerce").map(
-        lambda v: "n. a." if (pd.isna(v) or v == 0) else _fmt_cat(v)
+        lambda v: "n/a" if (pd.isna(v) or v == 0) else _fmt_cat(v)
     )
     if n_zero:
-        log.info("Csillagbesorolás: %d sor (%.1f%%) 0 értékű volt -> 'n. a.' "
-                 "kategóriába került.", n_zero, 100 * n_zero / len(out))
+        log.info("Star rating: %d rows (%.1f%%) had the value 0 -> moved to the "
+                 "'n/a' category.", n_zero, 100 * n_zero / len(out))
     return out
 
 
 # ==========================================================================
-# 1) ÁTTEKINTŐ TÁBLÁZAT
+# 1) OVERVIEW TABLE
 # ==========================================================================
 def dataset_overview(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Egysoros összefoglaló az adathalmazról — ez megy a dolgozat 4. fejezetébe
-    ("Data Sources") és a 9. fejezet elejére.
+    One-table summary of the dataset — this goes into chapter 4 of the thesis
+    ("Data Sources") and at the beginning of chapter 9.
     """
     rows: list[tuple[str, object]] = [
-        ("Reviewk száma", f"{len(df):,}"),
+        ("Number of reviews", f"{len(df):,}"),
     ]
 
     if "accommodation_id" in df.columns:
-        rows.append(("Egyedi szálláshelyek", f"{df['accommodation_id'].nunique():,}"))
+        rows.append(("Unique properties", f"{df['accommodation_id'].nunique():,}"))
     if "accommodation_country" in df.columns:
-        rows.append(("Országok száma", f"{df['accommodation_country'].nunique():,}"))
+        rows.append(("Number of countries", f"{df['accommodation_country'].nunique():,}"))
     if "accommodation_type" in df.columns:
-        rows.append(("Szállástípusok", f"{df['accommodation_type'].nunique():,}"))
+        rows.append(("Accommodation types", f"{df['accommodation_type'].nunique():,}"))
 
     rows += [
-        ("Átlagos pontszám", f"{df['score'].mean():.2f}"),
-        ("Medián pontszám", f"{df['score'].median():.2f}"),
-        ("Pontszám szórása", f"{df['score'].std():.2f}"),
+        ("Mean score", f"{df['score'].mean():.2f}"),
+        ("Median score", f"{df['score'].median():.2f}"),
+        ("Score standard deviation", f"{df['score'].std():.2f}"),
     ]
 
     if "n_words" in df.columns:
         rows += [
-            ("Átlagos reviewhossz (szó)", f"{df['n_words'].mean():.1f}"),
-            ("Medián reviewhossz (szó)", f"{df['n_words'].median():.0f}"),
+            ("Mean review length (words)", f"{df['n_words'].mean():.1f}"),
+            ("Median review length (words)", f"{df['n_words'].median():.0f}"),
         ]
 
     if "sentiment" in df.columns:
         vc = df["sentiment"].value_counts(normalize=True)
         for label in CFG.labels:
-            rows.append((f"{label} aránya", f"{vc.get(label, 0):.1%}"))
+            rows.append((f"Share of {label}", f"{vc.get(label, 0):.1%}"))
 
-    return pd.DataFrame(rows, columns=["Mutató", "Érték"]).set_index("Mutató")
+    return pd.DataFrame(rows, columns=["Metric", "Value"]).set_index("Metric")
 
 
 def missing_report(df: pd.DataFrame) -> pd.DataFrame:
-    """Hiányzó értékek oszloponként. Üres táblát ad vissza, ha nincs hiány."""
+    """Missing values per column. Returns an empty table if nothing is missing."""
     miss = df.isna().sum()
     miss = miss[miss > 0].sort_values(ascending=False)
     if miss.empty:
-        return pd.DataFrame(columns=["hiányzó", "arány"])
-    return pd.DataFrame({"hiányzó": miss, "arány": (miss / len(df)).round(4)})
+        return pd.DataFrame(columns=["missing", "share"])
+    return pd.DataFrame({"missing": miss, "share": (miss / len(df)).round(4)})
 
 
 def numeric_profile(df: pd.DataFrame, cols: list[str] | None = None) -> pd.DataFrame:
-    """Numerikus oszlopok leíró statisztikája, percentilisekkel."""
+    """Descriptive statistics of the numeric columns, with percentiles."""
     cols = cols or [c for c in ["score", "n_words", "n_chars", "room_nights",
                                 "accommodation_score", "accommodation_star_rating",
                                 "review_helpful_votes"]
@@ -140,7 +140,7 @@ def numeric_profile(df: pd.DataFrame, cols: list[str] | None = None) -> pd.DataF
 
 
 # ==========================================================================
-# 2) KERESZTTÁBLA: SENTIMENT EGY DIMENZIÓ MENTÉN
+# 2) CROSSTAB: SENTIMENT ALONG ONE DIMENSION
 # ==========================================================================
 def sentiment_by(
     df: pd.DataFrame,
@@ -150,28 +150,28 @@ def sentiment_by(
     sentiment_col: str = "sentiment",
 ) -> pd.DataFrame:
     """
-    Sentiment-megoszlás egy kategorikus dimenzió mentén, lift értékekkel.
+    Sentiment distribution along a categorical dimension, with lift values.
 
-    Paraméterek
-    -----------
-    dim       : az oszlop neve (pl. "accommodation_country", "guest_type")
-    min_count : ennél kevesebb reviewval rendelkező kategóriát eldobunk.
-                MIÉRT? Mert 12 reviewból számolt 50%-os negatív arány
-                statisztikai zaj, nem megállapítás. A dolgozatban ezt a
-                küszöböt meg kell említeni.
-    top_n     : csak a legtöbb reviewval rendelkező N kategóriát tartjuk meg.
+    Parameters
+    ----------
+    dim       : name of the column (e.g. "accommodation_country", "guest_type")
+    min_count : categories with fewer reviews than this are dropped.
+                WHY? Because a 50% negative share computed from 12 reviews is
+                statistical noise, not a finding. This threshold has to be
+                mentioned in the thesis.
+    top_n     : only the N categories with the most reviews are kept.
 
-    Visszatér
-    ---------
-    Index: a kategóriák. Oszlopok:
-        n           — reviewk száma
-        részarány   — a teljes adathalmaz hány százaléka
-        negative / neutral / positive — a sentiment megoszlása a csoporton belül
-        neg_lift    — hányszorosa az átlagos negatív aránynak
-        átlagpont   — átlagos vendégpontszám
+    Returns
+    -------
+    Index: the categories. Columns:
+        n           — number of reviews
+        share       — what percentage of the whole dataset
+        negative / neutral / positive — sentiment distribution within the group
+        neg_lift    — how many times the average negative share
+        mean_score  — mean guest score
     """
     if dim not in df.columns:
-        raise KeyError(f"Nincs ilyen oszlop: {dim}. Elérhető: {list(df.columns)}")
+        raise KeyError(f"No such column: {dim}. Available: {list(df.columns)}")
 
     sent = df[sentiment_col].astype(str)
     base_neg = (sent == "negative").mean()
@@ -187,50 +187,52 @@ def sentiment_by(
 
     tab["neg_lift"] = tab["negative"] / base_neg if base_neg else np.nan
     tab["pos_lift"] = tab["positive"] / base_pos if base_pos else np.nan
-    tab["átlagpont"] = g["score"].mean()
-    tab["részarány"] = tab["n"] / len(df)
+    tab["mean_score"] = g["score"].mean()
+    tab["share"] = tab["n"] / len(df)
 
     tab = tab[tab["n"] >= min_count]
     if top_n:
         tab = tab.nlargest(top_n, "n")
 
-    cols = ["n", "részarány", *CFG.labels, "neg_lift", "pos_lift", "átlagpont"]
+    cols = ["n", "share", *CFG.labels, "neg_lift", "pos_lift", "mean_score"]
     return tab[cols].sort_values("neg_lift", ascending=False).round(4)
 
 
 def plot_sentiment_by(
     table: pd.DataFrame,
     title: str,
-    xlabel: str = "A sentiment megoszlása a csoporton belül",
+    xlabel: str = "Sentiment distribution within the group",
     save_as: str | None = None,
     show_n: bool = True,
     figsize: tuple[float, float] = (9, None),
 ):
     """
-    100%-ra halmozott vízszintes oszlopdiagram.
+    Horizontal bar chart stacked to 100%.
 
-    Miért EZ a forma?
-      - A kérdés "rész-egész arány több kategórián keresztül" -> halmozott sáv.
-      - Vízszintes, mert a kategórianevek (országnevek, szállástípusok)
-        hosszúak; függőlegesen egymásra csúsznának.
-      - 100%-ra normalizálva, mert a csoportok mérete nagyon eltérő — a
-        nyers darabszám elnyomná a kicsiket. A darabszám a sáv végén,
-        szövegként jelenik meg.
-      - A szegmensek közt 2px-es felületszínű rés: így a határvonal akkor is
-        látszik, ha két szomszédos szín hasonló tónusú (pl. nyomtatásban).
+    Why THIS form?
+      - The question is "part-to-whole proportion across several categories"
+        -> stacked bar.
+      - Horizontal, because the category names (country names, accommodation
+        types) are long; vertically they would overlap.
+      - Normalised to 100%, because the group sizes differ a lot — raw counts
+        would drown the small ones. The count appears as text at the end of
+        the bar.
+      - A 2px surface-coloured gap between segments: this way the boundary is
+        visible even if two adjacent colours have a similar tone (e.g. in print).
     """
     import matplotlib.pyplot as plt
 
     data = table[list(CFG.labels)].sort_values("negative", ascending=True)
 
-    # A tengely KATEGORIKUS. Ha az index numerikus (pl. csillagbesorolás:
-    # 0.0, 2.0, 3.0, 3.5 ...), a matplotlib SZÁMÉRTÉKKÉNT helyezi el a
-    # sávokat a tengelyen — ilyenkor egymásra csúsznak, és a feliratok
-    # elcsúsznak. Stringgé alakítva minden kategória egyenlő sávot kap.
+    # The axis is CATEGORICAL. If the index is numeric (e.g. star rating:
+    # 0.0, 2.0, 3.0, 3.5 ...), matplotlib positions the bars on the axis AS
+    # NUMBERS — then they overlap and the labels shift. Converted to strings,
+    # every category gets an equal bar.
     ypos = [_fmt_cat(i) for i in data.index]
 
-    # A magasság a kategóriák számából jön, de van alsó korlát: a cím és a
-    # fölötte ülő jelmagyarázat helyet kér, különben a tight_layout panaszkodik.
+    # The height comes from the number of categories, but with a lower bound:
+    # the title and the legend above it need space, otherwise tight_layout
+    # complains.
     h = figsize[1] or max(3.4, 0.42 * len(data) + 2.2)
     fig, ax = plt.subplots(figsize=(figsize[0], h))
 
@@ -239,12 +241,12 @@ def plot_sentiment_by(
         ax.barh(
             ypos, data[label], left=left.values, label=label,
             color=SENTIMENT_COLORS[label], height=0.72,
-            edgecolor=INK["surface"], linewidth=1.5,   # a 2px-es rés
+            edgecolor=INK["surface"], linewidth=1.5,   # the 2px gap
         )
         left += data[label]
 
-    # Közvetlen felirat csak a negatív szegmensen — ez az, amit olvasni
-    # akarunk. Minden szegmensre írni számot zsúfolt és olvashatatlan lenne.
+    # Direct label only on the negative segment — this is what we want to
+    # read. Writing a number on every segment would be cluttered and unreadable.
     for y, (_, row) in enumerate(data.iterrows()):
         v = row["negative"]
         if v > 0.06:
@@ -263,8 +265,8 @@ def plot_sentiment_by(
     ax.grid(axis="y", visible=False)
     ax.set_axisbelow(True)
 
-    # A jelmagyarázat a cím ALÁ kerül, nem az ábra alá. Így kevés kategóriánál
-    # sem szorul ki a helyéről (a tight_layout különben figyelmeztetne).
+    # The legend goes BELOW the title, not below the chart. This way it is not
+    # squeezed out even with few categories (tight_layout would warn otherwise).
     ax.set_title(title, loc="left", pad=34, color=INK["primary"])
     ax.legend(loc="lower left", bbox_to_anchor=(0, 1.005), ncol=3, frameon=False)
 
@@ -275,7 +277,7 @@ def plot_sentiment_by(
 
 
 # ==========================================================================
-# 3) HŐTÉRKÉP: KÉT DIMENZIÓ EGYÜTT
+# 3) HEATMAP: TWO DIMENSIONS TOGETHER
 # ==========================================================================
 def negativity_heatmap(
     df: pd.DataFrame,
@@ -287,13 +289,13 @@ def negativity_heatmap(
     sentiment_col: str = "sentiment",
 ) -> tuple[pd.DataFrame, pd.DataFrame, float]:
     """
-    Két dimenzió kereszttáblája: mekkora a negatív arány minden cellában?
+    Crosstab of two dimensions: what is the negative share in each cell?
 
-    Visszatér: (lift-tábla, darabszám-tábla, átlagos negatív arány)
+    Returns: (lift table, count table, average negative share)
 
-    A lift-tábla azt mutatja, hányszorosa az adott cella negatív aránya a
-    teljes adathalmaz átlagának. Így a nagyon eltérő méretű cellák is
-    összehasonlíthatók.
+    The lift table shows how many times the negative share of the given cell
+    is the average of the whole dataset. This way cells of very different
+    sizes are comparable too.
     """
     sent = df[sentiment_col].astype(str)
     base_neg = (sent == "negative").mean()
@@ -307,18 +309,18 @@ def negativity_heatmap(
     counts = work.pivot_table(index=rows, columns=cols, values="_neg", aggfunc="size")
     neg_share = work.pivot_table(index=rows, columns=cols, values="_neg", aggfunc="mean")
 
-    # A megbízhatatlanul kicsi cellákat kimaszkoljuk
+    # Unreliably small cells are masked out
     neg_share = neg_share.where(counts >= min_count)
     lift = neg_share / base_neg if base_neg else neg_share
 
-    # A teljesen üres sorok/oszlopok csak helyet foglalnának az ábrán
+    # Completely empty rows/columns would only take up space in the figure
     lift = lift.dropna(how="all", axis=0).dropna(how="all", axis=1)
     counts = counts.reindex(index=lift.index, columns=lift.columns)
 
     if lift.empty:
         raise ValueError(
-            f"Minden cella kimaszkolva (min_count={min_count}). "
-            "Csökkentsd a min_count értéket, vagy válassz kevesebb kategóriát "
+            f"Every cell is masked out (min_count={min_count}). "
+            "Lower min_count or choose fewer categories "
             "(top_rows / top_cols)."
         )
 
@@ -336,15 +338,15 @@ def plot_negativity_heatmap(
     ylabel: str | None = None,
 ):
     """
-    Divergáló hőtérkép: kék = az átlagnál KEVESEBB negatív, piros = TÖBB.
+    Diverging heatmap: blue = FEWER negatives than average, red = MORE.
 
-    Miért divergáló és nem szekvenciális?
-      Mert a kérdés nem "mennyi?", hanem "az átlaghoz képest jobb vagy
-      rosszabb?" — ez polaritás, aminek van értelmes közepe (lift = 1,0).
-      Egy szekvenciális skálán nem látszana, hol van az átlag.
+    Why diverging and not sequential?
+      Because the question is not "how much?" but "better or worse than
+      average?" — that is a polarity with a meaningful midpoint (lift = 1.0).
+      On a sequential scale you could not see where the average is.
 
-    A szürke cellák: túl kevés review, nem értelmezhető. Ezt a dolgozatban
-    is jelölni kell, nem szabad üresen hagyni magyarázat nélkül.
+    Grey cells: too few reviews, not interpretable. This has to be marked in
+    the thesis too, it must not be left blank without an explanation.
     """
     import matplotlib.pyplot as plt
     from matplotlib.colors import LinearSegmentedColormap, TwoSlopeNorm
@@ -355,11 +357,11 @@ def plot_negativity_heatmap(
     vals = lift.to_numpy(dtype=float)
     finite = vals[np.isfinite(vals)]
     if finite.size == 0:
-        raise ValueError("Minden cella kimaszkolva — csökkentsd a min_count értéket.")
+        raise ValueError("Every cell is masked out — lower min_count.")
 
-    # A skála a lift = 1,0 (átlag) körül szimmetrikus, DE alulról 0-nál
-    # levágva: egy arányszám nem lehet negatív, és egy 0 alá nyúló
-    # színskála értelmezhetetlen lenne az olvasónak.
+    # The scale is symmetric around lift = 1.0 (the average), BUT cut off at
+    # 0 from below: a ratio cannot be negative, and a colour scale reaching
+    # below 0 would be uninterpretable for the reader.
     span = max(abs(finite - 1).max(), 0.15)
     norm = TwoSlopeNorm(vmin=max(0.0, 1 - span), vcenter=1.0, vmax=1 + span)
 
@@ -382,7 +384,7 @@ def plot_negativity_heatmap(
                 ax.text(j, i, "–", ha="center", va="center",
                         color=INK["muted"], fontsize=9)
                 continue
-            # Sötét cellán fehér, világoson fekete szöveg
+            # White text on a dark cell, black on a light one
             dark = abs(v - 1) > span * 0.55
             txt = f"{v:.2f}"
             if annotate_n:
@@ -391,7 +393,7 @@ def plot_negativity_heatmap(
                     color="white" if dark else INK["primary"])
 
     cb = fig.colorbar(im, ax=ax, shrink=0.82, pad=0.02)
-    cb.set_label(f"Negatív arány / átlag ({base_neg:.1%})", fontsize=9.5)
+    cb.set_label(f"Negative share / average ({base_neg:.1%})", fontsize=9.5)
     cb.outline.set_visible(False)
 
     plt.tight_layout()
@@ -401,7 +403,7 @@ def plot_negativity_heatmap(
 
 
 # ==========================================================================
-# 4) EGYSZERŰ GYAKORISÁGI ÁBRA
+# 4) SIMPLE FREQUENCY CHART
 # ==========================================================================
 def plot_top_categories(
     df: pd.DataFrame,
@@ -411,10 +413,10 @@ def plot_top_categories(
     save_as: str | None = None,
 ):
     """
-    Egyszerű vízszintes oszlopdiagram: melyik kategóriából van a legtöbb?
+    Simple horizontal bar chart: which category has the most reviews?
 
-    Egy adatsor -> NINCS jelmagyarázat (a cím megnevezi), és a számok
-    közvetlenül a sávok végén állnak.
+    One data series -> NO legend (the title names it), and the numbers sit
+    directly at the end of the bars.
     """
     import matplotlib.pyplot as plt
 
@@ -426,8 +428,8 @@ def plot_top_categories(
         ax.text(v * 1.01, y, f"{v:,}", va="center", fontsize=9,
                 color=INK["secondary"])
 
-    ax.set_xlabel("Reviewk száma")
-    ax.set_title(title or f"Leggyakoribb értékek — {col}", loc="left",
+    ax.set_xlabel("Number of reviews")
+    ax.set_title(title or f"Most frequent values — {col}", loc="left",
                  pad=12, color=INK["primary"])
     ax.grid(axis="y", visible=False)
     ax.set_axisbelow(True)
@@ -440,7 +442,7 @@ def plot_top_categories(
 
 
 # ==========================================================================
-# 5) ÖSSZEFOGLALÓ FUTTATÁS
+# 5) SUMMARY RUN
 # ==========================================================================
 def run_all_crosstabs(
     df: pd.DataFrame,
@@ -450,46 +452,46 @@ def run_all_crosstabs(
     save: bool = True,
 ) -> dict[str, pd.DataFrame]:
     """
-    Végigfuttatja a kereszttáblákat minden elérhető dimenzión, elmenti a
-    táblázatokat és az ábrákat.
+    Run the crosstabs on every available dimension and save the tables and
+    the figures.
 
-    dims: {oszlopnév: "magyar megnevezés az ábra címéhez"}
-          None esetén az alapértelmezett készlet, amennyi az adatban van.
+    dims: {column name: "readable name for the figure title"}
+          If None, the default set, as far as it is present in the data.
 
-    Visszatér: {oszlopnév: tábla}
+    Returns: {column name: table}
     """
     import matplotlib.pyplot as plt
 
     default_dims = {
-        "accommodation_country": "szálláshely országa",
-        "accommodation_type": "szállástípus",
-        "guest_type": "vendégtípus",
-        "accommodation_star_rating": "csillagbesorolás",
-        "guest_country": "vendég országa",
+        "accommodation_country": "accommodation country",
+        "accommodation_type": "accommodation type",
+        "guest_type": "guest type",
+        "accommodation_star_rating": "star rating",
+        "guest_country": "guest country",
     }
     dims = dims or {k: v for k, v in default_dims.items() if k in df.columns}
 
     results: dict[str, pd.DataFrame] = {}
     for col, label in dims.items():
         if col not in df.columns:
-            log.warning("Kihagyva (nincs ilyen oszlop): %s", col)
+            log.warning("Skipped (no such column): %s", col)
             continue
         try:
             tab = sentiment_by(df, col, min_count=min_count, top_n=top_n)
         except Exception as e:                       # noqa: BLE001
-            log.warning("Kihagyva (%s): %s", col, e)
+            log.warning("Skipped (%s): %s", col, e)
             continue
         if tab.empty:
-            log.warning("Kihagyva (üres a min_count=%d szűrés után): %s", min_count, col)
+            log.warning("Skipped (empty after min_count=%d filtering): %s", min_count, col)
             continue
 
         results[col] = tab
         if save:
             save_table(tab, f"01_crosstab_{col}")
-            plot_sentiment_by(tab, f"Sentiment-megoszlás — {label}",
+            plot_sentiment_by(tab, f"Sentiment distribution — {label}",
                               save_as=f"01_crosstab_{col}")
             plt.close("all")
-        log.info("%-28s %d kategória, neg_lift tartomány %.2f–%.2f",
+        log.info("%-28s %d categories, neg_lift range %.2f–%.2f",
                  col, len(tab), tab["neg_lift"].min(), tab["neg_lift"].max())
 
     return results

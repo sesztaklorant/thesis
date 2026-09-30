@@ -1,9 +1,9 @@
 """
-Szakdolgozat: Sentiment Analysis of Customer Reviews using Machine Learning Techniques
+Thesis: Sentiment Analysis of Customer Reviews using Machine Learning Techniques
 
-A forrásmodulok belépési pontja. Notebookból így használd:
+Entry point of the source modules. Usage from a notebook:
 
-    import sys; sys.path.append("..")          # a notebooks/ mappából
+    import sys; sys.path.append("..")          # from the notebooks/ folder
     from src.config import CFG, PATHS
     from src import data_loading, preprocessing, models_classical, evaluation, aspects
 """
@@ -12,8 +12,8 @@ __version__ = "0.1.0"
 
 import logging
 
-# Egységes naplózás minden modulban. A notebookokban így látod majd,
-# melyik lépés hol tart — nagy adaton ez nagyon hasznos.
+# Uniform logging in every module. In the notebooks this shows which step
+# is running and how far along it is — very useful on large data.
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s | %(levelname)-7s | %(name)s | %(message)s",
@@ -23,11 +23,11 @@ logging.basicConfig(
 
 def set_seed(seed: int | None = None) -> int:
     """
-    Minden véletlenszám-generátor rögzítése egyetlen hívással.
+    Fix every random number generator with a single call.
 
-    Ezt a notebook ELSŐ cellájában hívd meg. Enélkül minden futtatásnál
-    kicsit más eredményt kapsz, és a dolgozatba írt számokat nem tudod
-    reprodukálni — ami a védésen kellemetlen kérdéseket szül.
+    Call this in the FIRST cell of the notebook. Without it every run gives
+    slightly different results, and the numbers written into the thesis
+    cannot be reproduced — which leads to awkward questions at the defence.
     """
     import os
     import random

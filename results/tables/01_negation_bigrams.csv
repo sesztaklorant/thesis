@@ -1,4 +1,4 @@
-bigram,összes,negative,neutral,positive,neg_lift
+bigram,total,negative,neutral,positive,neg_lift
 not clean,819,0.558,0.2784,0.1636,4.2635
 not work,759,0.4163,0.3057,0.278,3.1811
 no one,746,0.3995,0.2909,0.3097,3.0522
