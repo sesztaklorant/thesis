@@ -1,4 +1,4 @@
-,db,arány_az_összes_hibából
+,count,share_of_all_errors
 positive -> neutral,5495,0.374
 neutral -> negative,2627,0.179
 neutral -> positive,2615,0.178

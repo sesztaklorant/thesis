@@ -1,40 +1,39 @@
 """
-text_analysis.py — Megkülönböztető kifejezések és tagadáselemzés.
+text_analysis.py — Distinctive terms and negation analysis.
 
-Erre a kérdésre válaszol: "mikor rakjuk össze a szavakat, hogy jelentést
-kapjanak — 'good' vs 'not good'?"
+Answers the question: "when should words be put together to get their
+meaning — 'good' vs 'not good'?"
 
-A probléma a puszta gyakorisággal
-----------------------------------
-A 01-es notebook első változata osztályonként a LEGGYAKORIBB szavakat
-mutatta. Az eredmény szinte használhatatlan volt: mindhárom osztályban
-ugyanazok a szavak vezettek (room, location, staff, good). Ez nem hiba,
-hanem a módszer korlátja — a gyakori szavak mindenhol gyakoriak.
+The problem with plain frequency
+--------------------------------
+The first version of notebook 01 showed the MOST FREQUENT words per class.
+The result was almost useless: the same words led in all three classes
+(room, location, staff, good). This is not a bug but a limitation of the
+method — frequent words are frequent everywhere.
 
-Amit tudni akarunk, az más kérdés:
+What we want to know is a different question:
 
-    NEM: "mely szavak gyakoriak a negatív reviewkban?"
-    HANEM: "mely szavak gyakoribbak a negatívban, MINT A TÖBBIBEN?"
+    NOT: "which words are frequent in negative reviews?"
+    BUT: "which words are more frequent in the negative class THAN IN THE OTHERS?"
 
-Ez a megkülönböztető (distinctive) kifejezések kérdése, és külön mérőszám
-kell hozzá.
+This is the question of distinctive terms, and it needs a separate measure.
 
-A használt módszer: súlyozott log-odds arány
----------------------------------------------
-Monroe, Colaresi és Quinn (2008) "Fightin' Words" módszere, ami a
-politikai szövegelemzés egyik bevett eszköze, és sentimentre is jól
-működik. Két lépésből áll:
+The method used: weighted log-odds ratio
+----------------------------------------
+The "Fightin' Words" method of Monroe, Colaresi and Quinn (2008), a standard
+tool of political text analysis that also works well for sentiment. It has
+two steps:
 
-1. LOG-ODDS: mennyivel valószínűbb a szó az egyik osztályban, mint a
-   másikban? A logaritmus szimmetrikussá teszi (a kétszer gyakoribb és a
-   feleannyira gyakori azonos távolságra kerül a nullától).
+1. LOG-ODDS: how much more likely is the word in one class than in the
+   other? The logarithm makes it symmetric (twice as frequent and half as
+   frequent end up at the same distance from zero).
 
-2. Z-ÉRTÉKKÉ NORMÁLÁS: a ritka szavak log-odds értéke bizonytalan — egy
-   3-szor előforduló szó aránya véletlenül is kiugorhat. A becslés
-   szórásával osztva a ritka szavak visszaszorulnak, és a lista tetején
-   olyan kifejezések maradnak, amelyek gyakoriak ÉS megkülönböztetőek.
+2. NORMALISING TO A Z-SCORE: the log-odds of rare words is uncertain — the
+   ratio of a word occurring 3 times can spike by chance. Dividing by the
+   standard deviation of the estimate pushes the rare words back, and the top
+   of the list keeps expressions that are frequent AND distinctive.
 
-Hivatkozás a dolgozatba:
+Reference for the thesis:
     Monroe, B. L., Colaresi, M. P., & Quinn, K. M. (2008). Fightin' Words:
     Lexical Feature Selection and Evaluation for Identifying the Content of
     Political Conflict. Political Analysis, 16(4), 372–403.
@@ -56,7 +55,7 @@ log = logging.getLogger(__name__)
 
 
 # ==========================================================================
-# 1) MEGKÜLÖNBÖZTETŐ KIFEJEZÉSEK
+# 1) DISTINCTIVE TERMS
 # ==========================================================================
 def distinctive_terms(
     texts: pd.Series,
@@ -68,20 +67,20 @@ def distinctive_terms(
     max_features: int = 60_000,
 ) -> pd.DataFrame:
     """
-    Osztályonként megadja a legjellemzőbb kifejezéseket.
+    Return the most characteristic terms per class.
 
-    Paraméterek
-    -----------
-    ngram_range : (1,1) csak szavak, (1,2) szavak + szópárok, (1,3) hármasok is.
-        A SZÓPÁROK a lényegesek: a "not clean" csak bigramként létezik.
-    min_count   : ennél ritkább kifejezést eldobunk (zaj).
-    alpha       : simítási paraméter. Megakadályozza a nullával osztást, és
-        tompítja a nagyon ritka kifejezéseket.
+    Parameters
+    ----------
+    ngram_range : (1,1) words only, (1,2) words + word pairs, (1,3) triples too.
+        The WORD PAIRS are what matters: "not clean" exists only as a bigram.
+    min_count   : rarer terms are dropped (noise).
+    alpha       : smoothing parameter. Prevents division by zero and dampens
+        very rare terms.
 
-    Visszatér
-    ---------
-    Hosszú formátumú tábla: sentiment | rang | kifejezés | z_ertek |
-    gyakorisag_osztalyban | gyakorisag_maskor | arany
+    Returns
+    -------
+    Long-format table: sentiment | rank | term | z_score |
+    count_in_class | count_elsewhere | ratio
     """
     from sklearn.feature_extraction.text import CountVectorizer
 
@@ -101,23 +100,23 @@ def distinctive_terms(
         if mask.sum() == 0:
             continue
 
-        y = np.asarray(X[mask].sum(axis=0)).ravel().astype(float)   # osztályon belül
-        rest = total - y                                            # a többi osztály
+        y = np.asarray(X[mask].sum(axis=0)).ravel().astype(float)   # within the class
+        rest = total - y                                            # the other classes
 
         n_y, n_rest = y.sum(), rest.sum()
 
-        # Simított arányok
+        # Smoothed proportions
         p_y = (y + alpha) / (n_y + alpha * V)
         p_r = (rest + alpha) / (n_rest + alpha * V)
 
-        # Log-odds arány
+        # Log-odds ratio
         lo = np.log(p_y / (1 - p_y)) - np.log(p_r / (1 - p_r))
 
-        # A becslés szórása, és a belőle képzett z-érték
+        # Standard deviation of the estimate, and the z-score derived from it
         var = 1.0 / (y + alpha) + 1.0 / (rest + alpha)
         z = lo / np.sqrt(var)
 
-        # Csak a ténylegesen előforduló kifejezések érdekelnek
+        # Only the terms that actually occur are of interest
         ok = y >= max(min_count // 3, 3)
         idx = np.argsort(np.where(ok, z, -np.inf))[-top_n:][::-1]
 
@@ -126,15 +125,15 @@ def distinctive_terms(
                 continue
             rows.append({
                 "sentiment": cls,
-                "rang": rank,
-                "kifejezés": vocab[i],
-                "z_érték": float(z[i]),
-                "db_osztályban": int(y[i]),
-                "db_máshol": int(rest[i]),
-                "arány": float((y[i] / max(n_y, 1)) / max(rest[i] / max(n_rest, 1), 1e-12)),
+                "rank": rank,
+                "term": vocab[i],
+                "z_score": float(z[i]),
+                "count_in_class": int(y[i]),
+                "count_elsewhere": int(rest[i]),
+                "ratio": float((y[i] / max(n_y, 1)) / max(rest[i] / max(n_rest, 1), 1e-12)),
             })
 
-    log.info("Szókincs: %d kifejezés (%s-gram), összesen %d token",
+    log.info("Vocabulary: %d terms (%s-gram), %d tokens in total",
              V, "-".join(map(str, ngram_range)), int(grand_total))
     return pd.DataFrame(rows)
 
@@ -145,9 +144,9 @@ def plot_distinctive_terms(
     save_as: str | None = None,
 ):
     """
-    Osztályonként vízszintes oszlopdiagram a z-értékekkel.
+    Horizontal bar chart of the z-scores per class.
 
-    Egy adatsor panelenként -> nincs jelmagyarázat, a panel címe nevezi meg.
+    One data series per panel -> no legend, the panel title names it.
     """
     import matplotlib.pyplot as plt
 
@@ -158,12 +157,12 @@ def plot_distinctive_terms(
 
     for ax, cls in zip(axes, classes):
         sub = (table[table["sentiment"] == cls]
-               .nsmallest(top_n, "rang")
-               .sort_values("z_érték"))
-        ax.barh(sub["kifejezés"], sub["z_érték"],
+               .nsmallest(top_n, "rank")
+               .sort_values("z_score"))
+        ax.barh(sub["term"], sub["z_score"],
                 color=SENTIMENT_COLORS[cls], height=0.72)
         ax.set_title(cls, loc="left", pad=10, color=INK["primary"])
-        ax.set_xlabel("z-érték (megkülönböztető erő)")
+        ax.set_xlabel("z-score (distinctiveness)")
         ax.grid(axis="y", visible=False)
         ax.set_axisbelow(True)
         ax.margins(x=0.10)
@@ -175,7 +174,7 @@ def plot_distinctive_terms(
 
 
 # ==========================================================================
-# 2) TAGADÁSELEMZÉS
+# 2) NEGATION ANALYSIS
 # ==========================================================================
 NEGATORS = ["not", "no", "never", "without", "nothing", "hardly", "barely",
             "didn't", "wasn't", "weren't", "isn't", "aren't", "couldn't",
@@ -189,13 +188,13 @@ def negation_bigrams(
     min_count: int = 20,
 ) -> pd.DataFrame:
     """
-    Kigyűjti a TAGADÁSSAL kezdődő szópárokat, és megmutatja az
-    osztályonkénti megoszlásukat.
+    Collect the word pairs STARTING WITH A NEGATION and show their
+    distribution across the classes.
 
-    Ez a kérdésed közvetlen válasza: hány "not good", "not clean",
-    "no hot water" fordul elő, és melyik osztályban?
+    This is the direct answer to your question: how many "not good",
+    "not clean", "no hot water" occur, and in which class?
 
-    Visszatér: bigram | összes | negative/neutral/positive arány | neg_lift
+    Returns: bigram | total | negative/neutral/positive share | neg_lift
     """
     from sklearn.feature_extraction.text import CountVectorizer
 
@@ -207,9 +206,9 @@ def negation_bigrams(
 
     keep = np.array([bool(neg_pattern.match(v)) for v in vocab])
     if not keep.any():
-        log.warning("Nem találtam tagadással kezdődő szópárt. Lehet, hogy a "
-                    "szövegoszlopból már kiestek a tagadószavak — ellenőrizd, "
-                    "hogy keep_negations=True volt-e a tisztításnál.")
+        log.warning("No word pair starting with a negation was found. The "
+                    "negation words may already have been removed from the text "
+                    "column — check that keep_negations=True was used in cleaning.")
         return pd.DataFrame()
 
     X = X[:, keep]
@@ -224,12 +223,12 @@ def negation_bigrams(
         m = lab == cls
         shares[cls] = np.asarray(X[m].sum(axis=0)).ravel().astype(float)
 
-    df = pd.DataFrame({"bigram": vocab, "összes": total.astype(int)})
+    df = pd.DataFrame({"bigram": vocab, "total": total.astype(int)})
     for cls in CFG.labels:
         df[cls] = shares[cls] / np.maximum(total, 1)
     df["neg_lift"] = df["negative"] / base_neg if base_neg else np.nan
 
-    return (df.nlargest(top_n, "összes")
+    return (df.nlargest(top_n, "total")
               .set_index("bigram")
               .sort_values("neg_lift", ascending=False)
               .round(4))
@@ -241,17 +240,17 @@ def compare_with_without_negation(
     words: list[str] | None = None,
 ) -> pd.DataFrame:
     """
-    A kérdésed magja: mennyit számít a "not" a szó előtt?
+    The core of your question: how much does a "not" before the word matter?
 
-    Szavanként összeveti:
-        "good"      hány százaléka esik negatív reviewba?
-        "not good"  hány százaléka esik negatív reviewba?
+    For each word it compares:
+        "good"      what percentage falls into negative reviews?
+        "not good"  what percentage falls into negative reviews?
 
-    Ha a kettő között nagy a különbség, az SZÁMSZERŰ BIZONYÍTÉK arra, hogy
-    az unigram-alapú (zsák-a-szavak) reprezentáció elveszít valamit —
-    pontosan ez az RQ2 lényege.
+    A large difference between the two is QUANTITATIVE EVIDENCE that the
+    unigram-based (bag-of-words) representation loses something — which is
+    exactly the point of RQ2.
 
-    A táblázat mehet a dolgozat 6.2 fejezetébe.
+    The table can go into chapter 6.2 of the thesis.
     """
     words = words or ["good", "clean", "comfortable", "friendly", "helpful",
                       "nice", "quiet", "great", "big", "working", "hot water",
@@ -261,22 +260,22 @@ def compare_with_without_negation(
     lab = labels.astype(str)
     base = (lab == "negative").mean()
 
-    # Nem-rögzítő csoport (?:...) kell, különben a pandas figyelmeztet, hogy
-    # a mintában rögzítő csoport van, és az str.extract-et ajánlja helyette.
+    # A non-capturing group (?:...) is needed, otherwise pandas warns that the
+    # pattern has a capturing group and recommends str.extract instead.
     neg_prefixes = "(?:" + "|".join(re.escape(n) for n in NEGATORS) + ")"
 
     rows = []
     for w in words:
         wq = re.escape(w)
-        # Előfordul-e egyáltalán a szó? (szóhatárral, hogy a "good" ne
-        # találjon a "goodbye"-ba)
+        # Does the word occur at all? (with word boundaries, so that "good"
+        # does not match inside "goodbye")
         present = txt.str.contains(rf"(?<!\w){wq}(?!\w)", regex=True, na=False)
-        # Előfordul-e TAGADÁS UTÁN közvetlenül?
+        # Does it occur DIRECTLY AFTER A NEGATION?
         negated = txt.str.contains(rf"(?<!\w){neg_prefixes}\s+{wq}(?!\w)",
                                    regex=True, na=False)
-        # "Önmagában" = szerepel, de nem tagadva. (Ha egy reviewban mindkét
-        # alak előfordul, azt a tagadott csoportba soroljuk — óvatosabb,
-        # mert a tagadás erősebb jel.)
+        # "Plain" = present, but not negated. (If both forms occur in one
+        # review, it is put into the negated group — more conservative,
+        # because negation is the stronger signal.)
         plain_only = present & ~negated
 
         if plain_only.sum() < 20 or negated.sum() < 20:
@@ -286,60 +285,61 @@ def compare_with_without_negation(
         p_neg_negated = (lab[negated] == "negative").mean()
 
         rows.append({
-            "szó": w,
-            "db (önmagában)": int(plain_only.sum()),
-            "negatív arány (önmagában)": p_neg_plain,
-            "db (tagadva)": int(negated.sum()),
-            "negatív arány (tagadva)": p_neg_negated,
-            "különbség": p_neg_negated - p_neg_plain,
-            "lift (tagadva)": p_neg_negated / base if base else np.nan,
+            "word": w,
+            "n (plain)": int(plain_only.sum()),
+            "negative share (plain)": p_neg_plain,
+            "n (negated)": int(negated.sum()),
+            "negative share (negated)": p_neg_negated,
+            "difference": p_neg_negated - p_neg_plain,
+            "lift (negated)": p_neg_negated / base if base else np.nan,
         })
 
     if not rows:
-        log.warning("Egyik szónál sem volt elég előfordulás az összevetéshez.")
+        log.warning("None of the words had enough occurrences for the comparison.")
         return pd.DataFrame()
 
     return (pd.DataFrame(rows)
-            .set_index("szó")
-            .sort_values("különbség", ascending=False)
+            .set_index("word")
+            .sort_values("difference", ascending=False)
             .round(4))
 
 
 def plot_negation_effect(table: pd.DataFrame, save_as: str | None = None):
     """
-    Párosított pontdiagram (dumbbell): minden szónál a puszta és a tagadott
-    alak negatív aránya, vonallal összekötve.
+    Paired dot plot (dumbbell): for every word the negative share of the
+    plain and of the negated form, connected by a line.
 
-    Miért ez a forma? Mert a kérdés PÁROS összehasonlítás — a vonal hossza
-    közvetlenül mutatja a hatás nagyságát, és egyben látszik a kiindulási
-    szint is. Két külön oszlopdiagram ugyanezt nehezebben olvashatóan adná.
+    Why this form? Because the question is a PAIRED comparison — the length
+    of the line shows the size of the effect directly, and the starting level
+    is visible at the same time. Two separate bar charts would show the same
+    thing less readably.
     """
     import matplotlib.pyplot as plt
 
     if table.empty:
-        log.warning("Üres tábla, nincs mit ábrázolni.")
+        log.warning("Empty table, nothing to plot.")
         return None
 
-    d = table.sort_values("különbség")
+    d = table.sort_values("difference")
     y = np.arange(len(d))
 
     fig, ax = plt.subplots(figsize=(9, max(3.4, 0.42 * len(d) + 2.0)))
 
-    ax.hlines(y, d["negatív arány (önmagában)"], d["negatív arány (tagadva)"],
+    ax.hlines(y, d["negative share (plain)"], d["negative share (negated)"],
               color=INK["axis"], lw=2, zorder=1)
-    ax.scatter(d["negatív arány (önmagában)"], y, s=90, zorder=2,
-               color=SENTIMENT_COLORS["positive"], label="a szó önmagában",
+    ax.scatter(d["negative share (plain)"], y, s=90, zorder=2,
+               color=SENTIMENT_COLORS["positive"], label="the word on its own",
                edgecolor=INK["surface"], linewidth=1.5)
-    ax.scatter(d["negatív arány (tagadva)"], y, s=90, zorder=2,
-               color=SENTIMENT_COLORS["negative"], label="tagadással",
+    ax.scatter(d["negative share (negated)"], y, s=90, zorder=2,
+               color=SENTIMENT_COLORS["negative"], label="with negation",
                edgecolor=INK["surface"], linewidth=1.5)
 
     ax.set_yticks(y, d.index)
-    ax.set_xlabel("Az előfordulások mekkora hányada esik negatív reviewba")
+    ax.set_xlabel("Share of occurrences that fall into negative reviews")
     ax.xaxis.set_major_formatter(lambda v, _: f"{v:.0%}")
     ax.grid(axis="y", visible=False)
     ax.set_axisbelow(True)
-    ax.set_title("A tagadás hatása — ugyanaz a szó, más jelentés",
+    ax.set_title("The effect of negation — same word, different meaning",
                  loc="left", pad=34, color=INK["primary"])
     ax.legend(loc="lower left", bbox_to_anchor=(0, 1.005), ncol=2, frameon=False)
 
@@ -350,7 +350,7 @@ def plot_negation_effect(table: pd.DataFrame, save_as: str | None = None):
 
 
 # ==========================================================================
-# 3) N-GRAM SZINTEK ÖSSZEHASONLÍTÁSA
+# 3) COMPARING N-GRAM LEVELS
 # ==========================================================================
 def ngram_level_comparison(
     texts: pd.Series,
@@ -358,14 +358,15 @@ def ngram_level_comparison(
     min_count: int = 30,
 ) -> pd.DataFrame:
     """
-    Mennyivel lesz "megkülönböztetőbb" a szókincs, ha szópárokat és
-    hármasokat is megengedünk?
+    How much more "distinctive" does the vocabulary become if word pairs and
+    triples are allowed?
 
-    A táblázat soronként egy n-gram szintet mutat: hány kifejezés van, és
-    mekkora a top-50 kifejezés átlagos megkülönböztető ereje.
+    The table shows one n-gram level per row: how many terms there are, and
+    the mean distinctiveness of the top-50 terms.
 
-    Ez előrevetíti a 02-es notebook ablációs vizsgálatát: ott ugyanezt a
-    kérdést MODELLTELJESÍTMÉNYBEN méred, itt a szókincs szintjén nézed meg.
+    This anticipates the ablation study of notebook 02: there the same
+    question is measured in MODEL PERFORMANCE, here it is looked at on the
+    level of the vocabulary.
     """
     rows = []
     for name, rng in [("unigram (1,1)", (1, 1)),
@@ -375,15 +376,15 @@ def ngram_level_comparison(
                               top_n=50, min_count=min_count)
         if t.empty:
             continue
-        n_multi = t["kifejezés"].str.contains(" ").sum()
+        n_multi = t["term"].str.contains(" ").sum()
         rows.append({
-            "n-gram szint": name,
-            "top-50 átlagos z": t.groupby("sentiment")["z_érték"].mean().mean(),
-            "többszavas a top-50-ben": n_multi / len(t),
-            "példa (negatív)": ", ".join(
-                t[(t.sentiment == "negative") & (t["kifejezés"].str.contains(" "))]
-                ["kifejezés"].head(3)
+            "n-gram level": name,
+            "top-50 mean z": t.groupby("sentiment")["z_score"].mean().mean(),
+            "multi-word share in top-50": n_multi / len(t),
+            "example (negative)": ", ".join(
+                t[(t.sentiment == "negative") & (t["term"].str.contains(" "))]
+                ["term"].head(3)
             ) or "—",
         })
 
-    return pd.DataFrame(rows).set_index("n-gram szint").round(3)
+    return pd.DataFrame(rows).set_index("n-gram level").round(3)

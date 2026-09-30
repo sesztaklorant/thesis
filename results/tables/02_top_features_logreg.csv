@@ -1,4 +1,4 @@
-,sentiment,rang,jellemző,súly
+,sentiment,rank,feature,weight
 0,negative,1,poor,3.7505922182482414
 1,negative,2,dirty,3.5900308499382967
 2,negative,3,disappointing,3.5712138059650735

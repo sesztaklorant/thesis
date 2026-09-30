@@ -1,4 +1,4 @@
-accommodation_type,n,részarány,negative,neutral,positive,neg_lift,pos_lift,átlagpont
+accommodation_type,n,share,negative,neutral,positive,neg_lift,pos_lift,mean_score
 Motel,6929,0.0341,0.1993,0.2589,0.5418,1.5229,0.8402,8.578
 Resort,7574,0.0373,0.1583,0.2147,0.627,1.2096,0.9724,8.7873
 Hotel,115437,0.5677,0.1499,0.2467,0.6034,1.1453,0.9359,8.7553

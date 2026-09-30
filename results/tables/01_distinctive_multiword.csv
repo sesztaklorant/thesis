@@ -1,4 +1,4 @@
-,sentiment,rang,kifejezés,z_érték,db_osztályban,db_máshol,arány
+,sentiment,rank,term,z_score,count_in_class,count_elsewhere,ratio
 0,negative,1,not clean,29.894438002682154,457,362,8.187488057182174
 1,negative,2,room not,28.592536486217845,848,1644,3.345315548139451
 2,negative,3,not good,26.33524419100539,585,952,3.98530870370674

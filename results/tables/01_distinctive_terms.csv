@@ -1,4 +1,4 @@
-,sentiment,rang,kifejezés,z_érték,db_osztályban,db_máshol,arány
+,sentiment,rank,term,z_score,count_in_class,count_elsewhere,ratio
 0,negative,1,not,81.05599604601615,15132,39973,2.152476201956282
 1,negative,2,no,65.16179458747854,8940,22618,2.24746060854225
 2,negative,3,ok,47.98427292735309,2076,3005,3.9281823714897945

@@ -1,4 +1,4 @@
-pontszam,n,pontossag,pred_negative,pred_neutral,pred_positive
+score_rounded,n,accuracy,pred_negative,pred_neutral,pred_positive
 3,3,1.0,1.0,0.0,0.0
 4,26,0.846,0.846,0.115,0.038
 5,253,0.874,0.874,0.115,0.012

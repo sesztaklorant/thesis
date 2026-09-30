@@ -1,5 +1,5 @@
-szabály,küszöbök,neg pontok,neu pontok,pos pontok,negative,neutral,positive,legkisebb osztály (db),kiegyensúlyozatlanság
-A) 6 / 8   — szigorú,6 / 8,3–6,7,8–10,0.0302,0.1006,0.8692,6149,28.8
-B) 7 / 9   — kiegyensúlyozott,7 / 9,3–7,8,9–10,0.1308,0.2244,0.6448,26647,4.9
-C) 7 / 10  — széles közép,7 / 10,3–7,8–9,10,0.1308,0.4746,0.3947,26647,3.6
-D) 8 / 10  — relatív,8 / 10,3–8,9,10,0.3552,0.2502,0.3947,50982,1.6
+scheme,thresholds,neg scores,neu scores,pos scores,negative,neutral,positive,smallest class (n),imbalance ratio
+A) 6 / 8   — strict,6 / 8,3–6,7,8–10,0.0302,0.1006,0.8692,6149,28.8
+B) 7 / 9   — balanced,7 / 9,3–7,8,9–10,0.1308,0.2244,0.6448,26647,4.9
+C) 7 / 10  — wide middle,7 / 10,3–7,8–9,10,0.1308,0.4746,0.3947,26647,3.6
+D) 8 / 10  — relative,8 / 10,3–8,9,10,0.3552,0.2502,0.3947,50982,1.6
