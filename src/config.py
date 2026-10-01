@@ -175,7 +175,7 @@ class Config:
     # EN: The final label is the majority vote of the three approaches.
     #     On a tie this approach decides (update it to the best one after the
     #     gold-sample evaluation).
-    tie_breaker_approach: str = "A"
+    tie_breaker_approach: str = "B"
 
     # --- Kézi annotáció / Manual annotation (gold standard) ---
     gold_sample_size: int = 400
