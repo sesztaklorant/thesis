@@ -372,6 +372,33 @@ def _sentence_label_from_aspects(labels: pd.Series, conflict_policy: str) -> str
     return "neutral"
 
 
+def labels_from_onehot(raw: pd.DataFrame, columns: dict[str, str]) -> pd.Series:
+    """
+    HU: Három 0/1 oszlop -> egy címke soronként:
+          pontosan egy 1-es          -> az az osztály
+          semleges + egy polaritás   -> a polaritás (mint az aspektusoknál)
+          pozitív ÉS negatív is 1    -> "conflict" (a conflict_policy dönt róla)
+          egyik sem                  -> NaN (kimarad)
+    EN: Three 0/1 columns -> one label per row:
+          exactly one 1              -> that class
+          neutral + one polarity     -> the polarity (as for the aspects)
+          positive AND negative are 1 -> "conflict" (handled by conflict_policy)
+          none                       -> NaN (dropped)
+    """
+    flags = pd.DataFrame({label: pd.to_numeric(raw[col], errors="coerce").fillna(0) > 0
+                          for label, col in columns.items()})
+    pos, neg, neu = flags["positive"], flags["negative"], flags["neutral"]
+    label = pd.Series(np.nan, index=raw.index, dtype=object)
+    label[neu & ~pos & ~neg] = "neutral"
+    label[pos & ~neg] = "positive"
+    label[neg & ~pos] = "negative"
+    label[pos & neg] = "conflict"
+    log.info("HRAST one-hot rows — positive: %d | negative: %d | neutral only: %d | "
+             "both pos+neg: %d | none: %d", int((pos & ~neg).sum()), int((neg & ~pos).sum()),
+             int((neu & ~pos & ~neg).sum()), int((pos & neg).sum()), int((~pos & ~neg & ~neu).sum()))
+    return label
+
+
 def prepare_hrast_sentences(
     raw: pd.DataFrame,
     text_col: str | None = None,
@@ -395,17 +422,27 @@ def prepare_hrast_sentences(
     text_col = text_col or found.get("text")
     sentiment_col = sentiment_col or found.get("sentiment")
     group_col = group_col or found.get("group")
-    if text_col is None or sentiment_col is None:
+
+    # HU: A Kaggle-féle HRAST "széles" formátumú: a szentiment három 0/1 oszlopban van
+    #     (positive / negative / neutral), soronként egy mondat. Ezt is felismerjük.
+    # EN: The Kaggle HRAST is in "wide" format: sentiment is in three 0/1 columns
+    #     (positive / negative / neutral), one sentence per row. This is recognised too.
+    onehot = resolve_columns(raw.columns, {label: [label] for label in CFG.labels})
+    use_onehot = sentiment_col is None and len(onehot) == len(CFG.labels)
+
+    if text_col is None or (sentiment_col is None and not use_onehot):
         raise KeyError(
             f"Text / sentiment column not recognised. HRAST columns: {list(raw.columns)}\n"
             "Pass them explicitly: prepare_hrast_sentences(raw, text_col='...', sentiment_col='...')"
         )
-    log.info("HRAST columns used — text: %s | sentiment: %s | group: %s",
-             text_col, sentiment_col, group_col)
+    log.info("HRAST columns used — text: %s | sentiment: %s | group: %s", text_col,
+             f"one-hot {list(onehot.values())}" if use_onehot else sentiment_col, group_col)
 
+    label_raw = (labels_from_onehot(raw, onehot) if use_onehot
+                 else normalise_sentiment_values(raw[sentiment_col], label_map))
     work = pd.DataFrame({
         "sentence": raw[text_col].astype(str).map(html.unescape).str.strip(),
-        "label_raw": normalise_sentiment_values(raw[sentiment_col], label_map),
+        "label_raw": label_raw,
         "group_id": raw[group_col].astype(str) if group_col else np.nan,
     }).dropna(subset=["label_raw"])
     work = work[work["sentence"].str.len() > 0]

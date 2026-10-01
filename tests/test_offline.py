@@ -145,6 +145,18 @@ def test_hrast_preparation():
     assert set(out["label"]) == {"positive", "neutral"}
 
 
+def test_hrast_onehot_format():
+    # HU: A Kaggle-HRAST valódi szerkezete (széles, 0/1 szentiment-oszlopok).
+    # EN: The real structure of the Kaggle HRAST (wide, 0/1 sentiment columns).
+    raw = pd.DataFrame({"id": [1, 2, 3, 4, 5], "review": ["1 elevator not working.", "Great pool.",
+                        "Nice room but noisy.", "We arrived at noon.", "Great pool."],
+                        "Unnamed: 2": np.nan, "positive": [0, 1, 1, 0, 1], "negative": [1, 0, 1, 0, 0],
+                        "neutral": [0, 0, 0, 1, 0], "Lift": [1, 0, 0, 0, 0], "Aspect": 0})
+    out = prepare_hrast_sentences(raw)
+    assert dict(zip(out["sentence"], out["label"])) == {
+        "1 elevator not working.": "negative", "Great pool.": "positive", "We arrived at noon.": "neutral"}
+
+
 def test_score_cut_reference():
     cut = lv.score_cut_labels(pd.Series([3.0, 7.0, 8.0, 9.0, np.nan]))
     assert list(cut[:4]) == ["negative", "negative", "neutral", "positive"] and pd.isna(cut[4])
