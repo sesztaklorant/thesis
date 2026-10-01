@@ -3,11 +3,8 @@ Number of reviews,"203,328"
 Unique properties,"5,000"
 Number of countries,120
 Accommodation types,24
-Mean score,8.87
-Median score,9.00
-Score standard deviation,1.16
+Mean guest score,8.87
+Median guest score,9.00
+Guest score std,1.16
 Mean review length (words),49.2
 Median review length (words),37
-Share of negative,13.1%
-Share of neutral,22.4%
-Share of positive,64.5%

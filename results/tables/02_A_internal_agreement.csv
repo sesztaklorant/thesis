@@ -1,0 +1,4 @@
+A_label,negative,neutral,positive
+negative,0.4296,0.4707,0.0997
+neutral,0.0892,0.4423,0.4685
+positive,0.0097,0.0906,0.8997

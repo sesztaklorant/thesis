@@ -1,33 +1,9 @@
-# --- Adatok: SOHA ne kerüljenek a Git repóba (túl nagyok + licenc) ---
-data/raw/*
-data/interim/*
-data/processed/*
-!data/**/.gitkeep
-
-# --- Betanított modellek és nagy kimenetek ---
-results/models/*
-!results/models/.gitkeep
-*.pt
-*.bin
-*.safetensors
-
-# --- Python ---
 __pycache__/
-*.py[cod]
-*.egg-info/
-.venv/
-venv/
-env/
-
-# --- Jupyter ---
 .ipynb_checkpoints/
-
-# --- IDE / OS ---
-.vscode/
-.idea/
-.DS_Store
-Thumbs.db
-
-# --- Titkos kulcsok (Kaggle, HF token) ---
-.env
-kaggle.json
+data/raw/*.csv
+data/raw/*.parquet
+data/raw/hrast/*.csv
+data/processed/*
+data/labels/*
+results/models/*
+!**/.gitkeep

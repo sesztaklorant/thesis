@@ -1,0 +1,6 @@
+step,rows,change
+start,203787,0
+short texts (<10 chars) removed,203662,-125
+very long texts (>5000 chars) removed,203662,0
+duplicates removed,203340,-322
+non-English texts removed,203328,-12

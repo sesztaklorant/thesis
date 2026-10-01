@@ -1,14 +1,20 @@
 """
-data_loading.py — Downloading the data and bringing it to a uniform shape.
+data_loading.py — Adatbetöltés és egységes séma / Data loading and a uniform schema.
 
-The datasets have very different structures. The goal is to produce the
-SAME table from each of them, so that the downstream code (cleaning,
-TF-IDF, BERT) does not need to know where the data came from:
+HU: Két adatforrás:
+    1. Booking.com val.csv — az ELEMZETT adat. Nincs benne szentiment-címke,
+       csak 1–10-es vendégpontszám.
+    2. HRAST — kézzel annotált, mondatszintű hotel-adat. KIZÁRÓLAG a (B)
+       címkéző megközelítés tanítóadata.
+EN: Two data sources:
+    1. Booking.com val.csv — the ANALYSED data. It has no sentiment label,
+       only a 1–10 guest score.
+    2. HRAST — human-annotated, sentence-level hotel data. ONLY the training
+       data of labelling approach (B).
 
-    review_id | text | score | score_scale_max | dataset | (optional extra columns)
-
-This makes the RQ5 (cross-dataset generalisation) experiment trivial: you
-call the same function with a different `dataset` parameter.
+HU: A Booking-betöltő egységes táblát ad vissza:
+EN: The Booking loader returns a uniform table:
+    review_id | text | score | score_scale_max | dataset | review_positive | review_negative | metadata...
 """
 
 from __future__ import annotations
@@ -17,52 +23,70 @@ import html
 import logging
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
-from .config import CFG, PATHS, DATASETS
+from .config import CFG, DATASETS, PATHS
 
 log = logging.getLogger(__name__)
 
-# The uniform schema returned by every loader.
 CANONICAL_COLUMNS = ["review_id", "text", "score", "score_scale_max", "dataset"]
 
+# HU: A cache-verzió a fájlnév része. Ha a betöltő logikája változik, ezt kell
+#     növelni, és a régi cache automatikusan érvényét veszti.
+# EN: The cache version is part of the file name. Increase it when the loader
+#     logic changes, and the old cache is automatically ignored.
+#   1 — HU: első változat / EN: initial version
+#   2 — HU: HTML-entitások dekódolása, cím-írásjelek / EN: HTML entities decoded, title punctuation
+#   3 — HU: review_title oszlop is mentve / EN: review_title column stored too
+_CACHE_VERSION = 3
+
 
 # ==========================================================================
-# Helper functions
+# 0) PARQUET / CSV SEGÉDFÜGGVÉNYEK / PARQUET / CSV HELPERS
 # ==========================================================================
-# --------------------------------------------------------------------------
-# CACHE VERSION
-# --------------------------------------------------------------------------
-# The loaded data is saved to a parquet file, so the CSV does not have to be
-# re-read the second time. This is fast, but it hides a trap: if the logic
-# of the loader or of the text assembly changes, the old cache becomes stale
-# and silently returns the OLD data — while the code is already new.
-#
-# Solution: the version number is part of the file name. When the number is
-# increased here, the old files simply do not match and the loader re-reads
-# the CSV. The old files stay on disk; clear_cache() removes them.
-#
-# Version history:
-#   1 — initial version
-#   2 — HTML entities decoded (&#39; -> '), punctuation handling of the title
-_CACHE_VERSION = 2
+def write_frame(df: pd.DataFrame, path: Path) -> Path:
+    """
+    HU: Parquet-mentés; ha a pyarrow hiányzik, CSV-re esik vissza (a pipeline nem áll le).
+    EN: Save as parquet; falls back to CSV if pyarrow is missing (the pipeline does not stop).
+    """
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        df.to_parquet(path.with_suffix(".parquet"), index=False)
+        return path.with_suffix(".parquet")
+    except Exception as e:                                        # noqa: BLE001
+        csv = path.with_suffix(".csv")
+        df.to_csv(csv, index=False, encoding="utf-8")
+        log.warning("Parquet not available (%s), saved as CSV: %s", e.__class__.__name__, csv.name)
+        return csv
+
+
+def read_frame(path: Path) -> pd.DataFrame:
+    """HU: Beolvasás parquet- vagy CSV-formában. / EN: Read in parquet or CSV form."""
+    path = Path(path)
+    for candidate in (path.with_suffix(".parquet"), path.with_suffix(".csv")):
+        if candidate.exists():
+            return (pd.read_parquet(candidate) if candidate.suffix == ".parquet"
+                    else pd.read_csv(candidate))
+    raise FileNotFoundError(f"Neither {path.with_suffix('.parquet').name} nor "
+                            f"{path.with_suffix('.csv').name} exists in {path.parent}")
+
+
+def frame_exists(path: Path) -> bool:
+    path = Path(path)
+    return path.with_suffix(".parquet").exists() or path.with_suffix(".csv").exists()
 
 
 def _cache_path(name: str) -> Path:
-    """Where the loaded, still raw data is saved."""
     PATHS.ensure()
     return PATHS.raw / f"{name}__v{_CACHE_VERSION}.parquet"
 
 
 def clear_cache(name: str | None = None) -> list[Path]:
     """
-    Delete the cache files from the data/raw/ folder.
-
-    Does not touch the ORIGINAL downloaded CSVs — only the `*__v*.parquet`
-    files created by this module.
-
-        dl.clear_cache()                 # all of them
-        dl.clear_cache("booking_local")  # only this one
+    HU: A betöltő által készített cache-fájlok törlése (az eredeti CSV-ket nem érinti).
+    EN: Delete the cache files created by the loader (the original CSVs are untouched).
     """
     PATHS.ensure()
     pattern = f"{name}*__v*.parquet" if name else "*__v*.parquet"
@@ -71,233 +95,115 @@ def clear_cache(name: str | None = None) -> list[Path]:
         p.unlink()
         removed.append(p)
         log.info("Deleted: %s", p.name)
-    if not removed:
-        log.info("No cache file found to delete.")
     return removed
 
 
-def _write_cache(df: pd.DataFrame, path: Path) -> None:
-    """
-    Write the cache in parquet format.
-
-    Parquet is fast and small, but it needs the pyarrow package. If that is
-    not available for some reason, caching is simply skipped — the code keeps
-    working, every load just re-reads the CSV.
-    """
-    try:
-        df.to_parquet(path, index=False)
-        log.info("Saved to cache: %s (%d rows)", path.name, len(df))
-    except Exception as e:                                        # noqa: BLE001
-        log.warning("Caching failed (%s). The code keeps working, reloading "
-                    "will just be slower. Fix: pip install pyarrow",
-                    e.__class__.__name__)
-
-
-def _finalize(df: pd.DataFrame, dataset: str, scale_max: float) -> pd.DataFrame:
-    """Uniform column names + types + sequential identifier."""
-    df = df.copy()
-    df["dataset"] = dataset
-    df["score_scale_max"] = float(scale_max)
-    df["review_id"] = [f"{dataset}_{i}" for i in range(len(df))]
-    df["text"] = df["text"].astype("string")
-    df["score"] = pd.to_numeric(df["score"], errors="coerce")
-
-    extra = [c for c in df.columns if c not in CANONICAL_COLUMNS]
-    return df[CANONICAL_COLUMNS + extra]
-
-
 # ==========================================================================
-# 1) Booking.com — Hugging Face (MAIN dataset)
+# 1) BOOKING.COM — HELYI CSV / LOCAL CSV
 # ==========================================================================
-def load_booking_hf(
-    n_rows: int | None = None,
-    use_cache: bool = True,
-    combine_pos_neg: bool = True,
-) -> pd.DataFrame:
-    """
-    Booking.com Accommodation Reviews (CC BY-SA 4.0).
-
-    Parameters
-    ----------
-    n_rows : how many rows to load (None = all ~1.6M). For development give
-             e.g. 50_000, otherwise it takes long and eats a lot of memory.
-    combine_pos_neg : if True, the `review_positive` and `review_negative`
-             fields are joined into a single text. This corresponds to the
-             "review-level" classification described in the thesis.
-
-             NOTE (worth mentioning in the thesis as well): each of the two
-             fields already carries a sentiment label on its own. If you use
-             them together AND derive the label from the score, that is
-             consistent. But if you split them into separate sentences, the
-             sentences from the "positive" field are positive almost by
-             definition — this is not a bug, it just has to be documented.
-    """
-    meta = DATASETS["booking_hf"]
-    cache = _cache_path("booking_hf")
-
-    if use_cache and cache.exists():
-        log.info("Loading from cache: %s", cache)
-        df = pd.read_parquet(cache)
-        return df.head(n_rows) if n_rows else df
-
-    try:
-        from datasets import load_dataset
-    except ImportError as e:
-        raise ImportError(
-            "The 'datasets' package is missing. Install it: pip install datasets"
-        ) from e
-
-    log.info("Downloading from Hugging Face: %s", meta["id"])
-    # streaming=True: does not load all 1.6M rows into memory, yields row by row.
-    # During development this is your friend.
-    if n_rows:
-        stream = load_dataset(meta["id"], split="train", streaming=True)
-        rows = []
-        for i, row in enumerate(stream):
-            if i >= n_rows:
-                break
-            rows.append(row)
-        raw = pd.DataFrame(rows)
-    else:
-        ds = load_dataset(meta["id"], split="train")
-        raw = ds.to_pandas()
-
-    # --- Assemble the text ---
-    def _clean_part(s):
-        """In the Booking data a missing part is often 'Nothing' / an empty string."""
-        s = "" if pd.isna(s) else str(s).strip()
-        return "" if s.lower() in {"nothing", "n/a", "na", "none", "-"} else s
-
-    pos = raw.get("review_positive", pd.Series([""] * len(raw))).map(_clean_part)
-    neg = raw.get("review_negative", pd.Series([""] * len(raw))).map(_clean_part)
-    title = raw.get("review_title", pd.Series([""] * len(raw))).map(_clean_part)
-
-    if combine_pos_neg:
-        text = (title + ". " + pos + " " + neg).str.strip().str.replace(r"\s+", " ", regex=True)
-    else:
-        text = pos + " " + neg
-
-    df = pd.DataFrame({
-        "text": text,
-        "score": raw[meta["score_field"]],
-        # Useful extra fields for EDA and error analysis:
-        "accommodation_type": raw.get("accommodation_type"),
-        "accommodation_country": raw.get("accommodation_country"),
-        "guest_type": raw.get("guest_type"),
-        "review_positive": pos,
-        "review_negative": neg,
-    })
-
-    df = _finalize(df, "booking_hf", meta["score_scale"][1])
-    df.to_parquet(cache, index=False)
-    log.info("Saved: %s (%d rows)", cache, len(df))
-    return df
-
-
-# ==========================================================================
-# 1/b) Booking.com — LOCAL CSV (from the official train/val/test split)
-# ==========================================================================
-# The Booking.com dataset can also be downloaded split into three files:
-# train.csv, val.csv, test.csv. As agreed with the supervisor, we start with
-# the ~200k-row val.csv.
-#
-# ⚠ NAME CLASH — this has to be clarified in the thesis as well:
-#   "val.csv" is Booking's OWN validation split. For us this file is the
-#   WHOLE working dataset, which WE split 60/20/20 into our own
-#   train/validation/test sets. The two have nothing to do with each other.
-#   That is why the loaded dataset is called "booking_val_split", not
-#   "validation".
-
-# Possible column names of the Booking CSVs. Several variants exist
-# (HF export, GitHub release), so we work with aliases.
+# HU: A Booking CSV-k oszlopnevei exportonként eltérhetnek, ezért álnevekkel dolgozunk.
+# EN: Column names differ between Booking exports, so we work with aliases.
 _BOOKING_ALIASES: dict[str, list[str]] = {
-    "review_title":             ["review_title", "title"],
-    "review_positive":          ["review_positive", "positive_review", "positive", "pros"],
-    "review_negative":          ["review_negative", "negative_review", "negative", "cons"],
-    "guest_score":              ["guest_score", "review_score", "score",
-                                 "reviewer_score", "rating"],
-    "guest_type":               ["guest_type", "traveller_type", "traveler_type"],
-    "guest_country":            ["guest_country", "reviewer_nationality", "nationality"],
-    "room_nights":              ["room_nights", "nights", "total_number_of_nights"],
-    "month":                    ["month", "review_month", "stay_month"],
-    "accommodation_id":         ["accommodation_id", "hotel_id", "property_id"],
-    "accommodation_type":       ["accommodation_type", "property_type", "hotel_type"],
-    "accommodation_score":      ["accommodation_score", "hotel_score", "average_score"],
-    "accommodation_country":    ["accommodation_country", "hotel_country", "country"],
+    "review_title":              ["review_title", "title"],
+    "review_positive":           ["review_positive", "positive_review", "positive", "pros"],
+    "review_negative":           ["review_negative", "negative_review", "negative", "cons"],
+    "guest_score":               ["guest_score", "review_score", "score", "reviewer_score", "rating"],
+    "guest_type":                ["guest_type", "traveller_type", "traveler_type"],
+    "guest_country":             ["guest_country", "reviewer_nationality", "nationality"],
+    "room_nights":               ["room_nights", "nights", "total_number_of_nights"],
+    "month":                     ["month", "review_month", "stay_month"],
+    "accommodation_id":          ["accommodation_id", "hotel_id", "property_id"],
+    "accommodation_type":        ["accommodation_type", "property_type", "hotel_type"],
+    "accommodation_score":       ["accommodation_score", "hotel_score", "average_score"],
+    "accommodation_country":     ["accommodation_country", "hotel_country", "country"],
     "accommodation_star_rating": ["accommodation_star_rating", "star_rating", "stars"],
-    "location_is_beach":        ["location_is_beach", "is_beach"],
-    "location_is_ski":          ["location_is_ski", "is_ski"],
-    "location_is_city_center":  ["location_is_city_center", "is_city_center", "is_city_centre"],
-    "review_helpful_votes":     ["review_helpful_votes", "helpful_votes"],
+    "location_is_beach":         ["location_is_beach", "is_beach"],
+    "location_is_ski":           ["location_is_ski", "is_ski"],
+    "location_is_city_center":   ["location_is_city_center", "is_city_center", "is_city_centre"],
+    "review_helpful_votes":      ["review_helpful_votes", "helpful_votes"],
 }
 
-# These fields may contain placeholders like "Nothing"/"n/a".
+METADATA_COLUMNS = [
+    "guest_type", "guest_country", "room_nights", "month", "accommodation_id",
+    "accommodation_type", "accommodation_score", "accommodation_country",
+    "accommodation_star_rating", "location_is_beach", "location_is_ski",
+    "location_is_city_center", "review_helpful_votes",
+]
+
+# HU: Helykitöltő szövegek ("Nothing", "n/a"), amelyek valójában üres mezőt jelentenek.
+# EN: Placeholder texts ("Nothing", "n/a") that actually mean an empty field.
 _PLACEHOLDERS = {"nothing", "n/a", "na", "none", "-", "nan", "no negative",
                  "no positive", "nothing to report", "nothing really"}
 
 
-def _resolve_columns(df_columns) -> dict[str, str]:
+def _normalise_name(name: str) -> str:
+    return str(name).strip().lower().replace(" ", "_").replace("-", "_")
+
+
+def resolve_columns(columns, aliases: dict[str, list[str]]) -> dict[str, str]:
     """
-    Find which actual column of the CSV corresponds to each canonical field.
-    Insensitive to case and to the space/underscore difference.
+    HU: Megkeresi, melyik valós oszlop felel meg az egyes kanonikus mezőknek
+        (kis-/nagybetűre és szóköz/aláhúzás különbségre érzéketlen).
+    EN: Find which real column corresponds to each canonical field
+        (insensitive to case and to the space/underscore difference).
 
     Returns: {canonical_name: actual_column_name}
     """
-    def norm(s: str) -> str:
-        return str(s).strip().lower().replace(" ", "_").replace("-", "_")
-
-    actual = {norm(c): c for c in df_columns}
+    actual = {_normalise_name(c): c for c in columns}
     found: dict[str, str] = {}
-    for canonical, aliases in _BOOKING_ALIASES.items():
-        for a in aliases:
-            if a in actual:
-                found[canonical] = actual[a]
+    for canonical, names in aliases.items():
+        for name in names:
+            if name in actual:
+                found[canonical] = actual[name]
                 break
     return found
 
 
-def _clean_placeholder(s) -> str:
+def clean_placeholder(value) -> str:
     """
-    Placeholder text -> empty string, and decode HTML entities.
-
-    In the Booking export the apostrophe is HTML-encoded: `wouldn&#39;t`.
-    It is decoded already here so that the raw `text` column is readable
-    too — this way the examples printed in the EDA and the quotes that go
-    into the thesis are fine as well, not only the cleaned versions.
+    HU: Helykitöltő -> üres szöveg, HTML-entitások dekódolása (wouldn&#39;t -> wouldn't).
+    EN: Placeholder -> empty string, decode HTML entities (wouldn&#39;t -> wouldn't).
     """
-    if pd.isna(s):
+    if pd.isna(value):
         return ""
-    s = html.unescape(str(s)).strip()
-    return "" if s.lower() in _PLACEHOLDERS else s
+    value = html.unescape(str(value)).strip()
+    return "" if value.lower() in _PLACEHOLDERS else value
 
 
-def load_booking_local(
+def assemble_review_text(title: pd.Series, positive: pd.Series, negative: pd.Series) -> pd.Series:
+    """
+    HU: "cím. pozitív rész negatív rész" összeállítása; pont csak akkor kerül a cím
+        után, ha az nem végződik már írásjelre.
+    EN: Build "title. positive part negative part"; a full stop is added after the
+        title only if it does not already end in punctuation.
+    """
+    separator = title.map(lambda t: "" if (not t or t[-1] in ".!?…") else ".")
+    text = title + separator + " " + positive + " " + negative
+    return (text.str.replace(r"^[\.\s]+", "", regex=True)
+                .str.replace(r"\.{2,}", ".", regex=True)
+                .str.replace(r"\s+", " ", regex=True)
+                .str.strip())
+
+
+def load_booking(
     filename: str | None = None,
     n_rows: int | None = None,
-    combine_pos_neg: bool = True,
     use_cache: bool = True,
     verbose: bool = True,
 ) -> pd.DataFrame:
     """
-    Load the Booking.com CSV from the data/raw/ folder (val.csv by default).
+    HU: A Booking.com CSV betöltése a data/raw/ mappából (alapból val.csv).
+    EN: Load the Booking.com CSV from the data/raw/ folder (val.csv by default).
 
     Parameters
     ----------
-    filename : name of the file in data/raw/. If None, CFG.local_csv_name.
-    n_rows   : how many rows to read (None = all). Useful for development.
-    combine_pos_neg : whether to join the positive and negative text parts
-                      into one field.
-
-    Returns
-    -------
-    Canonical table: review_id, text, score, score_scale_max, dataset,
-    + the metadata columns contained in the CSV (country, accommodation type,
-    guest type, star rating, month...). The crosstabs are built on these.
+    filename : HU: fájlnév a data/raw/ mappában / EN: file name in data/raw/
+    n_rows   : HU: hány sort olvasson (None = mind) / EN: how many rows to read (None = all)
     """
     filename = filename or CFG.local_csv_name
     cache = _cache_path(f"booking_local_{Path(filename).stem}")
 
-    if use_cache and cache.exists() and n_rows is None:
+    if use_cache and n_rows is None and cache.exists():
         try:
             log.info("Loading from cache: %s", cache.name)
             return pd.read_parquet(cache)
@@ -308,316 +214,245 @@ def load_booking_local(
     csv_path = PATHS.raw / filename
     if not csv_path.exists():
         raise FileNotFoundError(
-            f"Not found: {csv_path}\n"
-            f"Put the CSV into the data/raw/ folder, or give the exact file name:\n"
-            f"    load_booking_local(filename='my_file.csv')"
+            f"Not found: {csv_path}\nPut the CSV into data/raw/ or pass the exact "
+            f"file name: load_booking(filename='my_file.csv')"
         )
 
     log.info("Reading: %s", csv_path)
     raw = pd.read_csv(csv_path, nrows=n_rows, low_memory=False)
 
-    # --- Recognise the columns ---
-    cols = _resolve_columns(raw.columns)
+    cols = resolve_columns(raw.columns, _BOOKING_ALIASES)
     if verbose:
-        log.info("Recognised columns (%d/%d):", len(cols), len(_BOOKING_ALIASES))
-        for k, v in cols.items():
-            log.info("    %-28s <- %s", k, v)
-        missing = set(_BOOKING_ALIASES) - set(cols)
+        log.info("Recognised columns: %d/%d", len(cols), len(_BOOKING_ALIASES))
+        missing = sorted(set(_BOOKING_ALIASES) - set(cols))
         if missing:
-            log.warning("Not found: %s", sorted(missing))
-            log.warning("Actual columns of the CSV: %s", list(raw.columns))
-
+            log.warning("Not found: %s | CSV columns: %s", missing, list(raw.columns))
     if "guest_score" not in cols:
-        raise KeyError(
-            "The score column was not found. Columns of the CSV: "
-            f"{list(raw.columns)}\nExtend the _BOOKING_ALIASES dictionary in "
-            "data_loading.py with the right name."
-        )
+        raise KeyError(f"No score column found. CSV columns: {list(raw.columns)}. "
+                       "Extend _BOOKING_ALIASES in data_loading.py.")
 
-    # --- Assemble the text ---
     def _get(name: str) -> pd.Series:
         if name in cols:
-            return raw[cols[name]].map(_clean_placeholder)
+            return raw[cols[name]].map(clean_placeholder)
         return pd.Series([""] * len(raw), index=raw.index)
 
-    pos, neg, title = _get("review_positive"), _get("review_negative"), _get("review_title")
-
-    if combine_pos_neg:
-        # A full stop is added after the title only if it does not already end
-        # in punctuation — otherwise double stops like "Great stay! ... venue.."
-        # appear, which look ugly in the quotes lifted into the thesis.
-        sep = title.map(lambda t: "" if (not t or t[-1] in ".!?…") else ".")
-        text = (title + sep + " " + pos + " " + neg)
-    else:
-        text = (pos + " " + neg)
-
-    text = (text.str.replace(r"^[\.\s]+", "", regex=True)     # leading stop from an empty title
-                .str.replace(r"\.{2,}", ".", regex=True)      # remaining double stops
-                .str.replace(r"\s+", " ", regex=True)
-                .str.strip())
+    positive, negative, title = _get("review_positive"), _get("review_negative"), _get("review_title")
 
     out = pd.DataFrame({
-        "text": text,
+        "text": assemble_review_text(title, positive, negative),
         "score": pd.to_numeric(raw[cols["guest_score"]], errors="coerce"),
-        "review_positive": pos,
-        "review_negative": neg,
+        "review_title": title,
+        "review_positive": positive,
+        "review_negative": negative,
     })
-
-    # --- Metadata: the crosstabs are built on these ---
-    for meta in ["guest_type", "guest_country", "room_nights", "month",
-                 "accommodation_id", "accommodation_type", "accommodation_score",
-                 "accommodation_country", "accommodation_star_rating",
-                 "location_is_beach", "location_is_ski", "location_is_city_center",
-                 "review_helpful_votes"]:
+    for meta in METADATA_COLUMNS:
         if meta in cols:
             out[meta] = raw[cols[meta]]
 
-    df = _finalize(out, CFG.source_split_name, DATASETS["booking_hf"]["score_scale"][1])
+    out["dataset"] = CFG.source_split_name
+    out["score_scale_max"] = float(DATASETS["booking"]["score_scale"][1])
+    out["review_id"] = [f"{CFG.source_split_name}_{i}" for i in range(len(out))]
+    out["text"] = out["text"].astype("string")
+    extra = [c for c in out.columns if c not in CANONICAL_COLUMNS]
+    out = out[CANONICAL_COLUMNS + extra]
 
     if n_rows is None:
-        _write_cache(df, cache)
-
-    return df
+        try:
+            out.to_parquet(cache, index=False)
+            log.info("Saved to cache: %s (%d rows)", cache.name, len(out))
+        except Exception as e:                                    # noqa: BLE001
+            log.warning("Caching failed (%s) — pip install pyarrow", e.__class__.__name__)
+    return out
 
 
 # ==========================================================================
-# 2) Kaggle 515K Hotel Reviews (external validation)
+# 2) HRAST — CSAK A (B) MEGKÖZELÍTÉSHEZ / ONLY FOR APPROACH (B)
 # ==========================================================================
-def load_kaggle_515k(n_rows: int | None = None, use_cache: bool = True) -> pd.DataFrame:
+# HU: A HRAST pontos oszlopneveit letöltés után ELLENŐRIZNI kell. A betöltő
+#     álnevekkel keres, és ha nem talál, kiírja a valós oszlopokat — ilyenkor
+#     a prepare_hrast_sentences() paramétereivel kézzel megadhatók.
+# EN: The exact HRAST column names have to be CHECKED after download. The
+#     loader searches with aliases and, if it fails, prints the real columns —
+#     they can then be given by hand via prepare_hrast_sentences().
+_HRAST_ALIASES: dict[str, list[str]] = {
+    "text":      ["sentence", "text", "review_sentence", "sentences", "content", "review"],
+    "sentiment": ["sentiment", "polarity", "label", "sentiment_label",
+                  "aspect_sentiment", "sentiment_polarity"],
+    "aspect":    ["aspect", "aspect_category", "category", "aspects", "aspect_term"],
+    "group":     ["review_id", "reviewid", "doc_id", "document_id", "hotel_review_id", "id_review"],
+}
+
+# HU: Címkeértékek normalizálása a kanonikus negative/neutral/positive formára.
+# EN: Normalising label values to the canonical negative/neutral/positive form.
+_SENTIMENT_VALUE_MAP: dict[str, str] = {
+    "positive": "positive", "pos": "positive", "p": "positive", "+": "positive",
+    "negative": "negative", "neg": "negative", "n": "negative", "-": "negative",
+    "neutral": "neutral", "neu": "neutral", "0": "neutral", "none": "neutral",
+    "1": "positive", "-1": "negative", "1.0": "positive", "-1.0": "negative", "0.0": "neutral",
+    "conflict": "conflict", "mixed": "conflict",
+}
+
+
+def find_hrast_file() -> Path | None:
     """
-    515K Hotel Reviews Data in Europe.
-
-    Download: automatically with kagglehub, OR manually from Kaggle
-    (Hotel_Reviews.csv) into the data/raw/ folder.
+    HU: Keresés: data/raw/hrast.csv, data/raw/HRAST.csv vagy data/raw/hrast/*.csv.
+    EN: Search: data/raw/hrast.csv, data/raw/HRAST.csv or data/raw/hrast/*.csv.
     """
-    meta = DATASETS["kaggle_515k"]
-    cache = _cache_path("kaggle_515k")
-
-    if use_cache and cache.exists():
-        df = pd.read_parquet(cache)
-        return df.head(n_rows) if n_rows else df
-
-    csv = _find_local_csv(["Hotel_Reviews.csv"])
-    if csv is None:
-        csv = _kagglehub_download(meta["id"], want="Hotel_Reviews.csv")
-
-    raw = pd.read_csv(csv, nrows=n_rows)
-
-    def _clean_part(s, placeholder):
-        s = "" if pd.isna(s) else str(s).strip()
-        return "" if s.lower() == placeholder else s
-
-    pos = raw["Positive_Review"].map(lambda s: _clean_part(s, "no positive"))
-    neg = raw["Negative_Review"].map(lambda s: _clean_part(s, "no negative"))
-
-    df = pd.DataFrame({
-        "text": (pos + " " + neg).str.strip().str.replace(r"\s+", " ", regex=True),
-        "score": raw["Reviewer_Score"],
-        "hotel_name": raw.get("Hotel_Name"),
-        "review_positive": pos,
-        "review_negative": neg,
-    })
-
-    df = _finalize(df, "kaggle_515k", meta["score_scale"][1])
-    df.to_parquet(cache, index=False)
-    return df
-
-
-# ==========================================================================
-# 3) TripAdvisor (ALTERNATIVE external validation — DIFFERENT platform)
-# ==========================================================================
-def load_tripadvisor(n_rows: int | None = None, use_cache: bool = True) -> pd.DataFrame:
-    """
-    TripAdvisor Hotel Reviews (~20k, 1–5 stars).
-
-    Why does it matter? The Booking.com and the 515K datasets come from the
-    SAME platform, just from different periods. If you want to answer the
-    "cross-dataset generalization" question (RQ5) seriously, data from
-    another platform gives a much stronger test.
-    """
-    meta = DATASETS["tripadvisor"]
-    cache = _cache_path("tripadvisor")
-
-    if use_cache and cache.exists():
-        df = pd.read_parquet(cache)
-        return df.head(n_rows) if n_rows else df
-
-    csv = _find_local_csv(["tripadvisor_hotel_reviews.csv"])
-    if csv is None:
-        csv = _kagglehub_download(meta["id"], want="tripadvisor_hotel_reviews.csv")
-
-    raw = pd.read_csv(csv, nrows=n_rows)
-    df = pd.DataFrame({"text": raw["Review"], "score": raw["Rating"]})
-    df = _finalize(df, "tripadvisor", meta["score_scale"][1])
-    df.to_parquet(cache, index=False)
-    return df
-
-
-# ==========================================================================
-# 4) HRAST (ABSA)
-# ==========================================================================
-def load_hrast(use_cache: bool = True) -> pd.DataFrame:
-    """
-    HRAST — Hotel Reviews: Aspects, Sentiments and Topics (23,113 sentences).
-
-    NOTE: the exact column names have to be CHECKED after downloading — so
-    this function does not force the canonical schema, it returns the raw
-    table and prints the column names. The ABSA code is adapted to it in
-    step 05 of the notebook.
-    """
-    meta = DATASETS["hrast"]
-    cache = _cache_path("hrast")
-
-    if use_cache and cache.exists():
-        return pd.read_parquet(cache)
-
-    csv = _find_local_csv(["hrast.csv", "HRAST.csv"], any_csv_dir="hrast")
-    if csv is None:
-        csv = _kagglehub_download(meta["id"], want=None)
-
-    raw = pd.read_csv(csv)
-    log.warning("HRAST column names (check them and adapt the ABSA code!): %s",
-                list(raw.columns))
-    raw.to_parquet(cache, index=False)
-    return raw
-
-
-# ==========================================================================
-# Download helpers
-# ==========================================================================
-def _find_local_csv(names: list[str], any_csv_dir: str | None = None) -> Path | None:
-    """Check whether the file was downloaded manually into data/raw/."""
     PATHS.ensure()
-    for name in names:
-        p = PATHS.raw / name
-        if p.exists():
-            log.info("Found local file: %s", p)
-            return p
-    if any_csv_dir:
-        d = PATHS.raw / any_csv_dir
-        if d.is_dir():
-            csvs = sorted(d.glob("*.csv"))
-            if csvs:
-                return csvs[0]
+    for name in ("hrast.csv", "HRAST.csv"):
+        if (PATHS.raw / name).exists():
+            return PATHS.raw / name
+    folder = PATHS.raw / "hrast"
+    if folder.is_dir():
+        csvs = sorted(folder.glob("*.csv"))
+        if csvs:
+            if len(csvs) > 1:
+                log.warning("Several CSVs in data/raw/hrast/, using the first: %s",
+                            [c.name for c in csvs])
+            return csvs[0]
     return None
 
 
-def _kagglehub_download(dataset_id: str, want: str | None) -> Path:
+def load_hrast_raw(path: Path | str | None = None, try_kagglehub: bool = True) -> pd.DataFrame:
     """
-    Download from Kaggle.
-
-    Prerequisite: a Kaggle API token. See KORNYEZET.md, point 6.
-    If it does not work, simply download it manually in the browser and put
-    the CSV into the data/raw/ folder — the code finds it automatically.
+    HU: A nyers HRAST-tábla betöltése, átalakítás nélkül. Kiírja az oszlopneveket.
+    EN: Load the raw HRAST table without transformation. Prints the column names.
     """
-    try:
-        import kagglehub
-    except ImportError as e:
-        raise ImportError(
-            "'kagglehub' is missing. Install it (pip install kagglehub), OR "
-            f"download the '{dataset_id}' dataset manually into the data/raw/ folder."
-        ) from e
+    path = Path(path) if path else find_hrast_file()
+    if path is None and try_kagglehub:
+        try:
+            import kagglehub
+            folder = Path(kagglehub.dataset_download(DATASETS["hrast"]["id"]))
+            csvs = sorted(folder.rglob("*.csv"))
+            path = csvs[0] if csvs else None
+        except Exception as e:                                    # noqa: BLE001
+            log.warning("kagglehub download failed (%s).", e)
+    if path is None:
+        raise FileNotFoundError(
+            "HRAST not found. Download it from Kaggle "
+            f"({DATASETS['hrast']['id']}) and put the CSV into data/raw/hrast/."
+        )
+    raw = pd.read_csv(path)
+    log.info("HRAST loaded: %s — %d rows, columns: %s", Path(path).name, len(raw), list(raw.columns))
+    return raw
 
-    log.info("Downloading from Kaggle: %s", dataset_id)
-    folder = Path(kagglehub.dataset_download(dataset_id))
 
-    if want:
-        target = folder / want
-        if target.exists():
-            return target
-    csvs = sorted(folder.rglob("*.csv"))
-    if not csvs:
-        raise FileNotFoundError(f"No CSV found in: {folder}")
-    return csvs[0]
+def normalise_sentiment_values(values: pd.Series, label_map: dict | None = None) -> pd.Series:
+    """
+    HU: Tetszőleges címkeértékek -> negative / neutral / positive / conflict (vagy NaN).
+    EN: Arbitrary label values -> negative / neutral / positive / conflict (or NaN).
+    """
+    mapping = {**_SENTIMENT_VALUE_MAP, **{str(k).lower(): v for k, v in (label_map or {}).items()}}
+    normalised = values.astype(str).str.strip().str.lower().map(mapping)
+    unknown = sorted(values[normalised.isna() & values.notna()].astype(str).unique())[:10]
+    if unknown:
+        log.warning("Unknown sentiment values (dropped): %s — pass label_map={...} to map them.",
+                    unknown)
+    return normalised
+
+
+def _sentence_label_from_aspects(labels: pd.Series, conflict_policy: str) -> str | float:
+    """
+    HU: Egy mondat több aspektus-címkéjéből egy mondatszintű címke:
+          csak pozitív (és semleges)  -> positive
+          csak negatív (és semleges)  -> negative
+          csak semleges               -> neutral
+          pozitív ÉS negatív          -> conflict_policy szerint (drop / neutral)
+    EN: One sentence-level label from the aspect labels of a sentence:
+          only positive (and neutral) -> positive
+          only negative (and neutral) -> negative
+          only neutral                -> neutral
+          positive AND negative       -> by conflict_policy (drop / neutral)
+    """
+    polar = set(labels) & {"positive", "negative"}
+    if "conflict" in set(labels) or len(polar) == 2:
+        return "neutral" if conflict_policy == "neutral" else np.nan
+    if len(polar) == 1:
+        return polar.pop()
+    return "neutral"
+
+
+def prepare_hrast_sentences(
+    raw: pd.DataFrame,
+    text_col: str | None = None,
+    sentiment_col: str | None = None,
+    group_col: str | None = None,
+    label_map: dict | None = None,
+    conflict_policy: str = CFG.hrast_conflict_policy,
+) -> pd.DataFrame:
+    """
+    HU: A HRAST átalakítása mondatszintű, 3 osztályos tanítóadattá.
+    EN: Turn HRAST into sentence-level, 3-class training data.
+
+    Returns
+    -------
+    sentence | label | group_id   (HU: group_id = vélemény-azonosító, ha van —
+                                   a felosztásnál egy vélemény mondatai együtt maradnak)
+                                  (EN: group_id = review id if available — sentences
+                                   of one review stay together in the split)
+    """
+    found = resolve_columns(raw.columns, _HRAST_ALIASES)
+    text_col = text_col or found.get("text")
+    sentiment_col = sentiment_col or found.get("sentiment")
+    group_col = group_col or found.get("group")
+    if text_col is None or sentiment_col is None:
+        raise KeyError(
+            f"Text / sentiment column not recognised. HRAST columns: {list(raw.columns)}\n"
+            "Pass them explicitly: prepare_hrast_sentences(raw, text_col='...', sentiment_col='...')"
+        )
+    log.info("HRAST columns used — text: %s | sentiment: %s | group: %s",
+             text_col, sentiment_col, group_col)
+
+    work = pd.DataFrame({
+        "sentence": raw[text_col].astype(str).map(html.unescape).str.strip(),
+        "label_raw": normalise_sentiment_values(raw[sentiment_col], label_map),
+        "group_id": raw[group_col].astype(str) if group_col else np.nan,
+    }).dropna(subset=["label_raw"])
+    work = work[work["sentence"].str.len() > 0]
+
+    # HU: Egy mondat több sorban is szerepelhet (soronként egy aspektus) -> összevonás.
+    # EN: A sentence may appear in several rows (one aspect per row) -> merge.
+    # HU: Ha van vélemény-azonosító, (vélemény, mondat) párra vonunk össze, így két
+    #     különböző vélemény azonos mondata ("Great location.") nem olvad egybe.
+    # EN: With a review id we merge on (review, sentence), so the same sentence in
+    #     two different reviews ("Great location.") is not merged.
+    keys = ["group_id", "sentence"] if group_col else ["sentence"]
+    grouped = (work.groupby(keys, sort=False, dropna=False)
+                   .agg(labels=("label_raw", list))
+                   .reset_index())
+    if "group_id" not in grouped.columns:
+        grouped["group_id"] = np.nan
+    grouped["label"] = grouped["labels"].map(
+        lambda lbls: _sentence_label_from_aspects(pd.Series(lbls), conflict_policy))
+
+    n_before = len(grouped)
+    out = grouped.dropna(subset=["label"])[["sentence", "label", "group_id"]].reset_index(drop=True)
+    log.info("HRAST sentences: %d (dropped as conflicting: %d) | distribution: %s",
+             len(out), n_before - len(out), out["label"].value_counts().to_dict())
+    return out
 
 
 # ==========================================================================
-# Saving and reading back the split data
+# 3) FELOSZTÁSOK ÉS CÍMKÉK MENTÉSE / SAVING SPLITS AND LABELS
 # ==========================================================================
-# Notebook 01 saves them, notebooks 02 and 03 read them. In parquet format,
-# because it is fast and small — but if pyarrow is not available for some
-# reason, it falls back to CSV. This way the pipeline does not stop even if
-# the environment is incomplete.
-
-_SPLIT_NAMES = ("train", "val", "test")
+SPLIT_NAMES = ("train", "val", "test")
 
 
 def save_splits(splits: dict[str, pd.DataFrame], prefix: str = "booking") -> dict[str, Path]:
-    """
-    Save the train/val/test sets to the data/processed/ folder.
-
-        save_splits({"train": train_df, "val": val_df, "test": test_df})
-    """
+    """HU: train/val/test mentése a data/processed/ mappába. / EN: Save train/val/test to data/processed/."""
     PATHS.ensure()
-    written: dict[str, Path] = {}
+    written = {}
     for name, part in splits.items():
-        pq = PATHS.processed / f"{prefix}_{name}.parquet"
-        try:
-            part.to_parquet(pq, index=False)
-            written[name] = pq
-        except Exception:                                         # noqa: BLE001
-            csv = PATHS.processed / f"{prefix}_{name}.csv"
-            part.to_csv(csv, index=False, encoding="utf-8")
-            written[name] = csv
-            log.warning("Parquet not available, saved as CSV: %s "
-                        "(it would be faster with: pip install pyarrow)", csv.name)
+        written[name] = write_frame(part, PATHS.processed / f"{prefix}_{name}")
         log.info("%-6s -> %-30s (%d rows)", name, written[name].name, len(part))
     return written
 
 
 def load_split(name: str, prefix: str = "booking") -> pd.DataFrame:
-    """
-    Read back one of the sets. Finds it in both parquet and CSV form.
-
-        train_df = load_split("train")
-    """
-    if name not in _SPLIT_NAMES:
-        raise ValueError(f"Unknown split: {name}. Choose from: {_SPLIT_NAMES}")
-
-    pq = PATHS.processed / f"{prefix}_{name}.parquet"
-    csv = PATHS.processed / f"{prefix}_{name}.csv"
-    if pq.exists():
-        return pd.read_parquet(pq)
-    if csv.exists():
-        return pd.read_csv(csv)
-    raise FileNotFoundError(
-        f"Neither {pq.name} nor {csv.name} was found.\n"
-        "Run the 01_data_loading_eda.ipynb notebook to the end first — "
-        "its last cell saves these files."
-    )
+    if name not in SPLIT_NAMES:
+        raise ValueError(f"Unknown split: {name}. Choose from: {SPLIT_NAMES}")
+    return read_frame(PATHS.processed / f"{prefix}_{name}")
 
 
 def load_all_splits(prefix: str = "booking") -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """train, val, test in one call."""
-    return tuple(load_split(n, prefix) for n in _SPLIT_NAMES)   # type: ignore[return-value]
-
-
-# ==========================================================================
-# Single entry point
-# ==========================================================================
-
-_LOADERS = {
-    "booking_local": load_booking_local,   # data/raw/val.csv — THIS is used now
-    "booking_hf": load_booking_hf,
-    "kaggle_515k": load_kaggle_515k,
-    "tripadvisor": load_tripadvisor,
-    "hrast": load_hrast,
-}
-
-_BOOKING_SOURCES = {"booking_local", "booking_hf"}
-
-
-def load_dataset_by_name(name: str, **kwargs) -> pd.DataFrame:
-    """
-    The external datasets (tripadvisor, kaggle_515k, hrast) can be loaded
-    only if CFG.use_external_datasets = True in config.py.
-    """
-    if name not in _LOADERS:
-        raise ValueError(f"Unknown dataset: {name}. Choose from: {list(_LOADERS)}")
-    if name not in _BOOKING_SOURCES and not CFG.use_external_datasets:
-        raise PermissionError(
-            f"The '{name}' dataset is switched off. For now we work only with "
-            "the Booking.com data (CFG.use_external_datasets = False in "
-            "config.py). To include it later, set it to True."
-        )
-    return _LOADERS[name](**kwargs)
+    return tuple(load_split(n, prefix) for n in SPLIT_NAMES)  # type: ignore[return-value]
