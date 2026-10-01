@@ -155,6 +155,19 @@ class Config:
     local_grad_accum: int = 8       # HU: 4 × 8 = 32 effektív batch / EN: 4 × 8 = 32 effective batch
     small_gpu_vram_gb: float = 8.0  # HU: ez alatt a "local" beállítás él / EN: below this the "local" setting applies
 
+    # --- Semleges sáv / Neutral band (review level) ---
+    # HU: Mondatszintű címkézésnél a vélemények közel fele VEGYES (dicséret + panasz).
+    #     A valószínűségek argmax-a ezeket szinte mindig pozitívnak mondja. A "sáv"
+    #     szabály: polaritás = P(poz) − P(neg); ha |polaritás| < sáv -> semleges.
+    #     Így a 3 osztály és az 1–10 pontszám KÖVETKEZETES (0,3-as sáv = 4,15–6,85 pont).
+    #     Az értéket a gold mintán kell kalibrálni (apply_neutral_band, neutral_band_table).
+    # EN: With sentence-level labelling almost half of the reviews are MIXED (praise +
+    #     complaint). The argmax of the probabilities calls them positive almost always.
+    #     The "band" rule: polarity = P(pos) − P(neg); if |polarity| < band -> neutral.
+    #     This makes the 3 classes and the 1–10 score CONSISTENT (band 0.3 = 4.15–6.85 points).
+    #     Calibrate the value on the gold sample (apply_neutral_band, neutral_band_table).
+    review_neutral_band: float = 0.3
+
     # --- Végső címke / Final label ---
     # HU: A három megközelítés többségi szavazata adja a végső címkét.
     #     Döntetlennél ez a megközelítés dönt (a gold minta alapján érdemes

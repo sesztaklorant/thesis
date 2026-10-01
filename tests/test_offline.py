@@ -157,6 +157,18 @@ def test_hrast_onehot_format():
         "1 elevator not working.": "negative", "Great pool.": "positive", "We arrived at noon.": "neutral"}
 
 
+def test_neutral_band():
+    probs = np.array([[0.5, 0.0, 0.5], [0.1, 0.1, 0.8], [0.7, 0.2, 0.1], [0.3, 0.4, 0.3]])
+    frame = bl.probs_to_frame(probs, ["a", "b", "c", "d"], "B")
+    assert list(frame["B_label"]) == ["negative", "positive", "negative", "neutral"]  # HU/EN: argmax (tie -> first)
+    banded = bl.apply_neutral_band(frame, "B", band=0.3)
+    assert list(banded["B_label"]) == ["neutral", "positive", "negative", "neutral"]
+    assert banded["B_confidence"].between(0, 1).all()
+    assert "B_label_argmax" in banded.columns
+    table = bl.neutral_band_table(frame, "B")
+    assert np.allclose(table.sum(axis=1), 1.0)
+
+
 def test_score_cut_reference():
     cut = lv.score_cut_labels(pd.Series([3.0, 7.0, 8.0, 9.0, np.nan]))
     assert list(cut[:4]) == ["negative", "negative", "neutral", "positive"] and pd.isna(cut[4])

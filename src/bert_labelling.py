@@ -511,6 +511,57 @@ def label_approach_c(df: pd.DataFrame, model_dir: str | Path | None = None,
 # ==========================================================================
 # 4) PSEUDO-CÍMKÉK (C) ÉS A VÉGSŐ CÍMKE / PSEUDO-LABELS (C) AND THE FINAL LABEL
 # ==========================================================================
+def apply_neutral_band(labels: pd.DataFrame, prefix: str,
+                       band: float = CFG.review_neutral_band) -> pd.DataFrame:
+    """
+    HU: Véleményszintű címke a "semleges sáv" szabállyal (lásd config.review_neutral_band):
+          polaritás = P(poz) − P(neg);  |polaritás| < sáv -> neutral,  különben előjel szerint.
+        Az eredeti argmax-címke <prefix>_label_argmax néven megmarad.
+        A <prefix>_confidence itt azt méri, mennyire mélyen van a vélemény a saját
+        tartományában (0 = a határon, 1 = a tartomány közepén / szélén) — így a
+        pseudo-címke kiválasztás (C) ugyanúgy működik, mint argmax esetén.
+    EN: Review-level label with the "neutral band" rule (see config.review_neutral_band):
+          polarity = P(pos) − P(neg);  |polarity| < band -> neutral,  otherwise by sign.
+        The original argmax label is kept as <prefix>_label_argmax.
+        <prefix>_confidence here measures how deep the review is inside its own region
+        (0 = on the boundary, 1 = at the centre / edge) — so pseudo-label selection (C)
+        works the same way as with argmax.
+    """
+    out = labels.copy()
+    probs = out[[f"{prefix}_{s}" for s in PROB_SUFFIXES]].to_numpy()
+    polarity = polarity_from_probs(probs)
+    if f"{prefix}_label_argmax" not in out.columns:
+        out[f"{prefix}_label_argmax"] = out[f"{prefix}_label"]
+    out[f"{prefix}_label"] = np.where(np.abs(polarity) < band, "neutral",
+                                      np.where(polarity > 0, "positive", "negative"))
+    out[f"{prefix}_confidence"] = np.where(np.abs(polarity) < band,
+                                           1 - np.abs(polarity) / band,
+                                           (np.abs(polarity) - band) / (1 - band))
+    out[f"{prefix}_neutral_band"] = band
+    log.info("(%s) neutral band ±%.2f -> %s", prefix, band,
+             out[f"{prefix}_label"].value_counts(normalize=True).round(3).to_dict())
+    return out
+
+
+def neutral_band_table(labels: pd.DataFrame, prefix: str,
+                       bands: tuple[float, ...] = (0.0, 0.1, 0.2, 0.3, 0.4, 0.5)) -> pd.DataFrame:
+    """
+    HU: Osztályeloszlás különböző sávszélességekkel (0,0 = sima előjel, semleges nincs).
+        A dolgozatba érzékenységvizsgálatként; a végső értéket a gold minta dönti el.
+    EN: Class distribution for several band widths (0.0 = plain sign, no neutral).
+        For the thesis as a sensitivity analysis; the final value is set by the gold sample.
+    """
+    probs = labels[[f"{prefix}_{s}" for s in PROB_SUFFIXES]].to_numpy()
+    polarity = polarity_from_probs(probs)
+    rows = {}
+    for band in bands:
+        lab = np.where(np.abs(polarity) < band, "neutral", np.where(polarity > 0, "positive", "negative"))
+        rows[f"±{band:.1f}"] = pd.Series(lab).value_counts(normalize=True).reindex(LABELS, fill_value=0)
+    out = pd.DataFrame(rows).T.round(4)
+    out.index.name = "neutral band"
+    return out
+
+
 def select_pseudo_labels(
     labels: pd.DataFrame,
     teachers: tuple[str, ...] = ("A", "B"),
@@ -553,8 +604,16 @@ def select_pseudo_labels(
         "pseudo_label": chosen[f"{available[0]}_label"],
         "pseudo_confidence": chosen[[f"{t}_confidence" for t in available]].min(axis=1),
     })
+    counts = out["pseudo_label"].value_counts().reindex(LABELS, fill_value=0)
     log.info("Pseudo-labels: %d of %d reviews (%.1f%%) | %s", len(out), len(labels),
-             100 * len(out) / max(len(labels), 1), out["pseudo_label"].value_counts().to_dict())
+             100 * len(out) / max(len(labels), 1), counts.to_dict())
+    # HU: Ha egy osztályból alig van példa, a (C) azt az osztályt nem tudja megtanulni.
+    # EN: If a class has hardly any examples, (C) cannot learn that class.
+    for label, n in counts.items():
+        if n < 200:
+            log.warning("Only %d pseudo-labelled '%s' examples — (C) will hardly learn this class. "
+                        "Consider apply_neutral_band() on the teachers or a lower min_confidence.",
+                        n, label)
 
     if max_per_class:
         # HU: Véletlen keverés, majd csoportonként az első N — NEM groupby().apply(),

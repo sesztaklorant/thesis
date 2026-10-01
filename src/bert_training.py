@@ -184,7 +184,9 @@ def fine_tune_classifier(
         per_device_eval_batch_size=batch * 4,
         learning_rate=CFG.learning_rate,
         weight_decay=CFG.weight_decay,
-        warmup_ratio=CFG.warmup_ratio,
+        # HU: A transformers v5 már nem ismeri a warmup_ratio-t -> lépésszámra váltjuk.
+        # EN: transformers v5 no longer knows warmup_ratio -> converted to a number of steps.
+        warmup_steps=int(CFG.warmup_ratio * num_epochs * np.ceil(len(train_texts) / (batch * accum))),
         fp16=torch.cuda.is_available(),
         eval_strategy="epoch",
         save_strategy="epoch",
@@ -192,7 +194,7 @@ def fine_tune_classifier(
         load_best_model_at_end=True,
         metric_for_best_model="f1_macro",
         greater_is_better=True,
-        save_total_limit=1,
+        save_total_limit=2,
         report_to="none",
     )
 
@@ -204,10 +206,28 @@ def fine_tune_classifier(
     trainer_params = inspect.signature(Trainer.__init__).parameters
     trainer_kwargs["processing_class" if "processing_class" in trainer_params else "tokenizer"] = tokenizer
     trainer = WeightedTrainer(**trainer_kwargs)
+    # HU: A saját veszteségfüggvény nem használja a num_items_in_batch-et, ezért a Trainer
+    #     maga ossza el a veszteséget a gradiens-akkumulációval (különben a naplózott
+    #     tanítási veszteség accum-szorosa lenne).
+    # EN: The custom loss does not use num_items_in_batch, so the Trainer itself must
+    #     divide the loss by the gradient accumulation (otherwise the logged training
+    #     loss would be accum times too large).
+    trainer.model_accepts_loss_kwargs = False
 
     started = time.time()
     trainer.train()
     train_minutes = (time.time() - started) / 60
+
+    # HU: A legjobb ellenőrzőpont újratöltése from_pretrained-del. A Trainer saját
+    #     visszatöltése a régi BERT-súlyneveknél (LayerNorm gamma/beta vs weight/bias)
+    #     kihagyhat paramétereket — a from_pretrained ezeket helyesen átnevezi.
+    # EN: Reload the best checkpoint with from_pretrained. The Trainer's own reload can
+    #     skip parameters with the legacy BERT weight names (LayerNorm gamma/beta vs
+    #     weight/bias) — from_pretrained renames them correctly.
+    best = trainer.state.best_model_checkpoint
+    if best:
+        log.info("Reloading best checkpoint: %s", Path(best).name)
+        trainer.model = AutoModelForSequenceClassification.from_pretrained(best).to(trainer.args.device)
     val_metrics = {k.replace("eval_", ""): float(v) for k, v in trainer.evaluate().items()
                    if isinstance(v, (int, float))}
 
