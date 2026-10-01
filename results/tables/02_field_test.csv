@@ -1,0 +1,7 @@
+approach,field,n,hit,neutral,opposite
+A,review_negative,2000,0.497,0.345,0.158
+A,review_positive,2000,0.9475,0.048,0.0045
+C,review_negative,2000,0.681,0.2125,0.1065
+C,review_positive,2000,0.946,0.048,0.006
+B,review_negative,2000,0.764,0.0995,0.1365
+B,review_positive,2000,0.978,0.0065,0.0155
