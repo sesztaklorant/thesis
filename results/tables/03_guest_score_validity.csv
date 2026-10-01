@@ -1,0 +1,5 @@
+approach,spearman_rho,mean_guest_score_negative,mean_guest_score_neutral,mean_guest_score_positive,neg_but_score_ge9,pos_but_score_le6
+A,0.5633,7.2243,8.0446,8.9707,0.0046,0.0167
+B,0.4299,7.4627,8.0914,9.1456,0.0094,0.0064
+C,0.4742,7.4591,8.2664,9.267,0.0046,0.0035
+final,0.5385,7.4513,8.0553,9.1439,0.0084,0.0067
