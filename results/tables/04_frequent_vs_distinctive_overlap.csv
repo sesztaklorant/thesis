@@ -1,0 +1,3 @@
+,top_n,shared_by_all_classes,mean_pairwise_jaccard
+most frequent (count),15.0,11.0,0.67
+most distinctive (z-score),15.0,0.0,0.067
