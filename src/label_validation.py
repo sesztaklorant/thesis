@@ -407,6 +407,69 @@ def evaluate_on_gold(gold: pd.DataFrame, labels: pd.DataFrame, columns: dict[str
     return pd.DataFrame(rows).set_index("source").sort_values("f1_macro", ascending=False).round(4)
 
 
+def calibrate_neutral_band(gold: pd.DataFrame, labels: pd.DataFrame, prefix: str = "B",
+                           bands: tuple[float, ...] = (0.0, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.5)
+                           ) -> pd.DataFrame:
+    """
+    HU: A semleges sáv kalibrálása a gold mintán: minden sávszélességre kiszámolja a
+        kézi címkével mért accuracy-t, makro-F1-et, kappát és a semleges osztály F1-ét.
+        Figyelem: ugyanazon a mintán választunk és mérünk -> az eredmény enyhén
+        optimista; egyetlen paraméternél ez elfogadható, de a dolgozatban jelezni kell.
+    EN: Calibrating the neutral band on the gold sample: for every band width it computes
+        accuracy, macro-F1, kappa and the F1 of the neutral class against the manual label.
+        Note: we choose and measure on the same sample -> slightly optimistic; acceptable
+        for a single parameter, but it has to be stated in the thesis.
+    """
+    from sklearn.metrics import f1_score
+
+    from .bert_labelling import apply_neutral_band
+    from .evaluation import compute_metrics
+
+    joined = gold[["gold_label"]].join(labels, how="inner")
+    rows = []
+    for band in bands:
+        banded = apply_neutral_band(joined, prefix, band)
+        pred = banded[f"{prefix}_label"].astype(str)
+        m = compute_metrics(joined["gold_label"], pred)
+        rows.append({"band": band, "accuracy": m["accuracy"], "f1_macro": m["f1_macro"],
+                     "cohen_kappa": cohen_kappa(joined["gold_label"], pred),
+                     "f1_neutral": f1_score(joined["gold_label"], pred, labels=["neutral"],
+                                            average="macro", zero_division=0),
+                     "share_neutral": float((pred == "neutral").mean())})
+    return pd.DataFrame(rows).set_index("band").round(4)
+
+
+def bootstrap_ci(gold: pd.DataFrame, labels: pd.DataFrame, columns: dict[str, str],
+                 n_boot: int = 2000, seed: int = CFG.random_seed) -> pd.DataFrame:
+    """
+    HU: 95%-os bootstrap konfidencia-intervallum a makro-F1-re és az accuracy-re.
+        400 véleménynél a különbségek egy része a véletlen ingadozáson belül lehet —
+        ez mutatja meg, melyik eltérés valódi.
+    EN: 95% bootstrap confidence interval for macro-F1 and accuracy. With 400 reviews
+        some differences may be within random variation — this shows which are real.
+    """
+    from .evaluation import compute_metrics
+
+    joined = gold[["gold_label"]].join(labels, how="inner")
+    rng = np.random.default_rng(seed)
+    idx = np.arange(len(joined))
+    rows = []
+    for name, col in columns.items():
+        if col not in joined.columns:
+            continue
+        y_true, y_pred = joined["gold_label"].to_numpy(), joined[col].astype(str).to_numpy()
+        f1s, accs = [], []
+        for _ in range(n_boot):
+            b = rng.choice(idx, size=len(idx), replace=True)
+            m = compute_metrics(y_true[b], y_pred[b])
+            f1s.append(m["f1_macro"])
+            accs.append(m["accuracy"])
+        rows.append({"source": name,
+                     "f1_macro_low": np.percentile(f1s, 2.5), "f1_macro_high": np.percentile(f1s, 97.5),
+                     "accuracy_low": np.percentile(accs, 2.5), "accuracy_high": np.percentile(accs, 97.5)})
+    return pd.DataFrame(rows).set_index("source").round(4)
+
+
 # ==========================================================================
 # 6) ÁBRÁK / FIGURES
 # ==========================================================================

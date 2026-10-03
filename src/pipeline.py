@@ -127,7 +127,7 @@ def step_combine() -> pd.DataFrame:
     from .bert_labelling import combine_approaches, save_labels
     from .data_loading import write_frame
 
-    combined = combine_approaches(_load_available_labels())
+    combined = combine_approaches(_load_available_labels(), approaches=CFG.final_label_approaches)
     save_labels(combined, "labels_final")
     labelled = _working_set().set_index("review_id").join(combined, how="inner").reset_index()
     write_frame(labelled, LABELLED)

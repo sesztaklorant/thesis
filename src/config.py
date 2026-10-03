@@ -166,15 +166,18 @@ class Config:
     #     The "band" rule: polarity = P(pos) − P(neg); if |polarity| < band -> neutral.
     #     This makes the 3 classes and the 1–10 score CONSISTENT (band 0.3 = 4.15–6.85 points).
     #     Calibrate the value on the gold sample (apply_neutral_band, neutral_band_table).
-    review_neutral_band: float = 0.3
+    review_neutral_band: float = 0.25 # 0.3 ez volt a korábbi, de a gold mintán 0.25 a legjobb (makro-F1 0.631, kappa 0.507)
 
     # --- Végső címke / Final label ---
-    # HU: A három megközelítés többségi szavazata adja a végső címkét.
-    #     Döntetlennél ez a megközelítés dönt (a gold minta alapján érdemes
-    #     átírni a legjobbra).
-    # EN: The final label is the majority vote of the three approaches.
-    #     On a tie this approach decides (update it to the best one after the
-    #     gold-sample evaluation).
+    # HU: Mely megközelítések adják a végső címkét. A gold minta (399 vélemény) alapján a
+    #     (B) a legjobb (makro-F1 0,631, kappa 0,507), ezért a végső címke = (B).
+    #     Az (A) és (C) oszlopai megmaradnak az összehasonlításhoz.
+    #     ("A", "B", "C") = többségi szavazás, döntetlennél a tie_breaker_approach dönt.
+    # EN: Which approaches form the final label. On the gold sample (399 reviews) (B) is
+    #     the best (macro-F1 0.631, kappa 0.507), so the final label = (B).
+    #     The (A) and (C) columns are kept for comparison.
+    #     ("A", "B", "C") = majority vote, ties decided by tie_breaker_approach.
+    final_label_approaches: tuple[str, ...] = ("B",)
     tie_breaker_approach: str = "B"
 
     # --- Kézi annotáció / Manual annotation (gold standard) ---

@@ -534,8 +534,9 @@ def apply_neutral_band(labels: pd.DataFrame, prefix: str,
         out[f"{prefix}_label_argmax"] = out[f"{prefix}_label"]
     out[f"{prefix}_label"] = np.where(np.abs(polarity) < band, "neutral",
                                       np.where(polarity > 0, "positive", "negative"))
+    safe_band = max(band, 1e-9)    # HU/EN: band = 0 -> no neutral, avoid division by zero
     out[f"{prefix}_confidence"] = np.where(np.abs(polarity) < band,
-                                           1 - np.abs(polarity) / band,
+                                           1 - np.abs(polarity) / safe_band,
                                            (np.abs(polarity) - band) / (1 - band))
     out[f"{prefix}_neutral_band"] = band
     log.info("(%s) neutral band ±%.2f -> %s", prefix, band,
