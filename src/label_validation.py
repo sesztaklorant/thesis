@@ -297,9 +297,75 @@ def export_gold_sample(data: pd.DataFrame, n: int = CFG.gold_sample_size, text_c
     return path
 
 
-def load_gold(filename: str = "gold_sample_to_annotate.csv") -> pd.DataFrame:
-    """HU: A kitöltött gold minta beolvasása és ellenőrzése. / EN: Read and check the annotated gold sample."""
-    gold = pd.read_csv(PATHS.annotation / filename, encoding="utf-8-sig")
+def gold_csv_to_xlsx(csv_name: str = "gold_sample_to_annotate.csv",
+                     xlsx_name: str = "gold_sample_to_annotate.xlsx") -> Path:
+    """
+    HU: A gold minta CSV -> formázott Excel a kényelmes annotáláshoz:
+          • külön oszlopok (a magyar Excel a vesszős CSV-t egy oszlopba tenné);
+          • a szöveg tördelve, széles oszlopban; az első sor rögzítve;
+          • gold_label: legördülő lista (negative / neutral / positive);
+          • gold_score: csak 1–10 közötti egész fogadható el.
+        A load_gold() ezután az .xlsx-et olvassa (ha létezik).
+    EN: Gold sample CSV -> formatted Excel for convenient annotation:
+          • separate columns (Hungarian Excel would put a comma CSV into one column);
+          • text wrapped in a wide column; first row frozen;
+          • gold_label: drop-down list (negative / neutral / positive);
+          • gold_score: only integers 1–10 are accepted.
+        load_gold() then reads the .xlsx (if it exists).
+    """
+    from openpyxl import Workbook
+    from openpyxl.styles import Alignment, Font
+    from openpyxl.worksheet.datavalidation import DataValidation
+
+    xlsx_path = PATHS.annotation / xlsx_name
+    if xlsx_path.exists():
+        raise FileExistsError(f"{xlsx_path} already exists — it may contain your annotations.")
+    data = pd.read_csv(PATHS.annotation / csv_name, encoding="utf-8-sig")
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "annotation"
+    columns = ["review_id", "text", "gold_label", "gold_score"]
+    ws.append(columns)
+    for row in data[columns].itertuples(index=False):
+        ws.append([None if pd.isna(v) or v == "" else v for v in row])
+
+    n = len(data) + 1
+    for cell in ws[1]:
+        cell.font = Font(bold=True)
+    for col, width in zip("ABCD", (26, 110, 14, 12)):
+        ws.column_dimensions[col].width = width
+    for (cell,) in ws.iter_rows(min_row=2, max_row=n, min_col=2, max_col=2):
+        cell.alignment = Alignment(wrap_text=True, vertical="top")
+    ws.freeze_panes = "C2"
+
+    label_list = DataValidation(type="list", formula1='"negative,neutral,positive"', allow_blank=True)
+    score_range = DataValidation(type="whole", operator="between", formula1="1", formula2="10",
+                                 allow_blank=True)
+    ws.add_data_validation(label_list)
+    ws.add_data_validation(score_range)
+    label_list.add(f"C2:C{n}")
+    score_range.add(f"D2:D{n}")
+
+    wb.save(xlsx_path)
+    log.info("Excel for annotation: %s (%d reviews)", xlsx_path, len(data))
+    return xlsx_path
+
+
+def load_gold(filename: str | None = None) -> pd.DataFrame:
+    """
+    HU: A kitöltött gold minta beolvasása és ellenőrzése. Alapból az .xlsx-et olvassa,
+        ha az létezik, különben a .csv-t.
+    EN: Read and check the annotated gold sample. By default it reads the .xlsx if it
+        exists, otherwise the .csv.
+    """
+    if filename is None:
+        xlsx = PATHS.annotation / "gold_sample_to_annotate.xlsx"
+        filename = xlsx.name if xlsx.exists() else "gold_sample_to_annotate.csv"
+    path = PATHS.annotation / filename
+    gold = (pd.read_excel(path) if path.suffix == ".xlsx"
+            else pd.read_csv(path, encoding="utf-8-sig"))
+    log.info("Gold sample read from: %s", path.name)
     gold["gold_label"] = gold["gold_label"].astype(str).str.strip().str.lower()
     valid = gold["gold_label"].isin(LABELS)
     if (~valid).any():
