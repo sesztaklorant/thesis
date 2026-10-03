@@ -1,0 +1,14 @@
+Metric,Value
+Number of reviews,"20,000"
+Unique properties,"4,371"
+Number of countries,118
+Accommodation types,24
+Mean guest score,8.88
+Median guest score,9.00
+Guest score std,1.15
+Mean review length (words),49.3
+Median review length (words),37
+Share of negative (label_final),5.6%
+Share of neutral (label_final),15.4%
+Share of positive (label_final),79.0%
+Mean text-based score (1–10),8.24

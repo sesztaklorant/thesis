@@ -1,0 +1,3 @@
+source,n,accuracy,f1_macro,cohen_kappa
+TF-IDF logreg,399,0.7945,0.6424,0.5194
+BERT final,399,0.8045,0.6405,0.5046
