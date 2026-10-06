@@ -200,6 +200,61 @@ def explode_to_sentences(df: pd.DataFrame, text_col: str = "text_bert",
     return out.reset_index(drop=True)
 
 
+# HU: Tagmondat-határok: mondatvég, sortörés, pontosvessző, és az ellentétes kötőszavak
+#     ("but", "however", "although", "though", "except"). Egy tagmondatba így jellemzően
+#     EGY állítás kerül: "great location but the room was dirty" -> két egység.
+# EN: Clause boundaries: sentence end, line break, semicolon, and contrastive conjunctions
+#     ("but", "however", "although", "though", "except"). One clause thus typically holds
+#     ONE statement: "great location but the room was dirty" -> two units.
+_CLAUSE_SPLIT_RE = re.compile(
+    r"(?<=[.!?])\s+|\s*\n+\s*|\s*;\s*|,?\s+(?:but|however|although|though|except)\s+",
+    flags=re.IGNORECASE,
+)
+
+
+def split_clauses(text: str, min_words: int = 2) -> list[str]:
+    """
+    HU: Tagmondatokra bontás (finomabb, mint a split_sentences). A min_words-nél rövidebb
+        darabok kimaradnak ("Nothing.", "Ok") — ezekben nincs elemezhető tartalom.
+    EN: Splitting into clauses (finer than split_sentences). Pieces shorter than min_words
+        are dropped ("Nothing.", "Ok") — they contain no analysable content.
+    """
+    if not isinstance(text, str) or not text.strip():
+        return []
+    parts = [p.strip(" ,.-") for p in _CLAUSE_SPLIT_RE.split(clean_text_minimal(text))]
+    return [p for p in parts if len(p.split()) >= min_words]
+
+
+def build_field_units(df: pd.DataFrame, fields: tuple[str, ...] = ("review_positive", "review_negative"),
+                      id_col: str = "review_id", min_words: int = 2) -> pd.DataFrame:
+    """
+    HU: Elemzési egységek MEZŐNKÉNT: a Booking dicséret- és panaszmezőjét külön bontjuk
+        tagmondatokra, így a kettő soha nem olvad egy "mondatba" (ez okozta a vegyes témákat).
+        field_polarity = melyik mezőből jön (a vendég saját besorolása).
+    EN: Analysis units PER FIELD: Booking's praise and complaint fields are split into clauses
+        separately, so the two never merge into one "sentence" (this caused the mixed topics).
+        field_polarity = which field it comes from (the guest's own classification).
+
+    Returns: review_id | field | field_polarity | unit_idx | sentence
+    """
+    frames = []
+    for field in fields:
+        if field not in df.columns:
+            log.warning("Field not found, skipped: %s", field)
+            continue
+        part = df[[id_col, field]].copy()
+        part["sentence"] = part[field].map(lambda t: split_clauses(t, min_words))
+        part = part.drop(columns=[field]).explode("sentence").dropna(subset=["sentence"])
+        part["field"] = field
+        part["field_polarity"] = "positive" if "positive" in field else "negative"
+        frames.append(part)
+    units = pd.concat(frames, ignore_index=True)
+    units["unit_idx"] = units.groupby([id_col, "field"]).cumcount()
+    log.info("Field units: %d from %d reviews | by field: %s", len(units), units[id_col].nunique(),
+             units["field_polarity"].value_counts().to_dict())
+    return units[[id_col, "field", "field_polarity", "unit_idx", "sentence"]].reset_index(drop=True)
+
+
 # ==========================================================================
 # 3) SOR-SZINTŰ SZŰRÉS / ROW-LEVEL FILTERING
 # ==========================================================================

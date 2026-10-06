@@ -1,9 +1,9 @@
-segment,air / conditioning / air conditioning,coffee / tea / tea coffee,fridge / fridge room / refrigerator,gym / sauna / equipment,kettle / no kettle / tea,kitchen / cutlery / utensils,light / lights / lighting,microwave / no microwave / toaster,mirror / hair / hair dryer,paper / toilet paper / slippers,power / charging / electricity,room / facilities / not,shuttle / airport / shuttle service,soap / shampoo / shower,spa / tub / hot tub,space / clothes / storage,table / chairs / chair,towels / towel / hang,tv / channels / work,washing / washing machine / laundry,water / bottle / water room
-Australia,0.792,0.433,0.662,1.383,0.435,1.664,0.564,2.088,0.231,0.475,0.776,1.447,0.713,0.585,0.574,0.669,1.304,1.137,1.563,0.801,0.152
-France,1.239,1.306,1.552,0.0,2.04,0.372,1.322,0.0,0.541,0.558,1.822,0.819,0.558,0.458,1.347,1.766,0.765,0.205,0.978,0.47,1.785
-Greece,1.179,0.536,0.637,0.0,2.513,1.832,0.814,0.431,0.0,0.0,0.0,0.793,2.748,1.128,0.83,2.175,1.256,1.516,0.301,0.579,1.759
-Italy,1.415,1.414,1.326,0.277,2.092,0.667,0.847,0.359,1.941,1.43,0.747,0.72,1.144,1.643,0.691,1.106,0.784,0.736,0.439,0.963,1.098
-Spain,0.612,0.835,0.662,1.037,1.304,2.259,0.845,0.671,2.075,1.07,1.63,1.197,0.713,0.585,1.507,0.878,0.652,1.18,0.625,2.102,0.228
-Thailand,0.926,0.341,0.304,4.447,1.797,1.092,0.388,0.411,0.635,2.621,1.284,1.031,3.931,2.15,0.791,1.152,0.0,0.723,0.718,0.552,1.258
-United Kingdom,1.225,1.448,0.516,0.54,0.713,0.594,1.32,0.14,1.404,1.002,1.164,0.853,0.445,1.096,0.874,1.331,1.12,0.983,1.025,0.563,1.354
-United States of America,0.731,0.807,1.798,1.378,0.354,0.775,1.072,2.27,0.501,1.034,0.76,1.058,1.034,0.848,1.326,0.364,1.122,1.141,1.246,1.524,0.91
+segment,air / conditioning / air conditioning,bathroom / shower / room,chair / chairs / furniture,coffee / tea / tea coffee,dryer / laundry / washing,facilities / service / room service,fridge / fridge room / refrigerator,gym / sauna / gym small,kettle / kettle room / no kettle,kitchen / cutlery / plates,lights / light / lamp,microwave / no microwave / microwave room,paper / toilet / toilet paper,pool / tub / hot tub,soap / shampoo / shower,sockets / plug / bed,spa / massage / spa facilities,space / clothes / storage,towels / towel / hang,tv / channels / watch,water / hot water / hot
+Australia,0.814,1.157,1.25,0.38,0.926,1.529,0.437,1.726,0.532,1.8,0.532,1.958,0.688,1.228,0.694,1.064,0.639,0.553,0.976,1.464,0.607
+France,1.249,0.758,1.681,1.384,0.253,0.495,1.195,0.0,2.907,0.684,0.872,0.0,0.301,0.0,1.138,1.551,2.791,1.382,0.388,0.929,1.517
+Italy,1.433,0.52,0.649,1.566,1.56,0.636,1.229,0.485,2.392,0.44,0.897,0.339,1.083,0.345,1.17,0.797,1.794,0.977,0.797,0.531,1.17
+New Zealand,0.944,0.0,1.032,0.85,0.621,0.456,0.88,0.0,0.0,3.778,1.07,2.02,0.738,0.412,2.327,0.0,0.856,0.848,0.714,1.393,0.465
+Spain,0.566,0.827,0.688,0.997,1.489,1.62,0.782,1.543,1.522,2.127,1.142,0.431,1.181,1.537,0.248,1.015,1.37,1.357,1.396,0.473,0.621
+Thailand,1.329,0.666,0.277,0.547,0.666,0.652,0.315,3.726,0.766,0.676,0.383,0.434,2.773,2.209,1.498,0.511,2.757,0.91,0.511,0.68,1.498
+United Kingdom,1.174,1.295,0.994,1.201,0.997,0.878,0.565,0.558,0.573,0.573,1.146,0.324,0.711,0.727,1.196,1.299,0.963,1.328,0.993,1.037,1.121
+United States of America,0.731,1.161,1.117,0.836,0.916,1.106,1.905,1.139,0.702,0.537,1.194,1.988,1.308,1.459,0.733,0.843,0.0,0.668,1.264,1.122,1.008

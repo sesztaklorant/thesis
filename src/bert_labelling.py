@@ -425,6 +425,19 @@ def predict_sentences(df: pd.DataFrame, model_name_or_path: str, prefix: str,
     return pd.concat([sentences, frame], axis=1)
 
 
+def predict_units(units: pd.DataFrame, model_name_or_path: str, prefix: str,
+                  text_col: str = "sentence", cache_name: str | None = None, scorer=None) -> pd.DataFrame:
+    """
+    HU: Előrejelzés tetszőleges, előre elkészített szövegegységekre (pl. a mezőnkénti
+        tagmondatokra, preprocessing.build_field_units) — az egységes kimeneti oszlopokkal.
+    EN: Prediction for arbitrary, pre-built text units (e.g. the per-field clauses,
+        preprocessing.build_field_units) — with the uniform output columns.
+    """
+    scorer = scorer or TransformerScorer(model_name_or_path)
+    probs = run_chunked(units[text_col].fillna(""), scorer.predict_proba, cache_name)
+    return pd.concat([units, probs_to_frame(probs, units.index, prefix)], axis=1)
+
+
 def label_approach_a(df: pd.DataFrame, text_col: str = "text_bert", granularity: str = "review",
                      three_class_model: str = CFG.zero_shot_3class_model,
                      stars_model: str = CFG.zero_shot_stars_model,

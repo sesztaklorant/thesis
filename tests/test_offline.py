@@ -169,6 +169,18 @@ def test_neutral_band():
     assert np.allclose(table.sum(axis=1), 1.0)
 
 
+def test_clause_units():
+    assert pp.split_clauses("Great location but the room was dirty; staff were rude. Nothing.") == [
+        "Great location", "the room was dirty", "staff were rude"]
+    df = pd.DataFrame({"review_id": ["r1"], "review_positive": ["Clean room and location very good"],
+                       "review_negative": ["Very small room, very small shower. There was a leak in the toilet"]})
+    units = pp.build_field_units(df)
+    assert list(units["field_polarity"]) == ["positive", "negative", "negative"]
+    assert units.loc[1, "sentence"] == "Very small room, very small shower"
+    scored = bl.predict_units(units, "fake", "B", scorer=FakeScorer())
+    assert "B_label" in scored.columns and len(scored) == 3
+
+
 def test_score_cut_reference():
     cut = lv.score_cut_labels(pd.Series([3.0, 7.0, 8.0, 9.0, np.nan]))
     assert list(cut[:4]) == ["negative", "negative", "neutral", "positive"] and pd.isna(cut[4])
