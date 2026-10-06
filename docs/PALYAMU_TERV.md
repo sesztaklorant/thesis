@@ -28,7 +28,8 @@ mutat be** — mire való, hogyan épül fel, hogyan készült, és milyen tapas
 | 2.4 PyTorch és Hugging Face Transformers | | `AutoModel…`, `Trainer`, GPU, fp16, gradiens-akkumuláció | `bert_training.py` |
 | 2.5 A felhasznált kész modellek és adatok | | twitter-roberta (3 osztály), nlptown BERT (1–5 csillag), bert-base-uncased, HRAST, Booking | `config.py` → `DATASETS`, modellnevek |
 | 2.6 Címke nélküli adatok kezelése | | zero-shot, transzfertanulás, önképzés (pseudo-label) — fogalmi szinten | |
-| 2.7 Értékelési módszerek | | accuracy, makro-F1, Cohen- és Fleiss-kappa, Spearman-korreláció | `evaluation.py`, `label_validation.py` |
+| 2.7 Tematikus elemzés (2. réteg) | | többcímkés osztályozás (szigmoid, BCE, pos_weight), mondatbeágyazás (Sentence-BERT), UMAP, HDBSCAN, c-TF-IDF | `aspect_model.py`, `topic_modeling.py` |
+| 2.8 Értékelési módszerek | | accuracy, makro-F1, Cohen- és Fleiss-kappa, Spearman-korreláció; többcímkés mikro/makro-F1; NPMI-koherencia, témadiverzitás, ARI-stabilitás | `evaluation.py`, `label_validation.py`, `topic_modeling.py` |
 | **3. A pályamű bemutatása** | 8–10 oldal | **áttekintő ábrákkal** | |
 | 3.1 Alkalmazási környezet és követelmények | | ki használná (szállodai elemző), funkcionális és nem funkcionális követelmények (reprodukálhatóság, futás 4 GB GPU-n, folytatható futás) | `config.py` |
 | 3.2 Funkcionalitás | | előkészítés → címkézés (A/B/C) → végső címke → validáció → szóelemzés, kereszttáblák, aspektusok → tanítvány-modellek | `pipeline.py` lépései |
@@ -62,6 +63,12 @@ data/raw/val.csv ──► data_loading ──► preprocessing ──► [munka
     label_validation        text_analysis, descriptives,    models_classical
     (kappa, pontszám,       aspects (TF-IDF szóelemzés,     (TF-IDF „tanítvány”
     mezőpróba, gold)        kereszttáblák, aspektusok)        modellek)
+
+2. INTELLIGENCIARÉTEG — tematikus kategorizálás (05 notebook)
+  mondat ─► [1. réteg] szentiment (B)              → negatív / semleges / pozitív
+         ─► [2/a] aspektus-osztályozó (aspect_model) → MIRŐL szól?  (HRAST-on tanított többcímkés BERT)
+         ─► [2/b] altémák (topic_modeling)           → MI A GOND?   (Sentence-BERT → UMAP → HDBSCAN → c-TF-IDF)
+                                                     → panasztérkép szegmensenként
 ```
 
 | Modul | Feladat |
@@ -74,6 +81,8 @@ data/raw/val.csv ──► data_loading ──► preprocessing ──► [munka
 | `label_validation.py` | címkék ellenőrzése valódi címke nélkül |
 | `text_analysis.py`, `descriptives.py`, `aspects.py` | elemzések a végső címkén |
 | `models_classical.py` | TF-IDF + NB / LogReg / SVM a BERT-címkéken |
+| `aspect_model.py` | **2/a réteg**: többcímkés aspektus-osztályozó a HRAST-on, küszöbhangolás, összevetés a kulcsszólistával |
+| `topic_modeling.py` | **2/b réteg**: altémák felfedezése (BERTopic-elv, saját megvalósítás), minőségmérés, panasztérkép |
 | `pipeline.py` | parancssori futtatás lépésenként (`python -m src.pipeline all`) |
 | `tests/test_offline.py` | tesztek GPU és internet nélkül |
 
@@ -121,6 +130,13 @@ egyszerű webes felület vagy REST API a címkézőhöz; a teljes 1,6 milliós a
 - Monroe, B. L., Colaresi, M. P., & Quinn, K. M. (2008). Fightin' words. *Political Analysis, 16*(4), 372–403. https://doi.org/10.1093/pan/mpn018
 - Pedregosa, F., et al. (2011). Scikit-learn: Machine learning in Python. *Journal of Machine Learning Research, 12*, 2825–2830.
 - Wolf, T., et al. (2020). Transformers: State-of-the-art natural language processing. In *Proceedings of EMNLP 2020: System Demonstrations* (pp. 38–45).
+- Bouma, G. (2009). Normalized (pointwise) mutual information in collocation extraction. *Proceedings of GSCL*, 31–40.
+- Campello, R. J. G. B., Moulavi, D., & Sander, J. (2013). Density-based clustering based on hierarchical density estimates. In *PAKDD 2013* (pp. 160–172). Springer.
+- Dieng, A. B., Ruiz, F. J. R., & Blei, D. M. (2020). Topic modeling in embedding spaces. *Transactions of the ACL, 8*, 439–453.
+- Grootendorst, M. (2022). BERTopic: Neural topic modeling with a class-based TF-IDF procedure. *arXiv:2203.05794*.
+- McInnes, L., Healy, J., & Melville, J. (2018). UMAP: Uniform manifold approximation and projection for dimension reduction. *arXiv:1802.03426*.
+- Reimers, N., & Gurevych, I. (2019). Sentence-BERT: Sentence embeddings using Siamese BERT-networks. In *Proceedings of EMNLP-IJCNLP 2019* (pp. 3982–3992).
+- Röder, M., Both, A., & Hinneburg, A. (2015). Exploring the space of topic coherence measures. In *WSDM 2015* (pp. 399–408).
 - HRAST adatcikk: „A Dataset of Hotel Reviews for Aspect-Based Sentiment Analysis and Topic Modeling” (IEEE, 2023) — szerzők és oldalszámok az IEEE Xplore oldalról.
 - Booking.com Accommodation Reviews adathalmaz (Hugging Face, CC BY-SA 4.0) — az adatkártya szerinti hivatkozással.
 - nlptown/bert-base-multilingual-uncased-sentiment (Hugging Face modellkártya, MIT licenc).

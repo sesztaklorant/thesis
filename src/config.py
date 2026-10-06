@@ -166,7 +166,7 @@ class Config:
     #     The "band" rule: polarity = P(pos) − P(neg); if |polarity| < band -> neutral.
     #     This makes the 3 classes and the 1–10 score CONSISTENT (band 0.3 = 4.15–6.85 points).
     #     Calibrate the value on the gold sample (apply_neutral_band, neutral_band_table).
-    review_neutral_band: float = 0.25 # 0.3 ez volt a korábbi, de a gold mintán 0.25 a legjobb (makro-F1 0.631, kappa 0.507)
+    review_neutral_band: float = 0.25        # HU: a gold mintán kalibrálva / EN: calibrated on the gold sample
 
     # --- Végső címke / Final label ---
     # HU: Mely megközelítések adják a végső címkét. A gold minta (399 vélemény) alapján a
@@ -179,6 +179,32 @@ class Config:
     #     ("A", "B", "C") = majority vote, ties decided by tie_breaker_approach.
     final_label_approaches: tuple[str, ...] = ("B",)
     tie_breaker_approach: str = "B"
+
+    # ======================================================================
+    # 2. INTELLIGENCIARÉTEG: TEMATIKUS KATEGORIZÁLÁS / LAYER 2: THEMATIC CATEGORISATION
+    # ======================================================================
+    # --- 2/a: aspektus-osztályozó a HRAST-on / aspect classifier on HRAST ---
+    # HU: Többcímkés BERT: egy mondat egyszerre több aspektushoz is tartozhat.
+    # EN: Multi-label BERT: one sentence can belong to several aspects at once.
+    aspect_base_model: str = "bert-base-uncased"
+    aspect_max_length: int = 128            # HU: mondatok, nem vélemények / EN: sentences, not reviews
+    aspect_val_size: float = 0.15
+    aspect_test_size: float = 0.15
+    aspect_min_examples: int = 50           # HU: ennél ritkább aspektus kimarad / EN: rarer aspects are dropped
+    aspect_max_pos_weight: float = 10.0     # HU: a ritka aspektusok súlyának felső korlátja / EN: cap on rare-aspect weight
+
+    # --- 2/b: altémák (BERTopic-elv) / subtopics (BERTopic principle) ---
+    embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
+    embedding_batch_size: int = 256
+    umap_n_neighbors: int = 15
+    umap_n_components: int = 5
+    topic_min_cluster_size: int = 40        # HU: ennél kisebb fürt nem téma / EN: smaller clusters are not topics
+    topic_min_samples: int = 10
+    topic_sample_per_aspect: int = 15_000   # HU: aspektusonként legfeljebb ennyi mondat / EN: max sentences per aspect
+    topic_min_sentences: int = 300          # HU: ennél kevesebb mondatú aspektusra nincs altéma / EN: no subtopics below this
+    topic_outlier_threshold: float = 0.45   # HU: zajpont áthelyezése, ha a koszinusz-hasonlóság ≥ ez / EN: reassign noise if cosine ≥ this
+    topic_top_n_terms: int = 10
+    topic_stability_seeds: tuple[int, ...] = (42, 7, 123)
 
     # --- Kézi annotáció / Manual annotation (gold standard) ---
     gold_sample_size: int = 400
@@ -217,6 +243,25 @@ class Config:
 
 
 CFG = Config()
+
+# HU: HRAST aspektusoszlopai -> egységes angol név. Az "Aspect" oszlop jelentése nem
+#     egyértelmű, ezért kimarad. A nevek a kulcsszavas aspektusokkal (aspects.py) egyeznek,
+#     ahol van megfelelő, így a kettő közvetlenül összevethető.
+# EN: HRAST aspect columns -> uniform English name. The meaning of the "Aspect" column is
+#     unclear, so it is left out. Names match the keyword aspects (aspects.py) where a
+#     counterpart exists, so the two are directly comparable.
+HRAST_ASPECT_MAP: dict[str, str] = {
+    "Clean": "cleanliness", "Comfort": "comfort", "Facilities/Amenities": "facilities",
+    "Location": "location", "Restaurant (dinner)": "restaurant", "Staff": "staff",
+    "View (Balcony)": "view", "Breakfast": "breakfast", "Room": "room", "Pool": "pool",
+    "Beach": "beach", "Bathroom/Shower (toilet)": "bathroom", "Bar": "bar", "Bed": "bed",
+    "Parking": "parking", "Noise": "noise", "Reception-checkin": "reception", "Lift": "lift",
+    "Value for money": "value_for_money", "Wi-Fi": "wifi", "Generic": "generic",
+}
+
+# HU: Ezekre NEM készítünk altémát (nem tematikus, általános mondatok).
+# EN: No subtopics for these (non-thematic, general sentences).
+NON_THEMATIC_ASPECTS: tuple[str, ...] = ("generic",)
 
 # HU: A három címkéző megközelítés rövid neve -> leírás (ábrák, táblák).
 # EN: Short name of the three labelling approaches -> description (figures, tables).

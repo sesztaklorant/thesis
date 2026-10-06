@@ -28,6 +28,7 @@ CODE/
 | 2 | `02_bert_labelling` | **Colab GPU** | (A) zero-shot, (B) HRAST, (C) önképzés / self-training → végső címke / final label |
 | 3 | `03_label_validation` | helyben / locally | egyezés, pontszám, mezőpróba, gold minta / agreement, score, field test, gold sample |
 | 4 | `04_text_analysis_classical` | helyben / locally | TF-IDF szóelemzés, kereszttáblák, aspektusok, klasszikus modellek |
+| 5 | `05_thematic_layer` | GPU ajánlott / recommended | **2. réteg:** tanult aspektusok (HRAST) + altémák + panasztérkép / learned aspects + subtopics + complaint map |
 
 Parancssorból ugyanez / The same from the command line: `python -m src.pipeline all`
 

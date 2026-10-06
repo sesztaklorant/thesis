@@ -174,6 +174,92 @@ def test_score_cut_reference():
     assert list(cut[:4]) == ["negative", "negative", "neutral", "positive"] and pd.isna(cut[4])
 
 
+# --------------------------------------------------------------------------
+# HU: 2. intelligenciaréteg / EN: Layer 2 (thematic)
+# --------------------------------------------------------------------------
+SUBTOPIC_TEMPLATES = {
+    "bathroom": [["no hot water in the shower", "the water was cold every morning", "hot water ran out quickly"],
+                 ["weak water pressure in the shower", "shower pressure was terrible", "barely any water pressure"],
+                 ["black mould in the bathroom", "mould on the shower curtain", "bathroom smelled of mould"]],
+    "noise": [["street noise all night", "traffic noise kept us awake", "loud traffic outside the window"],
+              ["thin walls we heard neighbours", "could hear the people next door through thin walls",
+               "neighbours were loud thin walls"]],
+}
+
+
+def fake_thematic_sentences(n_per_template: int = 60, seed: int = 0):
+    """HU: Szintetikus mondatok + beágyazások ismert altémákkal. / EN: Synthetic sentences + embeddings with known subtopics."""
+    rng = np.random.default_rng(seed)
+    rows, vectors = [], []
+    centers = {}
+    for aspect, groups in SUBTOPIC_TEMPLATES.items():
+        for g, templates in enumerate(groups):
+            centers[(aspect, g)] = rng.normal(size=32)
+            for i in range(n_per_template):
+                text = templates[i % len(templates)] + rng.choice(["", " really", " again", " sadly"])
+                rows.append({"sentence": text, "true": f"{aspect}_{g}",
+                             "asp_bathroom": int(aspect == "bathroom"), "asp_noise": int(aspect == "noise"),
+                             "accommodation_type": rng.choice(["Hotel", "Apartment"])})
+                vectors.append(centers[(aspect, g)] + rng.normal(scale=0.35, size=32))
+    emb = np.array(vectors, dtype=np.float32)
+    return pd.DataFrame(rows), emb / np.linalg.norm(emb, axis=1, keepdims=True)
+
+
+def test_aspect_model_pure_functions():
+    from src import aspect_model as am
+    raw = pd.DataFrame({"id": range(6), "review": ["Room was dirty.", "Room was dirty.", "Great pool.",
+                                                    "Wifi slow.", "Nice view.", "We arrived."],
+                        "Clean": [1, 0, 0, 0, 0, 0], "Room": [0, 1, 0, 0, 0, 0], "Pool": [0, 0, 1, 0, 0, 0],
+                        "Wi-Fi": [0, 0, 0, 1, 0, 0], "View (Balcony)": [0, 0, 0, 0, 1, 0], "Aspect": 1})
+    data, names = am.prepare_hrast_aspects(raw, min_examples=1)
+    assert len(data) == 5                                         # HU/EN: duplicate merged
+    row = data[data["sentence"] == "Room was dirty."].iloc[0]
+    assert row["cleanliness"] == 1 and row["room"] == 1           # HU/EN: union of aspects
+    assert "Aspect" not in data.columns and set(names) == {"cleanliness", "room", "pool", "wifi", "view"}
+
+    y = np.array([[1, 0], [1, 0], [0, 1], [0, 0]])
+    probs = np.array([[0.3, 0.1], [0.35, 0.2], [0.1, 0.8], [0.05, 0.6]])
+    thr = am.tune_thresholds(y, probs)
+    assert thr[0] <= 0.3 and thr[1] > 0.6
+    report = am.multilabel_report(y, (probs >= thr).astype(int), ["a", "b"])
+    assert report.loc["micro avg", "f1"] == 1.0
+
+    kw = am.keyword_predictions(pd.Series(["the room was noisy", "lovely view"]), ["room", "noise", "view"])
+    assert kw.loc[0, "room"] == 1 and kw.loc[0, "noise"] == 1 and kw["view"].isna().all()
+    cmp_ = am.compare_with_keywords(np.array([[1, 1, 0], [0, 0, 1]]), np.array([[1, 1, 0], [0, 0, 1]]),
+                                    kw, ["room", "noise", "view"])
+    assert set(cmp_.index) == {"room", "noise"} and (cmp_["model_f1"] == 1).all()
+    assert am.positive_weights(np.array([[1], [0], [0], [0]]))[0] == 3.0
+
+
+def test_topic_modeling_recovers_subtopics():
+    from sklearn.metrics import adjusted_rand_score
+    from src import topic_modeling as tm
+
+    sent, emb = fake_thematic_sentences()
+    bath = sent["asp_bathroom"] == 1
+    res = tm.fit_topics(sent.loc[bath, "sentence"], emb[bath.to_numpy()], min_cluster_size=20)
+    assert res.metrics["n_topics"] == 3
+    assert adjusted_rand_score(sent.loc[bath, "true"], res.labels) > 0.9
+    assert res.topic_info["label"].str.len().gt(0).all()
+    assert 0 < res.metrics["topic_diversity"] <= 1
+
+    table, assign, summary = tm.fit_subtopics_per_aspect(sent, emb, ["bathroom", "noise", "generic"],
+                                                        min_sentences=50, min_cluster_size=20)
+    assert set(summary.index) == {"bathroom", "noise"}            # HU/EN: generic skipped
+    assert table.groupby("aspect")["topic"].nunique().to_dict() == {"bathroom": 3, "noise": 2}
+    lift = tm.segment_table(assign, sent, "bathroom", "accommodation_type", min_count=10)
+    assert lift.shape[0] == 2 and lift.shape[1] == 3
+
+    labels = np.array([0, 0, 1, -1, -1])
+    e = np.array([[1, 0], [1, 0.1], [0, 1], [0.99, 0.05], [-1, 0]], dtype=float)
+    e /= np.linalg.norm(e, axis=1, keepdims=True)
+    out = tm.reassign_outliers(e, labels, threshold=0.5)
+    assert list(out) == [0, 0, 1, 0, -1]
+    assert tm.topic_diversity([["a", "b"], ["a", "c"]]) == 0.75
+    assert "not" not in tm.stopwords() and "the" in tm.stopwords()
+
+
 if __name__ == "__main__":
     tests = [v for k, v in dict(globals()).items() if k.startswith("test_") and callable(v)]
     for test in tests:

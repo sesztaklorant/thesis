@@ -122,18 +122,22 @@ def explode_by_polarity(df: pd.DataFrame, pos_col: str = "review_positive",
 # ==========================================================================
 # 3) ASPEKTUS × SZENTIMENT / ASPECT × SENTIMENT
 # ==========================================================================
-def aspect_sentiment_table(sent_df: pd.DataFrame, label_col: str, min_count: int = 30) -> pd.DataFrame:
+def aspect_sentiment_table(sent_df: pd.DataFrame, label_col: str, min_count: int = 30,
+                           aspects: list[str] | None = None, prefix: str = "aspect_") -> pd.DataFrame:
     """
     HU: Aspektusonként: hány mondat említi, és mi a szentiment-eloszlás ezekben.
         neg_lift > 1: az aspektus a panaszokat hajtja; < 1: az elégedettséget.
     EN: Per aspect: how many sentences mention it and the sentiment distribution in them.
         neg_lift > 1: the aspect drives complaints; < 1: drives satisfaction.
+
+    HU: aspects / prefix: a tanult modell oszlopaihoz (aspect_model) pl. prefix="asp_".
+    EN: aspects / prefix: for the learned model's columns (aspect_model), e.g. prefix="asp_".
     """
     labels = sent_df[label_col].astype(str)
     base_neg, base_pos = (labels == "negative").mean(), (labels == "positive").mean()
     rows = []
-    for aspect in CFG.aspects:
-        col = f"aspect_{aspect}"
+    for aspect in (aspects or CFG.aspects):
+        col = f"{prefix}{aspect}"
         if col not in sent_df.columns:
             continue
         sub = labels[sent_df[col] == 1]
