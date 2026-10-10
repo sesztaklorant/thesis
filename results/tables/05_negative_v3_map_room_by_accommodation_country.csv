@@ -1,0 +1,9 @@
+segment,room / small / rooms,smell / room / clean,cold / air / hot,window / windows / open,dark / lighting / lights,breakfast / coffee / room,door / lock / key,noisy / noise / loud
+Australia,0.857,0.917,0.756,1.475,1.505,1.243,1.367,0.967
+France,1.124,0.769,0.732,0.793,1.165,1.425,0.196,1.039
+Italy,0.829,0.721,1.532,0.725,1.281,1.628,0.597,2.058
+Japan,1.565,1.053,0.698,0.303,0.329,0.68,0.249,0.529
+Portugal,0.982,1.01,0.81,1.505,0.737,0.676,1.488,1.578
+Spain,1.097,0.943,0.625,1.265,0.884,1.218,2.009,0.71
+United Kingdom,1.05,0.614,1.242,1.341,0.712,0.798,0.998,1.016
+United States of America,0.84,1.863,0.789,0.447,1.33,0.886,1.105,0.62

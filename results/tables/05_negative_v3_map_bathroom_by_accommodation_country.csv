@@ -1,0 +1,9 @@
+segment,shower / water / floor,bathroom / toilet / room,hot / water / hot water,towels / towel / hang,paper / toilet paper / toilet,door / bathroom door / close,fan / bathroom / fan bathroom,soap / shampoo / wash
+Australia,0.762,1.22,0.603,1.305,0.965,0.66,2.032,1.016
+France,1.087,1.132,0.597,0.277,0.478,1.96,0.0,1.508
+Greece,1.383,0.937,1.029,0.546,0.941,0.965,0.0,0.0
+Italy,1.173,0.983,0.998,0.81,1.397,0.205,0.63,1.26
+Spain,0.696,1.146,0.54,1.502,0.432,3.1,1.818,1.364
+Thailand,0.868,1.06,1.112,1.179,2.542,0.522,1.606,0.535
+United Kingdom,1.023,0.969,1.051,0.812,1.051,0.79,1.106,1.032
+United States of America,0.947,0.916,1.236,1.401,0.659,1.239,0.809,0.925

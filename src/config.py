@@ -205,21 +205,32 @@ class Config:
     topic_outlier_threshold: float = 0.45   # HU: zajpont áthelyezése, ha a koszinusz-hasonlóság ≥ ez / EN: reassign noise if cosine ≥ this
     topic_top_n_terms: int = 10
     topic_stability_seeds: tuple[int, ...] = (42, 7, 123)
-    # HU: Fürtméret-alsó határ a mondatok arányában: áttekintő modell 1%, aspektusonkénti altémák 3%
-    #     (v1-ben 1% volt -> 19–21 túl apró altéma aspektusonként). A notebook "finomság-vizsgálata"
-    #     (granularity sweep) mutatja meg, melyik arány ad 5–10 értelmezhető altémát.
-    # EN: Minimum cluster size as a share of the sentences: overview model 1%, per-aspect subtopics 3%
-    #     (v1 used 1% -> 19–21 overly small subtopics per aspect). The notebook's granularity sweep
-    #     shows which share gives 5–10 interpretable subtopics.
+    # HU: ALTÉMÁK = finom fürtözés + TÉMA-ÖSSZEVONÁS.
+    #     v1: 1% fürtméret -> 19–21 apró, átfedő altéma aspektusonként.
+    #     v2: 3% -> a fürdőszoba 18-ról 2 altémára "ugrott" (a HDBSCAN egy óriásfürtöt választott),
+    #         egyetlen globális fürtméret tehát nem jó minden aspektusra.
+    #     v3: 2%-os finom fürtözés, majd a leghasonlóbb témák összevonása, amíg legfeljebb
+    #         subtopic_max_topics marad, ÉS nincs két téma subtopic_merge_similarity feletti
+    #         hasonlósággal (közel-duplikátumok, pl. "rooms are small" / "the room was quite small").
+    # EN: SUBTOPICS = fine clustering + TOPIC MERGING.
+    #     v1: 1% cluster size -> 19–21 small, overlapping subtopics per aspect.
+    #     v2: 3% -> bathroom "jumped" from 18 to 2 subtopics (HDBSCAN chose one giant cluster),
+    #         so a single global cluster size does not suit every aspect.
+    #     v3: fine clustering at 2%, then merging the most similar topics until at most
+    #         subtopic_max_topics remain AND no two topics are more similar than
+    #         subtopic_merge_similarity (near-duplicates, e.g. "rooms are small" / "the room was quite small").
     topic_overview_min_share: float = 0.01
-    subtopic_min_cluster_share: float = 0.03
-    subtopic_sweep_shares: tuple[float, ...] = (0.01, 0.02, 0.03, 0.05)
+    subtopic_min_cluster_share: float = 0.02
+    subtopic_max_topics: int = 10
+    subtopic_merge_similarity: float = 0.90
+    subtopic_sweep_shares: tuple[float, ...] = (0.01, 0.02)
+    subtopic_sweep_max_topics: tuple = (None, 12, 10, 8, 6)   # HU/EN: None = no merging
     heatmap_max_subtopics: int = 8          # HU: panasztérképen legfeljebb ennyi altéma / EN: max subtopics on a complaint map
     # HU: Az altéma-futás verziója: minden 2/b kimenet nevében szerepel, így egy új paraméterezés
     #     NEM írja felül a korábbi táblákat, ábrákat és a kitöltött kézi ellenőrzést.
     # EN: Version of the subtopic run: it is part of every 2/b output name, so a new parameter set
     #     does NOT overwrite earlier tables, figures and the filled-in manual check.
-    topic_version: str = "v2"
+    topic_version: str = "v3"
 
     # --- Kézi annotáció / Manual annotation (gold standard) ---
     gold_sample_size: int = 400

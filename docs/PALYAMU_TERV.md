@@ -100,6 +100,8 @@ data/raw/val.csv ──► data_loading ──► preprocessing ──► [munka
 | angol kommentek | **magyar + angol** kommentek, angol változónevek | kérésed szerint |
 | 2/b elemzési egység: mondat a teljes szövegből | **tagmondat**, a dicséret- és panaszmezőből külön bontva | a pozitív és negatív rész egy „mondattá” olvadt → kevert altémák |
 | 2/b v1: altéma-határ 1% (19–21 altéma/aspektus, fürdőszoba ARI 0,44) | **v2:** 3% + finomság-vizsgálat (`granularity_sweep`) | túl apró, átfedő, instabil altémák |
+| 2/b v2: 3% fürtméret — a fürdőszoba 18 → 2 altémára „ugrott” (86%-os óriásfürt) | **v3:** 2%-os finom fürtözés + **téma-összevonás** (max. 10 altéma, közel-duplikátumok ≥ 0,90 hasonlóságnál), `merged_from` oszlop | egy globális fürtméret nem jó minden aspektusra; „rooms are small” / „the room was quite small” két fürt volt |
+| panasztérkép: nyers lift | lift + **arány-z-próba, Benjamini–Hochberg** (`*` = szignifikáns, halvány = nem) | kis szegmensekben (n≈80) a nagy lift is lehet véletlen |
 | „nothing / didn't like” szemét-téma (3,7%) | **nem-panasz szűrő** (`is_non_complaint`) a negatív altémák előtt | nem valódi panaszok |
 | panasztérkép minden altémával (19–21 oszlop) | csak a **8 legnagyobb** altéma (a lift értéke nem változik) | olvashatatlan ábra |
 | verzió nélküli 2/b kimenetek | `CFG.topic_version` minden 2/b fájlnévben | egy új futás ne írja felül a régit |

@@ -262,6 +262,10 @@ def test_topic_modeling_recovers_subtopics():
     assert table.groupby("aspect")["topic"].nunique().to_dict() == {"bathroom": 3, "noise": 2}
     lift = tm.segment_table(assign, sent, "bathroom", "accommodation_type", min_count=10)
     assert lift.shape[0] == 2 and lift.shape[1] == 3
+    assert {"counts", "q", "significant"} <= set(lift.attrs)
+    long = tm.segment_long_table(lift)
+    assert {"segment", "subtopic", "lift", "count", "q", "significant"} <= set(long.columns)
+    assert len(long) == lift.size
     top2 = tm.segment_table(assign, sent, "bathroom", "accommodation_type", min_count=10, top_topics=2)
     assert top2.shape[1] == 2                                     # HU/EN: only the 2 largest subtopics
     assert np.allclose(top2.to_numpy(), lift[top2.columns].to_numpy())   # HU/EN: lift values unchanged
@@ -285,6 +289,30 @@ def test_non_complaint_filter():
     assert all(pp.is_non_complaint(t) for t in junk), [t for t in junk if not pp.is_non_complaint(t)]
     assert not any(pp.is_non_complaint(t) for t in real), [t for t in real if pp.is_non_complaint(t)]
     assert pp.non_complaint_mask(pd.Series(junk[:2] + real[:1])).tolist() == [True, True, False]
+
+
+def test_topic_merging_and_significance():
+    from src import topic_modeling as tm
+
+    rng = np.random.default_rng(1)
+    base = np.eye(8)[:3]                                         # HU/EN: 3 real themes
+    dup = base[0] + 0.15 * np.eye(8)[5]                          # HU/EN: near-duplicate of theme 0
+    centres = np.vstack([base, dup / np.linalg.norm(dup)])
+    labels = np.repeat(np.arange(4), [50, 40, 30, 20])
+    emb = centres[labels] + rng.normal(0, 0.02, (len(labels), 8))
+    emb /= np.linalg.norm(emb, axis=1, keepdims=True)
+
+    merged, merges = tm.merge_similar_topics(emb, labels, min_similarity=0.95)
+    assert len(np.unique(merged)) == 3 and len(merges) == 1      # HU/EN: only the duplicate merged
+    assert merges[0]["reason"] == "near-duplicate" and merges[0]["size_merged"] == 20
+    capped, _ = tm.merge_similar_topics(emb, labels, max_topics=2)
+    assert len(np.unique(capped)) == 2
+    same, none = tm.merge_similar_topics(emb, labels)              # HU/EN: no rule -> unchanged
+    assert none == [] and len(np.unique(same)) == 4
+
+    q = tm.benjamini_hochberg(np.array([0.01, 0.04, 0.03, 0.5]))
+    assert np.allclose(q, [0.04, 0.0533333, 0.0533333, 0.5])
+    assert tm._two_proportion_p(np.array([50]), np.array([100]), np.array([10]), np.array([100]))[0] < 1e-6
 
 if __name__ == "__main__":
     tests = [v for k, v in dict(globals()).items() if k.startswith("test_") and callable(v)]

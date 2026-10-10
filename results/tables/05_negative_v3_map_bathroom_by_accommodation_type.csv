@@ -1,0 +1,9 @@
+segment,bathroom / toilet / room,shower / water / floor,hot / water / hot water,towels / towel / hang,soap / shampoo / wash,paper / toilet paper / toilet,door / bathroom door / close,fan / bathroom / fan bathroom
+ApartHotel,0.799,1.233,0.662,1.249,1.133,2.278,0.53,0.538
+Apartment,0.826,1.037,1.218,1.251,1.604,1.466,0.682,1.039
+Bed and Breakfast,1.392,0.952,0.572,0.63,1.37,0.383,0.801,0.814
+Guest house,0.918,1.015,1.297,0.784,1.644,0.613,0.855,0.868
+Hostel,1.232,0.712,1.177,0.628,0.512,1.718,2.695,0.304
+Hotel,0.974,1.036,0.984,0.976,0.913,0.902,0.993,1.084
+Motel,1.356,0.682,0.854,1.003,0.818,0.0,1.435,2.429
+Resort,1.298,0.655,1.014,1.701,0.0,0.776,0.406,0.412
