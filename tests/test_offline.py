@@ -259,6 +259,9 @@ def test_topic_modeling_recovers_subtopics():
     table, assign, summary = tm.fit_subtopics_per_aspect(sent, emb, ["bathroom", "noise", "generic"],
                                                         min_sentences=50, min_cluster_size=20)
     assert set(summary.index) == {"bathroom", "noise"}            # HU/EN: generic skipped
+    _, assign_s, _ = tm.fit_subtopics_per_aspect(sent, emb, ["bathroom"], min_sentences=50,
+                                                 min_cluster_size=20, sample_per_aspect=120)
+    assert len(assign_s) == int(bath.sum()) and assign_s["in_fit_sample"].sum() == 120   # HU/EN: all rows assigned
     assert table.groupby("aspect")["topic"].nunique().to_dict() == {"bathroom": 3, "noise": 2}
     lift = tm.segment_table(assign, sent, "bathroom", "accommodation_type", min_count=10)
     assert lift.shape[0] == 2 and lift.shape[1] == 3
@@ -307,6 +310,11 @@ def test_topic_merging_and_significance():
     assert merges[0]["reason"] == "near-duplicate" and merges[0]["size_merged"] == 20
     capped, _ = tm.merge_similar_topics(emb, labels, max_topics=2)
     assert len(np.unique(capped)) == 2
+    capped_share, _ = tm.merge_similar_topics(emb, labels, max_topics=1, max_topic_share=0.55)
+    assert np.bincount(capped_share).max() / len(labels) <= 0.55       # HU/EN: size cap respected
+    new = emb[[0, 60, 100]]                                             # HU/EN: one from each theme
+    assert list(tm.assign_to_topics(new, emb, labels)) == [0, 1, 2]
+    assert list(tm.assign_to_topics(-new, emb, labels)) == [-1, -1, -1]  # HU/EN: dissimilar -> noise
     same, none = tm.merge_similar_topics(emb, labels)              # HU/EN: no rule -> unchanged
     assert none == [] and len(np.unique(same)) == 4
 

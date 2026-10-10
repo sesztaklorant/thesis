@@ -1,0 +1,65 @@
+,segment,subtopic,lift,count,segment_n,q,significant,notable
+38,Hostel,door / bathroom door / close,2.695,9,107,0.0788,False,False
+55,Motel,fan / bathroom / fan bathroom,2.429,5,67,0.3135,False,False
+5,ApartHotel,paper / toilet paper / toilet,2.278,9,121,0.2162,False,False
+37,Hostel,paper / toilet paper / toilet,1.718,6,107,0.5166,False,False
+59,Resort,towels / towel / hang,1.701,8,79,0.4173,False,False
+28,Guest house,soap / shampoo / wash,1.644,9,150,0.4173,False,False
+12,Apartment,soap / shampoo / wash,1.604,11,188,0.4173,False,False
+13,Apartment,paper / toilet paper / toilet,1.466,9,188,0.6158,False,False
+54,Motel,door / bathroom door / close,1.435,3,67,0.718,False,False
+16,Bed and Breakfast,bathroom / toilet / room,1.392,38,80,0.2162,False,False
+20,Bed and Breakfast,soap / shampoo / wash,1.37,4,80,0.718,False,False
+48,Motel,bathroom / toilet / room,1.356,31,67,0.3135,False,False
+56,Resort,bathroom / toilet / room,1.298,35,79,0.3832,False,False
+26,Guest house,hot / water / hot water,1.297,17,150,0.6158,False,False
+11,Apartment,towels / towel / hang,1.251,14,188,0.6158,False,False
+3,ApartHotel,towels / towel / hang,1.249,9,121,0.7097,False,False
+1,ApartHotel,shower / water / floor,1.233,49,121,0.3832,False,False
+32,Hostel,bathroom / toilet / room,1.232,45,107,0.3832,False,False
+10,Apartment,hot / water / hot water,1.218,20,188,0.6158,False,False
+34,Hostel,hot / water / hot water,1.177,11,107,0.7649,False,False
+4,ApartHotel,soap / shampoo / wash,1.133,5,121,0.8392,False,False
+47,Hotel,fan / bathroom / fan bathroom,1.084,43,1291,0.6288,False,False
+15,Apartment,fan / bathroom / fan bathroom,1.039,6,188,0.9663,False,False
+9,Apartment,shower / water / floor,1.037,64,188,0.8392,False,False
+41,Hotel,shower / water / floor,1.036,439,1291,0.4968,False,False
+25,Guest house,shower / water / floor,1.015,50,150,0.9527,False,False
+58,Resort,hot / water / hot water,1.014,7,79,0.9838,False,False
+51,Motel,towels / towel / hang,1.003,4,67,0.9952,False,False
+46,Hotel,door / bathroom door / close,0.993,40,1291,0.9712,False,False
+42,Hotel,hot / water / hot water,0.984,111,1291,0.8392,False,False
+43,Hotel,towels / towel / hang,0.976,75,1291,0.8392,False,False
+40,Hotel,bathroom / toilet / room,0.974,429,1291,0.6158,False,False
+17,Bed and Breakfast,shower / water / floor,0.952,25,80,0.8392,False,False
+24,Guest house,bathroom / toilet / room,0.918,47,150,0.6899,False,False
+44,Hotel,soap / shampoo / wash,0.913,43,1291,0.6158,False,False
+45,Hotel,paper / toilet paper / toilet,0.902,38,1291,0.6158,False,False
+31,Guest house,fan / bathroom / fan bathroom,0.868,4,150,0.8392,False,False
+30,Guest house,door / bathroom door / close,0.855,4,150,0.8392,False,False
+50,Motel,hot / water / hot water,0.854,5,67,0.8392,False,False
+8,Apartment,bathroom / toilet / room,0.826,53,188,0.3832,False,False
+52,Motel,soap / shampoo / wash,0.818,2,67,0.8392,False,False
+23,Bed and Breakfast,fan / bathroom / fan bathroom,0.814,2,80,0.8392,False,False
+22,Bed and Breakfast,door / bathroom door / close,0.801,2,80,0.8392,False,False
+0,ApartHotel,bathroom / toilet / room,0.799,33,121,0.4173,False,False
+27,Guest house,towels / towel / hang,0.784,7,150,0.712,False,False
+61,Resort,paper / toilet paper / toilet,0.776,2,79,0.8392,False,False
+33,Hostel,shower / water / floor,0.712,25,107,0.3135,False,False
+14,Apartment,door / bathroom door / close,0.682,4,188,0.6427,False,False
+49,Motel,shower / water / floor,0.682,15,67,0.3832,False,False
+2,ApartHotel,hot / water / hot water,0.662,7,121,0.6158,False,False
+57,Resort,shower / water / floor,0.655,17,79,0.3135,False,False
+19,Bed and Breakfast,towels / towel / hang,0.63,3,80,0.6332,False,False
+35,Hostel,towels / towel / hang,0.628,4,107,0.6158,False,False
+29,Guest house,paper / toilet paper / toilet,0.613,3,150,0.6158,False,False
+18,Bed and Breakfast,hot / water / hot water,0.572,4,80,0.6158,False,False
+7,ApartHotel,fan / bathroom / fan bathroom,0.538,2,121,0.6158,False,False
+6,ApartHotel,door / bathroom door / close,0.53,2,121,0.6158,False,False
+36,Hostel,soap / shampoo / wash,0.512,2,107,0.6158,False,False
+63,Resort,fan / bathroom / fan bathroom,0.412,1,79,0.6158,False,False
+62,Resort,door / bathroom door / close,0.406,1,79,0.6158,False,False
+21,Bed and Breakfast,paper / toilet paper / toilet,0.383,1,80,0.6158,False,False
+39,Hostel,fan / bathroom / fan bathroom,0.304,1,107,0.5738,False,False
+53,Motel,paper / toilet paper / toilet,0.0,0,67,0.4494,False,False
+60,Resort,soap / shampoo / wash,0.0,0,79,0.3832,False,False

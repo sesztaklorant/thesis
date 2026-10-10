@@ -223,14 +223,20 @@ class Config:
     subtopic_min_cluster_share: float = 0.02
     subtopic_max_topics: int = 10
     subtopic_merge_similarity: float = 0.90
+    # HU: v4: összevont altéma legfeljebb az aspektus 35%-a (a v3-ban a "hógolyó-összevonás" 40–55%-os
+    #     gyűjtőtémákat hozott létre, pl. a zajnál forgalom + zene + szomszédok egyben).
+    # EN: v4: a merged subtopic is at most 35% of the aspect (in v3 "snowball merging" created 40–55%
+    #     catch-all topics, e.g. traffic + music + neighbours together for noise).
+    subtopic_max_topic_share: float = 0.35
     subtopic_sweep_shares: tuple[float, ...] = (0.01, 0.02)
     subtopic_sweep_max_topics: tuple = (None, 12, 10, 8, 6)   # HU/EN: None = no merging
     heatmap_max_subtopics: int = 8          # HU: panasztérképen legfeljebb ennyi altéma / EN: max subtopics on a complaint map
+    heatmap_min_effect: float = 0.20        # HU: csillag csak, ha |lift − 1| ≥ ez IS / EN: star only if |lift − 1| ≥ this TOO
     # HU: Az altéma-futás verziója: minden 2/b kimenet nevében szerepel, így egy új paraméterezés
     #     NEM írja felül a korábbi táblákat, ábrákat és a kitöltött kézi ellenőrzést.
     # EN: Version of the subtopic run: it is part of every 2/b output name, so a new parameter set
     #     does NOT overwrite earlier tables, figures and the filled-in manual check.
-    topic_version: str = "v3"
+    topic_version: str = "v4"
 
     # --- Kézi annotáció / Manual annotation (gold standard) ---
     gold_sample_size: int = 400

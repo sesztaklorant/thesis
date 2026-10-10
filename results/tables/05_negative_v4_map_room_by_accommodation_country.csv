@@ -1,0 +1,65 @@
+,segment,subtopic,lift,count,segment_n,q,significant,notable
+25,Japan,small / room / room small,2.467,56,103,0.0,True,True
+23,Italy,noisy / noise / loud,2.058,13,172,0.0312,True,True
+58,United States of America,smell / room / clean,1.863,95,395,0.0,True,True
+19,Italy,cold / air / hot,1.532,33,172,0.0351,True,True
+9,France,small / room / room small,1.455,42,131,0.0312,True,True
+52,United Kingdom,window / windows / open,1.341,83,643,0.0046,True,True
+51,United Kingdom,cold / air / hot,1.242,100,643,0.0312,True,True
+50,United Kingdom,smell / room / clean,0.614,51,643,0.0,True,True
+57,United States of America,small / room / room small,0.563,49,395,0.0,True,True
+60,United States of America,window / windows / open,0.447,17,395,0.0006,True,True
+46,Spain,door / lock / key,2.009,9,115,0.1112,False,False
+39,Portugal,noisy / noise / loud,1.578,4,69,0.5352,False,False
+5,Australia,dark / lighting / lights,1.505,15,169,0.2572,False,False
+36,Portugal,window / windows / open,1.505,10,69,0.3848,False,False
+38,Portugal,door / lock / key,1.488,4,69,0.6173,False,False
+4,Australia,window / windows / open,1.475,24,169,0.1458,False,False
+6,Australia,door / lock / key,1.367,9,169,0.5352,False,False
+61,United States of America,dark / lighting / lights,1.33,31,395,0.2358,False,False
+41,Spain,small / room / room small,1.302,33,115,0.2525,False,False
+21,Italy,dark / lighting / lights,1.281,13,172,0.5352,False,False
+44,Spain,window / windows / open,1.265,14,115,0.5352,False,False
+13,France,dark / lighting / lights,1.165,9,131,0.7966,False,False
+62,United States of America,door / lock / key,1.105,17,395,0.7966,False,False
+56,United States of America,room / bathroom / rooms,1.092,108,395,0.4646,False,False
+48,United Kingdom,room / bathroom / rooms,1.062,171,643,0.4954,False,False
+26,Japan,smell / room / clean,1.053,14,103,0.9116,False,False
+32,Portugal,room / bathroom / rooms,1.042,18,69,0.9116,False,False
+15,France,noisy / noise / loud,1.039,5,131,0.9591,False,False
+55,United Kingdom,noisy / noise / loud,1.016,24,643,0.9591,False,False
+34,Portugal,smell / room / clean,1.01,9,69,0.9886,False,False
+54,United Kingdom,door / lock / key,0.998,25,643,0.9904,False,False
+49,United Kingdom,small / room / room small,0.988,140,643,0.9116,False,False
+0,Australia,room / bathroom / rooms,0.969,41,169,0.9116,False,False
+7,Australia,noisy / noise / loud,0.967,6,169,0.9591,False,False
+42,Spain,smell / room / clean,0.943,14,115,0.9116,False,False
+40,Spain,room / bathroom / rooms,0.938,27,115,0.8322,False,False
+16,Italy,room / bathroom / rooms,0.929,40,172,0.7538,False,False
+2,Australia,smell / room / clean,0.917,20,169,0.8137,False,False
+8,France,room / bathroom / rooms,0.884,29,131,0.619,False,False
+45,Spain,dark / lighting / lights,0.884,6,115,0.8872,False,False
+17,Italy,small / room / room small,0.871,33,172,0.5352,False,False
+33,Portugal,small / room / room small,0.855,13,69,0.7305,False,False
+35,Portugal,cold / air / hot,0.81,7,69,0.7395,False,False
+1,Australia,small / room / room small,0.806,30,169,0.3848,False,False
+12,France,window / windows / open,0.793,10,131,0.619,False,False
+59,United States of America,cold / air / hot,0.789,39,395,0.2525,False,False
+10,France,smell / room / clean,0.769,13,131,0.5297,False,False
+3,Australia,cold / air / hot,0.756,16,169,0.4646,False,False
+37,Portugal,dark / lighting / lights,0.737,3,69,0.7538,False,False
+11,France,cold / air / hot,0.732,12,131,0.4646,False,False
+20,Italy,window / windows / open,0.725,12,172,0.4646,False,False
+18,Italy,smell / room / clean,0.721,16,172,0.3528,False,False
+53,United Kingdom,dark / lighting / lights,0.712,27,643,0.1105,False,False
+47,Spain,noisy / noise / loud,0.71,3,115,0.7382,False,False
+27,Japan,cold / air / hot,0.698,9,103,0.4646,False,False
+43,Spain,cold / air / hot,0.625,9,115,0.309,False,False
+24,Japan,room / bathroom / rooms,0.62,16,103,0.1105,False,False
+63,United States of America,noisy / noise / loud,0.62,9,395,0.2773,False,False
+22,Italy,door / lock / key,0.597,4,172,0.4954,False,False
+31,Japan,noisy / noise / loud,0.529,2,103,0.5352,False,False
+29,Japan,dark / lighting / lights,0.329,2,103,0.2533,False,False
+28,Japan,window / windows / open,0.303,3,103,0.1009,False,False
+30,Japan,door / lock / key,0.249,1,103,0.309,False,False
+14,France,door / lock / key,0.196,1,131,0.2173,False,False

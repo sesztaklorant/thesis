@@ -1,0 +1,65 @@
+,segment,subtopic,lift,count,segment_n,q,significant,notable
+37,Hostel,kitchen / cutlery / plates,3.906,23,112,0.0,True,True
+5,ApartHotel,kitchen / cutlery / plates,2.919,33,215,0.0,True,True
+13,Apartment,kitchen / cutlery / plates,2.661,48,343,0.0,True,True
+53,Motel,kitchen / cutlery / plates,2.133,12,107,0.0272,True,True
+3,ApartHotel,towels / soap / no,1.724,56,215,0.0,True,True
+56,Resort,room / no / not,1.705,68,178,0.0,True,True
+11,Apartment,towels / soap / no,1.312,68,343,0.0414,True,True
+8,Apartment,room / no / not,0.703,54,343,0.011,True,True
+10,Apartment,coffee / water / fridge,0.673,45,343,0.011,True,True
+57,Resort,air / air conditioning / conditioning,0.597,21,178,0.0297,True,True
+2,ApartHotel,coffee / water / fridge,0.525,22,215,0.003,True,True
+51,Motel,towels / soap / no,0.433,7,107,0.0474,True,True
+45,Hotel,kitchen / cutlery / plates,0.311,31,1895,0.0,True,True
+36,Hostel,tv / channels / work,0.113,1,112,0.0272,True,True
+38,Hostel,lights / light / lamp,2.204,7,112,0.0899,False,False
+55,Motel,pool / tub / hot tub,1.833,5,107,0.3375,False,False
+17,Bed and Breakfast,air / air conditioning / conditioning,1.446,26,91,0.1028,False,False
+52,Motel,tv / channels / work,1.419,12,107,0.3808,False,False
+50,Motel,coffee / water / fridge,1.342,28,107,0.1962,False,False
+63,Resort,pool / tub / hot tub,1.322,6,178,0.5971,False,False
+6,ApartHotel,lights / light / lamp,1.312,8,215,0.5947,False,False
+27,Guest house,towels / soap / no,1.277,38,197,0.214,False,False
+20,Bed and Breakfast,tv / channels / work,1.251,9,91,0.5971,False,False
+22,Bed and Breakfast,lights / light / lamp,1.162,3,91,0.8475,False,False
+25,Guest house,air / air conditioning / conditioning,1.156,45,197,0.452,False,False
+9,Apartment,air / air conditioning / conditioning,1.136,77,343,0.3808,False,False
+44,Hotel,tv / channels / work,1.128,169,1895,0.0414,True,False
+32,Hostel,room / no / not,1.116,28,112,0.6179,False,False
+42,Hotel,coffee / water / fridge,1.115,412,1895,0.0009,True,False
+47,Hotel,pool / tub / hot tub,1.097,53,1895,0.4555,False,False
+16,Bed and Breakfast,room / no / not,1.079,22,91,0.7778,False,False
+18,Bed and Breakfast,coffee / water / fridge,1.071,19,91,0.8271,False,False
+46,Hotel,lights / light / lamp,1.061,57,1895,0.5971,False,False
+26,Guest house,coffee / water / fridge,1.041,40,197,0.8475,False,False
+40,Hotel,room / no / not,1.029,437,1895,0.4555,False,False
+41,Hotel,air / air conditioning / conditioning,1.002,375,1895,0.9721,False,False
+49,Motel,air / air conditioning / conditioning,0.993,21,107,0.9722,False,False
+12,Apartment,tv / channels / work,0.922,25,343,0.7621,False,False
+58,Resort,coffee / water / fridge,0.922,32,178,0.7075,False,False
+43,Hotel,towels / soap / no,0.919,263,1895,0.0671,False,False
+7,ApartHotel,pool / tub / hot tub,0.912,5,215,0.8559,False,False
+24,Guest house,room / no / not,0.906,40,197,0.5971,False,False
+1,ApartHotel,air / air conditioning / conditioning,0.895,38,215,0.5947,False,False
+30,Guest house,lights / light / lamp,0.895,5,197,0.8475,False,False
+23,Bed and Breakfast,pool / tub / hot tub,0.862,2,91,0.8559,False,False
+35,Hostel,towels / soap / no,0.828,14,112,0.5947,False,False
+15,Apartment,pool / tub / hot tub,0.801,7,343,0.6359,False,False
+48,Motel,room / no / not,0.793,19,107,0.4282,False,False
+60,Resort,tv / channels / work,0.782,11,178,0.5935,False,False
+59,Resort,towels / soap / no,0.781,21,178,0.385,False,False
+29,Guest house,kitchen / cutlery / plates,0.772,8,197,0.5947,False,False
+33,Hostel,air / air conditioning / conditioning,0.768,17,112,0.3935,False,False
+61,Resort,kitchen / cutlery / plates,0.748,7,178,0.5947,False,False
+0,ApartHotel,room / no / not,0.727,35,215,0.0899,False,False
+14,Apartment,lights / light / lamp,0.72,7,343,0.5554,False,False
+4,ApartHotel,tv / channels / work,0.706,12,215,0.3808,False,False
+34,Hostel,coffee / water / fridge,0.641,14,112,0.1653,False,False
+21,Bed and Breakfast,kitchen / cutlery / plates,0.627,3,91,0.5947,False,False
+28,Guest house,tv / channels / work,0.578,9,197,0.195,False,False
+19,Bed and Breakfast,towels / soap / no,0.509,7,91,0.1374,False,False
+31,Guest house,pool / tub / hot tub,0.398,2,197,0.3375,False,False
+62,Resort,lights / light / lamp,0.396,2,178,0.3375,False,False
+39,Hostel,pool / tub / hot tub,0.0,0,112,0.2002,False,False
+54,Motel,lights / light / lamp,0.0,0,107,0.195,False,False

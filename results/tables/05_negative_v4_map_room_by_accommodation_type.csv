@@ -1,0 +1,65 @@
+,segment,subtopic,lift,count,segment_n,q,significant,notable
+14,Apartment,door / lock / key,2.024,15,193,0.035,True,True
+5,ApartHotel,dark / lighting / lights,1.864,17,148,0.0408,True,True
+12,Apartment,window / windows / open,1.641,32,193,0.0259,True,True
+33,Hostel,small / room / room small,1.596,39,113,0.0221,True,True
+46,Hotel,door / lock / key,0.693,54,2029,0.0001,True,True
+1,ApartHotel,small / room / room small,0.594,19,148,0.0495,True,True
+32,Hostel,room / bathroom / rooms,0.473,13,113,0.0235,True,True
+49,Motel,small / room / room small,0.448,9,93,0.0403,True,True
+54,Motel,door / lock / key,2.24,8,93,0.0746,False,False
+38,Hostel,door / lock / key,2.074,9,113,0.0913,False,False
+39,Hostel,noisy / noise / loud,2.002,8,113,0.1337,False,False
+30,Guest house,door / lock / key,1.935,13,175,0.058,False,False
+55,Motel,noisy / noise / loud,1.52,5,93,0.5542,False,False
+50,Motel,smell / room / clean,1.485,18,93,0.1833,False,False
+4,ApartHotel,window / windows / open,1.471,22,148,0.1558,False,False
+6,ApartHotel,door / lock / key,1.408,8,148,0.5496,False,False
+35,Hostel,cold / air / hot,1.405,20,113,0.2447,False,False
+2,ApartHotel,smell / room / clean,1.4,27,148,0.1607,False,False
+53,Motel,dark / lighting / lights,1.396,8,93,0.5542,False,False
+58,Resort,smell / room / clean,1.382,20,111,0.2612,False,False
+19,Bed and Breakfast,cold / air / hot,1.335,18,107,0.3833,False,False
+11,Apartment,cold / air / hot,1.316,32,193,0.2255,False,False
+56,Resort,room / bathroom / rooms,1.26,34,111,0.2612,False,False
+20,Bed and Breakfast,window / windows / open,1.202,13,107,0.6904,False,False
+28,Guest house,window / windows / open,1.188,21,175,0.6104,False,False
+13,Apartment,dark / lighting / lights,1.177,14,193,0.7002,False,False
+27,Guest house,cold / air / hot,1.134,25,175,0.6935,False,False
+31,Guest house,noisy / noise / loud,1.131,7,175,0.8368,False,False
+3,ApartHotel,cold / air / hot,1.073,20,148,0.8368,False,False
+40,Hotel,room / bathroom / rooms,1.07,528,2029,0.0235,True,False
+41,Hotel,small / room / room small,1.067,468,2029,0.0403,True,False
+21,Bed and Breakfast,dark / lighting / lights,1.061,7,107,0.9419,False,False
+23,Bed and Breakfast,noisy / noise / loud,1.057,4,107,0.9689,False,False
+63,Resort,noisy / noise / loud,1.019,4,111,0.9843,False,False
+48,Motel,room / bathroom / rooms,1.017,23,93,0.9703,False,False
+16,Bed and Breakfast,room / bathroom / rooms,0.999,26,107,0.9963,False,False
+42,Hotel,smell / room / clean,0.979,259,2029,0.7002,False,False
+22,Bed and Breakfast,door / lock / key,0.974,4,107,0.9843,False,False
+26,Guest house,smell / room / clean,0.964,22,175,0.9392,False,False
+24,Guest house,room / bathroom / rooms,0.963,41,175,0.8729,False,False
+47,Hotel,noisy / noise / loud,0.962,69,2029,0.7141,False,False
+44,Hotel,window / windows / open,0.961,197,2029,0.5496,False,False
+45,Hotel,dark / lighting / lights,0.96,120,2029,0.6192,False,False
+25,Guest house,small / room / room small,0.951,36,175,0.8368,False,False
+43,Hotel,cold / air / hot,0.927,237,2029,0.1083,False,False
+37,Hostel,dark / lighting / lights,0.861,6,113,0.8368,False,False
+18,Bed and Breakfast,smell / room / clean,0.86,12,107,0.7141,False,False
+59,Resort,cold / air / hot,0.858,12,111,0.7141,False,False
+51,Motel,cold / air / hot,0.854,10,93,0.7213,False,False
+10,Apartment,smell / room / clean,0.835,21,193,0.5729,False,False
+57,Resort,small / room / room small,0.833,20,111,0.5694,False,False
+9,Apartment,small / room / room small,0.791,33,193,0.2612,False,False
+17,Bed and Breakfast,small / room / room small,0.778,18,107,0.4397,False,False
+15,Apartment,noisy / noise / loud,0.733,5,193,0.6874,False,False
+62,Resort,door / lock / key,0.704,3,111,0.7002,False,False
+0,ApartHotel,room / bathroom / rooms,0.695,25,148,0.1157,False,False
+8,Apartment,room / bathroom / rooms,0.682,32,193,0.0556,False,False
+29,Guest house,dark / lighting / lights,0.649,7,175,0.4397,False,False
+36,Hostel,window / windows / open,0.613,7,113,0.3525,False,False
+61,Resort,dark / lighting / lights,0.585,4,111,0.4907,False,False
+7,ApartHotel,noisy / noise / loud,0.573,3,148,0.5496,False,False
+34,Hostel,smell / room / clean,0.543,8,113,0.1607,False,False
+60,Resort,window / windows / open,0.446,5,111,0.155,False,False
+52,Motel,window / windows / open,0.319,3,93,0.1081,False,False

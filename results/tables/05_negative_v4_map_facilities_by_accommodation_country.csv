@@ -1,0 +1,65 @@
+,segment,subtopic,lift,count,segment_n,q,significant,notable
+29,New Zealand,kitchen / cutlery / plates,3.79,18,88,0.0,True,True
+37,Spain,kitchen / cutlery / plates,2.121,19,166,0.0097,True,True
+5,Australia,kitchen / cutlery / plates,1.791,23,238,0.0254,True,True
+18,Italy,air / air conditioning / conditioning,1.431,58,211,0.0254,True,True
+58,United States of America,air / air conditioning / conditioning,0.737,63,445,0.0254,True,True
+53,United Kingdom,kitchen / cutlery / plates,0.571,17,552,0.0383,True,True
+34,Spain,air / air conditioning / conditioning,0.565,18,166,0.0383,True,True
+47,Thailand,pool / tub / hot tub,2.216,5,82,0.1774,False,False
+39,Spain,pool / tub / hot tub,1.533,7,166,0.3994,False,False
+63,United States of America,pool / tub / hot tub,1.47,18,445,0.1774,False,False
+4,Australia,tv / channels / work,1.457,31,238,0.0929,False,False
+28,New Zealand,tv / channels / work,1.398,11,88,0.3994,False,False
+17,Italy,coffee / water / fridge,1.334,56,211,0.0599,False,False
+42,Thailand,air / air conditioning / conditioning,1.333,21,82,0.3025,False,False
+9,France,coffee / water / fridge,1.303,28,108,0.2606,False,False
+10,France,air / air conditioning / conditioning,1.253,26,108,0.3964,False,False
+32,Spain,room / no / not,1.238,46,166,0.2352,False,False
+43,Thailand,towels / soap / no,1.227,14,82,0.5423,False,False
+7,Australia,pool / tub / hot tub,1.222,8,238,0.65,False,False
+57,United States of America,coffee / water / fridge,1.22,108,445,0.0526,False,False
+62,United States of America,lights / light / lamp,1.203,17,445,0.5208,False,False
+50,United Kingdom,air / air conditioning / conditioning,1.17,124,552,0.0929,False,False
+35,Spain,towels / soap / no,1.169,27,166,0.5116,False,False
+0,Australia,room / no / not,1.145,61,238,0.3964,False,False
+54,United Kingdom,lights / light / lamp,1.141,20,552,0.5977,False,False
+38,Spain,lights / light / lamp,1.139,6,166,0.84,False,False
+60,United States of America,tv / channels / work,1.131,45,445,0.5031,False,False
+8,France,room / no / not,1.117,27,108,0.6169,False,False
+59,United States of America,towels / soap / no,1.098,68,445,0.5103,False,False
+19,Italy,towels / soap / no,1.09,32,211,0.6846,False,False
+48,United Kingdom,room / no / not,1.085,134,552,0.3964,False,False
+30,New Zealand,lights / light / lamp,1.074,3,88,0.912,False,False
+52,United Kingdom,tv / channels / work,1.033,51,552,0.8459,False,False
+27,New Zealand,towels / soap / no,0.98,12,88,0.9383,False,False
+51,United Kingdom,towels / soap / no,0.976,75,552,0.8459,False,False
+26,New Zealand,air / air conditioning / conditioning,0.947,16,88,0.8459,False,False
+56,United States of America,room / no / not,0.944,94,445,0.5977,False,False
+12,France,tv / channels / work,0.932,9,108,0.8459,False,False
+25,New Zealand,coffee / water / fridge,0.914,16,88,0.7916,False,False
+22,Italy,lights / light / lamp,0.896,6,211,0.8459,False,False
+49,United Kingdom,coffee / water / fridge,0.883,97,552,0.2606,False,False
+14,France,lights / light / lamp,0.875,3,108,0.8459,False,False
+3,Australia,towels / soap / no,0.845,28,238,0.4883,False,False
+33,Spain,coffee / water / fridge,0.818,27,166,0.3994,False,False
+2,Australia,air / air conditioning / conditioning,0.809,37,238,0.2968,False,False
+40,Thailand,room / no / not,0.763,14,82,0.4015,False,False
+16,Italy,room / no / not,0.762,36,211,0.1657,False,False
+41,Thailand,coffee / water / fridge,0.736,12,82,0.3994,False,False
+55,United Kingdom,pool / tub / hot tub,0.724,11,552,0.3964,False,False
+13,France,kitchen / cutlery / plates,0.686,4,108,0.5634,False,False
+44,Thailand,tv / channels / work,0.682,5,82,0.5116,False,False
+45,Thailand,kitchen / cutlery / plates,0.678,3,82,0.5977,False,False
+1,Australia,coffee / water / fridge,0.676,32,238,0.0526,False,False
+24,New Zealand,room / no / not,0.559,11,88,0.0929,False,False
+61,United States of America,kitchen / cutlery / plates,0.541,13,445,0.0526,False,False
+20,Italy,tv / channels / work,0.53,10,211,0.0929,False,False
+6,Australia,lights / light / lamp,0.529,4,238,0.3525,False,False
+36,Spain,tv / channels / work,0.472,7,166,0.096,False,False
+11,France,towels / soap / no,0.466,7,108,0.0929,False,False
+21,Italy,kitchen / cutlery / plates,0.439,5,211,0.1385,False,False
+31,New Zealand,pool / tub / hot tub,0.413,1,88,0.5103,False,False
+46,Thailand,lights / light / lamp,0.384,1,82,0.4883,False,False
+23,Italy,pool / tub / hot tub,0.345,2,211,0.2381,False,False
+15,France,pool / tub / hot tub,0.0,0,108,0.209,False,False

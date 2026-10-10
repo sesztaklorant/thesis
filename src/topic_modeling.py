@@ -187,56 +187,95 @@ def _centroids(embeddings: np.ndarray, labels: np.ndarray) -> tuple[np.ndarray, 
 
 
 def merge_similar_topics(embeddings: np.ndarray, labels: np.ndarray, max_topics: int | None = None,
-                         min_similarity: float | None = None) -> tuple[np.ndarray, list[dict]]:
+                         min_similarity: float | None = None,
+                         max_topic_share: float | None = None) -> tuple[np.ndarray, list[dict]]:
     """
     HU: TÉMA-ÖSSZEVONÁS (vö. BERTopic "topic reduction"). A HDBSCAN a mondatok MEGFOGALMAZÁSA
         szerint is szétválaszt (pl. "rooms are small" vs. "the room was quite small" — ugyanaz a
         panasz, két fürt). Ezért a finom fürtözés után lépésenként összevonjuk a két leghasonlóbb
-        témát (a középpontjaik koszinusz-hasonlósága alapján; a kisebbet a nagyobbikba), amíg
+        témacsoportot, amíg
           • a témák száma > max_topics, VAGY
-          • van két téma, amelyek hasonlósága ≥ min_similarity (közel-duplikátum).
-        Így aspektusonként ugyanaz a szabály ad 5–10 altémát, és nem kell egyetlen globális
-        fürtméretet eltalálni (az a fürdőszobánál 18-ról 2 altémára ugrott).
+          • van két csoport, amelyek hasonlósága ≥ min_similarity (közel-duplikátum).
+        Két csoport hasonlósága = a finom témáik középpontjai közötti ÁTLAGOS koszinusz-hasonlóság
+        (átlagos kapcsolás). Az összevont csoportnak NEM számolunk új középpontot: az "átlagos"
+        középpont minden témához hasonló lenne, és hógolyóként mindent elnyelne (v3-as hiba: a
+        zaj aspektusban a forgalom, a zene és a szomszédok egyetlen 55%-os témává olvadt).
+        max_topic_share: összevont téma legfeljebb ekkora arányú lehet (biztonsági korlát).
     EN: TOPIC MERGING (cf. BERTopic "topic reduction"). HDBSCAN also separates sentences by their
         WORDING (e.g. "rooms are small" vs. "the room was quite small" — the same complaint, two
-        clusters). So after the fine clustering the two most similar topics are merged step by step
-        (by the cosine similarity of their centres; the smaller into the larger) while
+        clusters). So after the fine clustering the two most similar topic groups are merged step
+        by step while
           • the number of topics is > max_topics, OR
-          • two topics have similarity ≥ min_similarity (near-duplicates).
-        The same rule thus gives 5–10 subtopics per aspect, and no single global cluster size has
-        to be guessed (for bathroom that jumped from 18 to 2 subtopics).
+          • two groups have similarity ≥ min_similarity (near-duplicates).
+        Similarity of two groups = the AVERAGE cosine similarity between the centres of their fine
+        topics (average linkage). No new centre is computed for a merged group: an "average" centre
+        would be similar to every topic and would swallow everything like a snowball (the v3 bug:
+        in the noise aspect traffic, music and neighbours melted into one 55% topic).
+        max_topic_share: a merged topic may not exceed this share (safety cap).
 
-    Returns: new labels (renumbered by size) and the list of merges (sizes and similarity).
+    Returns: new labels (renumbered by size) and the list of merges.
     """
     labels = labels.copy()
     merges: list[dict] = []
-    while True:
-        topics = np.unique(labels[labels >= 0])
-        if len(topics) < 2 or (max_topics is None and min_similarity is None):
-            break
-        topics, cents = _centroids(embeddings, labels)
-        sim = cents @ cents.T
-        np.fill_diagonal(sim, -np.inf)
-        i, j = np.unravel_index(np.argmax(sim), sim.shape)
-        best = float(sim[i, j])
-        too_many = max_topics is not None and len(topics) > max_topics
+    if max_topics is None and min_similarity is None:
+        return labels, merges
+    topics, cents = (np.unique(labels[labels >= 0]), None)
+    if len(topics) < 2:
+        return labels, merges
+    topics, cents = _centroids(embeddings, labels)
+    fine_sim = cents @ cents.T
+    sizes = np.array([(labels == t).sum() for t in topics], dtype=float)
+    total = float((labels >= 0).sum())
+    groups: list[list[int]] = [[i] for i in range(len(topics))]   # HU/EN: indices of fine topics
+
+    while len(groups) > 1:
+        best, pair = -np.inf, None
+        for a, b in itertools.combinations(range(len(groups)), 2):
+            if max_topic_share is not None and \
+                    (sizes[groups[a]].sum() + sizes[groups[b]].sum()) / total > max_topic_share:
+                continue
+            sim = float(fine_sim[np.ix_(groups[a], groups[b])].mean())
+            if sim > best:
+                best, pair = sim, (a, b)
+        if pair is None:
+            break                                     # HU/EN: every merge would break the size cap
+        too_many = max_topics is not None and len(groups) > max_topics
         too_similar = min_similarity is not None and best >= min_similarity
         if not (too_many or too_similar):
             break
-        a, b = topics[i], topics[j]
-        size_a, size_b = int((labels == a).sum()), int((labels == b).sum())
-        keep, drop = (a, b) if size_a >= size_b else (b, a)
-        labels[labels == drop] = keep
-        merges.append({"kept": int(keep), "merged": int(drop), "similarity": round(best, 4),
-                       "size_kept": max(size_a, size_b), "size_merged": min(size_a, size_b),
+        a, b = pair
+        size_a, size_b = sizes[groups[a]].sum(), sizes[groups[b]].sum()
+        merges.append({"similarity": round(best, 4), "size_kept": int(max(size_a, size_b)),
+                       "size_merged": int(min(size_a, size_b)),
                        "reason": "max_topics" if too_many else "near-duplicate"})
-    return renumber_by_size(labels), merges
+        groups[a] = groups[a] + groups[b]
+        del groups[b]
+
+    mapping = {int(topics[i]): g_id for g_id, g in enumerate(groups) for i in g}
+    out = np.array([mapping.get(int(x), -1) if x >= 0 else -1 for x in labels])
+    return renumber_by_size(out), merges
+
+
+def assign_to_topics(new_embeddings: np.ndarray, fit_embeddings: np.ndarray, fit_labels: np.ndarray,
+                     threshold: float = CFG.topic_outlier_threshold) -> np.ndarray:
+    """
+    HU: Új mondatok besorolása egy már illesztett témamodellbe: a legközelebbi téma-középpont
+        (koszinusz), ha a hasonlóság ≥ threshold, különben -1 (zaj).
+    EN: Assigning new sentences to an already fitted topic model: the nearest topic centre
+        (cosine) if the similarity is ≥ threshold, otherwise -1 (noise).
+    """
+    if len(new_embeddings) == 0 or not (fit_labels >= 0).any():
+        return np.full(len(new_embeddings), -1)
+    topics, cents = _centroids(fit_embeddings, fit_labels)
+    sims = new_embeddings @ cents.T
+    best = sims.argmax(axis=1)
+    return np.where(sims[np.arange(len(best)), best] >= threshold, topics[best], -1)
 
 
 def subtopic_params() -> dict:
     """HU: Az altéma-modell beállításai a configból. / EN: Subtopic model settings from the config."""
     return {"min_cluster_share": CFG.subtopic_min_cluster_share, "max_topics": CFG.subtopic_max_topics,
-            "merge_similarity": CFG.subtopic_merge_similarity}
+            "merge_similarity": CFG.subtopic_merge_similarity, "max_topic_share": CFG.subtopic_max_topic_share}
 
 
 # ==========================================================================
@@ -340,7 +379,8 @@ class TopicResult:
 def fit_topics(texts: pd.Series, embeddings: np.ndarray, seed: int = CFG.random_seed,
                min_cluster_size: int | None = None, min_cluster_share: float = CFG.topic_overview_min_share,
                reduce_outliers: bool = True, n_examples: int = 3, max_topics: int | None = None,
-               merge_similarity: float | None = None, reduced: np.ndarray | None = None) -> TopicResult:
+               merge_similarity: float | None = None, max_topic_share: float | None = None,
+               reduced: np.ndarray | None = None) -> TopicResult:
     """
     HU: Egy témamodell: UMAP -> HDBSCAN -> (zaj áthelyezése) -> c-TF-IDF -> minőség.
         min_cluster_size: alapból max(CFG.topic_min_cluster_size, a mondatok min_cluster_share
@@ -366,7 +406,7 @@ def fit_topics(texts: pd.Series, embeddings: np.ndarray, seed: int = CFG.random_
     if max_topics is not None or merge_similarity is not None:
         fine_terms, _, _ = class_tfidf(texts.tolist(), labels)
         fine_labels = labels
-        labels, merges = merge_similar_topics(embeddings, labels, max_topics, merge_similarity)
+        labels, merges = merge_similar_topics(embeddings, labels, max_topics, merge_similarity, max_topic_share)
         # HU: melyik finom témákból állt össze (átláthatóság) / EN: which fine topics it was built from
         for t in np.unique(labels[labels >= 0]):
             parts = np.unique(fine_labels[labels == t])
@@ -428,6 +468,7 @@ def granularity_sweep(texts: pd.Series, embeddings: np.ndarray,
                       shares: tuple[float, ...] = CFG.subtopic_sweep_shares,
                       max_topics_grid: tuple[int | None, ...] = CFG.subtopic_sweep_max_topics,
                       merge_similarity: float | None = CFG.subtopic_merge_similarity,
+                      max_topic_share: float | None = CFG.subtopic_max_topic_share,
                       seed: int = CFG.random_seed) -> pd.DataFrame:
     """
     HU: Finomság-vizsgálat: ugyanaz a mondathalmaz több fürtméret-aránnyal (min_cluster_share) és
@@ -445,7 +486,8 @@ def granularity_sweep(texts: pd.Series, embeddings: np.ndarray,
         for max_topics in max_topics_grid:
             result = fit_topics(texts, embeddings, seed=seed, min_cluster_share=share, reduced=reduced,
                                 max_topics=max_topics,
-                                merge_similarity=merge_similarity if max_topics is not None else None)
+                                merge_similarity=merge_similarity if max_topics is not None else None,
+                                max_topic_share=max_topic_share)
             info = result.topic_info
             rows.append({"min_cluster_share": share, "max_topics": max_topics if max_topics else "none",
                          **{k: result.metrics[k] for k in
@@ -486,9 +528,10 @@ def fit_subtopics_per_aspect(sentences: pd.DataFrame, embeddings: np.ndarray, as
         if len(rows) < min_sentences:
             log.info("%-16s skipped (%d sentences < %d)", aspect, len(rows), min_sentences)
             continue
+        all_rows = rows
         if len(rows) > sample_per_aspect:
             rows = np.sort(rng.choice(rows, size=sample_per_aspect, replace=False))
-        log.info("%-16s %d sentences", aspect, len(rows))
+        log.info("%-16s %d sentences (model fitted on %d)", aspect, len(all_rows), len(rows))
         for key, value in subtopic_params().items():
             kwargs.setdefault(key, value)
         result = fit_topics(sentences[text_col].iloc[rows], embeddings[rows], seed=seed, **kwargs)
@@ -499,14 +542,23 @@ def fit_subtopics_per_aspect(sentences: pd.DataFrame, embeddings: np.ndarray, as
         info = result.topic_info.assign(aspect=aspect).rename(columns={"share": "share_within_aspect"})
         tables.append(info)
         label_map = dict(zip(info["topic"], info["label"]))
-        assigns.append(pd.DataFrame({"row": rows, "aspect": aspect, "topic": result.labels,
-                                     "topic_label": [label_map.get(t, "(unassigned)") for t in result.labels]}))
+        # HU: A mintán kívüli mondatok (teljes adatnál) a legközelebbi téma-középponthoz kerülnek,
+        #     ugyanazzal a küszöbbel, mint a zajpontok — így a panasztérkép MINDEN mondatot számol.
+        # EN: Sentences outside the sample (full data) go to the nearest topic centre, with the same
+        #     threshold as noise points — so the complaint map counts EVERY sentence.
+        rest = np.setdiff1d(all_rows, rows)
+        rest_topics = assign_to_topics(embeddings[rest], embeddings[rows], result.labels)
+        both_rows = np.concatenate([rows, rest])
+        both_topics = np.concatenate([result.labels, rest_topics])
+        assigns.append(pd.DataFrame({"row": both_rows, "aspect": aspect, "topic": both_topics,
+                                     "topic_label": [label_map.get(t, "(unassigned)") for t in both_topics],
+                                     "in_fit_sample": np.r_[np.ones(len(rows), bool), np.zeros(len(rest), bool)]}))
 
     cols = ["aspect", "topic", "size", "share_within_aspect", "label", "top_terms", "coherence_npmi", "examples",
             "merged_from"]
     topic_table = pd.concat(tables, ignore_index=True)[cols] if tables else pd.DataFrame(columns=cols)
     assignments = pd.concat(assigns, ignore_index=True) if assigns else pd.DataFrame(
-        columns=["row", "aspect", "topic", "topic_label"])
+        columns=["row", "aspect", "topic", "topic_label", "in_fit_sample"])
     summary_cols = ["aspect", "n_sentences", "n_topics_before_merge", "n_topics", "min_cluster_size",
                     "noise_share_before",
                     "noise_share_after", "mean_coherence_npmi", "topic_diversity"]
@@ -533,7 +585,8 @@ def rename_topics(topic_table: pd.DataFrame, assignments: pd.DataFrame,
 
 def segment_table(assignments: pd.DataFrame, sentences: pd.DataFrame, aspect: str, segment_col: str,
                   min_count: int = 50, top_segments: int = 10,
-                  top_topics: int | None = CFG.heatmap_max_subtopics, alpha: float = 0.05) -> pd.DataFrame:
+                  top_topics: int | None = CFG.heatmap_max_subtopics, alpha: float = 0.05,
+                  min_effect: float = CFG.heatmap_min_effect) -> pd.DataFrame:
     """
     HU: "Panasztérkép": egy aspektus altémáinak aránya szegmensenként (pl. szállástípus).
         A lift = a szegmensbeli arány / az összesített arány; 1 felett az altéma ott gyakoribb.
@@ -544,10 +597,14 @@ def segment_table(assignments: pd.DataFrame, sentences: pd.DataFrame, aspect: st
 
     HU: SZIGNIFIKANCIA: minden cellára kétmintás arány-z-próba (a szegmens vs. az összes többi),
         Benjamini–Hochberg-korrekcióval (sok cella = sok teszt). lift.attrs: "counts", "q",
-        "significant" (q < alpha). Kis szegmensben (n≈80) egy 2-es lift is lehet véletlen!
+        "significant" (q < alpha), "notable" (szignifikáns ÉS |lift − 1| ≥ min_effect). Kis
+        szegmensben (n≈80) egy 2-es lift is lehet véletlen; nagy mintán (teljes adat) viszont
+        egy 1,06-os, gyakorlatilag jelentéktelen eltérés is szignifikáns — ezért kell mindkét feltétel.
     EN: SIGNIFICANCE: a two-proportion z-test per cell (the segment vs. all others), with
         Benjamini–Hochberg correction (many cells = many tests). lift.attrs: "counts", "q",
-        "significant" (q < alpha). In a small segment (n≈80) even a lift of 2 can be chance!
+        "significant" (q < alpha), "notable" (significant AND |lift − 1| ≥ min_effect). In a small
+        segment (n≈80) even a lift of 2 can be chance; on a large sample (full data), however, even a
+        practically meaningless 1.06 becomes significant — hence both conditions.
     """
     sub = assignments[(assignments["aspect"] == aspect) & (assignments["topic"] >= 0)].copy()
     sub["segment"] = sentences[segment_col].iloc[sub["row"]].to_numpy()
@@ -572,6 +629,7 @@ def segment_table(assignments: pd.DataFrame, sentences: pd.DataFrame, aspect: st
     lift.attrs["counts"] = counts
     lift.attrs["q"] = pd.DataFrame(q, index=counts.index, columns=columns)
     lift.attrs["significant"] = lift.attrs["q"] < alpha
+    lift.attrs["notable"] = lift.attrs["significant"] & ((lift - 1).abs() >= min_effect)
     return lift
 
 
@@ -609,8 +667,9 @@ def segment_long_table(lift: pd.DataFrame) -> pd.DataFrame:
     long["segment_n"] = [lift.attrs["n"][seg] for seg in long.index.get_level_values(0)]
     long["q"] = lift.attrs["q"].stack().round(4)
     long["significant"] = lift.attrs["significant"].stack()
+    long["notable"] = lift.attrs["notable"].stack()
     long.index.names = ["segment", "subtopic"]
-    return long.reset_index().sort_values(["significant", "lift"], ascending=[False, False])
+    return long.reset_index().sort_values(["notable", "lift"], ascending=[False, False])
 
 
 # ==========================================================================
@@ -730,7 +789,7 @@ def plot_segment_heatmap(lift: pd.DataFrame, title: str, save_as: str | None = N
     cmap = LinearSegmentedColormap.from_list("div_br", DIVERGING_BLUE_RED)
     norm = TwoSlopeNorm(vmin=max(0.0, 1 - span), vcenter=1.0, vmax=1 + span)
     fig, ax = plt.subplots(figsize=(1.25 * lift.shape[1] + 3.6, 0.55 * lift.shape[0] + 2.4))
-    sig = lift.attrs.get("significant")
+    sig = lift.attrs.get("notable", lift.attrs.get("significant"))
     sig = sig.reindex(index=lift.index, columns=lift.columns).to_numpy(dtype=bool) if sig is not None \
         else np.ones_like(vals, dtype=bool)
     # HU: a nem szignifikáns cellák halványak / EN: non-significant cells are faded
@@ -749,8 +808,9 @@ def plot_segment_heatmap(lift: pd.DataFrame, title: str, save_as: str | None = N
     cb.set_label("Share in segment / overall share", fontsize=9.5)
     cb.outline.set_visible(False)
     ax.set_title(title, loc="left", pad=12)
-    fig.text(0.01, 0.005, "* significant (two-proportion z-test, Benjamini–Hochberg q < 0.05); "
-             "faded = not significant", fontsize=8.5, color=INK["muted"], ha="left", va="bottom")
+    fig.text(0.01, 0.005, f"* significant (two-proportion z-test, Benjamini–Hochberg q < 0.05) and "
+             f"|lift − 1| ≥ {CFG.heatmap_min_effect:g}; faded = not", fontsize=8.5, color=INK["muted"],
+             ha="left", va="bottom")
     plt.tight_layout(rect=(0, 0.03, 1, 1))
     if save_as:
         save_figure(save_as)
