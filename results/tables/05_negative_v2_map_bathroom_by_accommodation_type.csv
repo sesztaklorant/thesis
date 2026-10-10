@@ -1,0 +1,9 @@
+segment,bathroom / shower / water,towels / no / towel
+ApartHotel,0.907,1.581
+Apartment,0.941,1.369
+Bed and Breakfast,1.0,0.999
+Guest house,1.006,0.962
+Hostel,1.031,0.807
+Hotel,1.01,0.94
+Motel,1.056,0.65
+Resort,1.029,0.817

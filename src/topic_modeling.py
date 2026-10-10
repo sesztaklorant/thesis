@@ -273,15 +273,15 @@ class TopicResult:
 
 
 def fit_topics(texts: pd.Series, embeddings: np.ndarray, seed: int = CFG.random_seed,
-               min_cluster_size: int | None = None, min_cluster_share: float = 0.01,
+               min_cluster_size: int | None = None, min_cluster_share: float = CFG.topic_overview_min_share,
                reduce_outliers: bool = True, n_examples: int = 3) -> TopicResult:
     """
     HU: Egy témamodell: UMAP -> HDBSCAN -> (zaj áthelyezése) -> c-TF-IDF -> minőség.
-        min_cluster_size: alapból max(CFG.topic_min_cluster_size, a mondatok 1%-a) — így
-        aspektusonként jellemzően 5–15 értelmezhető altéma lesz, nem száz apró.
+        min_cluster_size: alapból max(CFG.topic_min_cluster_size, a mondatok min_cluster_share
+        része) — az aspektusonkénti altémáknál CFG.subtopic_min_cluster_share (3%).
     EN: One topic model: UMAP -> HDBSCAN -> (reassign noise) -> c-TF-IDF -> quality.
-        min_cluster_size: by default max(CFG.topic_min_cluster_size, 1% of the sentences) — so
-        typically 5–15 interpretable subtopics per aspect, not a hundred tiny ones.
+        min_cluster_size: by default max(CFG.topic_min_cluster_size, min_cluster_share of the
+        sentences) — for per-aspect subtopics CFG.subtopic_min_cluster_share (3%).
     """
     texts = texts.fillna("").astype(str).reset_index(drop=True)
     n = len(texts)
@@ -339,6 +339,28 @@ def topic_stability(texts: pd.Series, embeddings: np.ndarray,
     return table
 
 
+def granularity_sweep(texts: pd.Series, embeddings: np.ndarray,
+                      shares: tuple[float, ...] = CFG.subtopic_sweep_shares,
+                      seed: int = CFG.random_seed) -> pd.DataFrame:
+    """
+    HU: Finomság-vizsgálat: ugyanaz a mondathalmaz több min_cluster_share értékkel. Megmutatja,
+        hogyan változik a témák száma, a zaj, a koherencia és a legnagyobb téma aránya — ebből
+        indokolható a választott paraméter (a dolgozat 3.4 fejezetébe).
+    EN: Granularity sweep: the same sentences with several min_cluster_share values. It shows how
+        the number of topics, the noise, the coherence and the share of the largest topic change —
+        this justifies the chosen parameter (for chapter 3.4 of the thesis).
+    """
+    rows = []
+    for share in shares:
+        result = fit_topics(texts, embeddings, seed=seed, min_cluster_share=share)
+        info = result.topic_info
+        rows.append({"min_cluster_share": share, **{k: result.metrics[k] for k in
+                     ("n_sentences", "min_cluster_size", "n_topics", "noise_share_before",
+                      "mean_coherence_npmi", "topic_diversity")},
+                     "largest_topic_share": round(float(info["share"].max()), 4) if len(info) else float("nan")})
+    return pd.DataFrame(rows).set_index("min_cluster_share")
+
+
 # ==========================================================================
 # 5) ALTÉMÁK ASPEKTUSONKÉNT / SUBTOPICS PER ASPECT
 # ==========================================================================
@@ -373,6 +395,7 @@ def fit_subtopics_per_aspect(sentences: pd.DataFrame, embeddings: np.ndarray, as
         if len(rows) > sample_per_aspect:
             rows = np.sort(rng.choice(rows, size=sample_per_aspect, replace=False))
         log.info("%-16s %d sentences", aspect, len(rows))
+        kwargs.setdefault("min_cluster_share", CFG.subtopic_min_cluster_share)
         result = fit_topics(sentences[text_col].iloc[rows], embeddings[rows], seed=seed, **kwargs)
         summary.append({"aspect": aspect, **result.metrics})
         if result.topic_info.empty:
@@ -412,12 +435,15 @@ def rename_topics(topic_table: pd.DataFrame, assignments: pd.DataFrame,
 
 
 def segment_table(assignments: pd.DataFrame, sentences: pd.DataFrame, aspect: str, segment_col: str,
-                  min_count: int = 50, top_segments: int = 10) -> pd.DataFrame:
+                  min_count: int = 50, top_segments: int = 10,
+                  top_topics: int | None = CFG.heatmap_max_subtopics) -> pd.DataFrame:
     """
     HU: "Panasztérkép": egy aspektus altémáinak aránya szegmensenként (pl. szállástípus).
         A lift = a szegmensbeli arány / az összesített arány; 1 felett az altéma ott gyakoribb.
     EN: "Complaint map": share of an aspect's subtopics per segment (e.g. accommodation type).
         Lift = share in the segment / overall share; above 1 the subtopic is more common there.
+        top_topics: only the N largest subtopics are shown (the shares are still computed over
+        ALL subtopics, so the lift values do not change — the map just becomes readable).
     """
     sub = assignments[(assignments["aspect"] == aspect) & (assignments["topic"] >= 0)].copy()
     sub["segment"] = sentences[segment_col].iloc[sub["row"]].to_numpy()
@@ -429,7 +455,8 @@ def segment_table(assignments: pd.DataFrame, sentences: pd.DataFrame, aspect: st
         return pd.DataFrame()
     share = pd.crosstab(sub["segment"], sub["topic_label"], normalize="index")
     overall = sub["topic_label"].value_counts(normalize=True)
-    lift = share / overall.reindex(share.columns)
+    columns = overall.index[:top_topics] if top_topics else overall.index   # HU/EN: largest first
+    lift = share[columns] / overall[columns]
     lift.attrs["n"] = sub["segment"].value_counts().reindex(lift.index).to_dict()
     return lift.round(3)
 

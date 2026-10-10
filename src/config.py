@@ -205,6 +205,21 @@ class Config:
     topic_outlier_threshold: float = 0.45   # HU: zajpont áthelyezése, ha a koszinusz-hasonlóság ≥ ez / EN: reassign noise if cosine ≥ this
     topic_top_n_terms: int = 10
     topic_stability_seeds: tuple[int, ...] = (42, 7, 123)
+    # HU: Fürtméret-alsó határ a mondatok arányában: áttekintő modell 1%, aspektusonkénti altémák 3%
+    #     (v1-ben 1% volt -> 19–21 túl apró altéma aspektusonként). A notebook "finomság-vizsgálata"
+    #     (granularity sweep) mutatja meg, melyik arány ad 5–10 értelmezhető altémát.
+    # EN: Minimum cluster size as a share of the sentences: overview model 1%, per-aspect subtopics 3%
+    #     (v1 used 1% -> 19–21 overly small subtopics per aspect). The notebook's granularity sweep
+    #     shows which share gives 5–10 interpretable subtopics.
+    topic_overview_min_share: float = 0.01
+    subtopic_min_cluster_share: float = 0.03
+    subtopic_sweep_shares: tuple[float, ...] = (0.01, 0.02, 0.03, 0.05)
+    heatmap_max_subtopics: int = 8          # HU: panasztérképen legfeljebb ennyi altéma / EN: max subtopics on a complaint map
+    # HU: Az altéma-futás verziója: minden 2/b kimenet nevében szerepel, így egy új paraméterezés
+    #     NEM írja felül a korábbi táblákat, ábrákat és a kitöltött kézi ellenőrzést.
+    # EN: Version of the subtopic run: it is part of every 2/b output name, so a new parameter set
+    #     does NOT overwrite earlier tables, figures and the filled-in manual check.
+    topic_version: str = "v2"
 
     # --- Kézi annotáció / Manual annotation (gold standard) ---
     gold_sample_size: int = 400

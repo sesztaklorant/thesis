@@ -262,6 +262,9 @@ def test_topic_modeling_recovers_subtopics():
     assert table.groupby("aspect")["topic"].nunique().to_dict() == {"bathroom": 3, "noise": 2}
     lift = tm.segment_table(assign, sent, "bathroom", "accommodation_type", min_count=10)
     assert lift.shape[0] == 2 and lift.shape[1] == 3
+    top2 = tm.segment_table(assign, sent, "bathroom", "accommodation_type", min_count=10, top_topics=2)
+    assert top2.shape[1] == 2                                     # HU/EN: only the 2 largest subtopics
+    assert np.allclose(top2.to_numpy(), lift[top2.columns].to_numpy())   # HU/EN: lift values unchanged
 
     labels = np.array([0, 0, 1, -1, -1])
     e = np.array([[1, 0], [1, 0.1], [0, 1], [0.99, 0.05], [-1, 0]], dtype=float)
@@ -271,6 +274,17 @@ def test_topic_modeling_recovers_subtopics():
     assert tm.topic_diversity([["a", "b"], ["a", "c"]]) == 0.75
     assert "not" not in tm.stopwords() and "the" in tm.stopwords()
 
+
+
+def test_non_complaint_filter():
+    junk = ["Nothing", "nothing really", "Nothing, everything was perfect", "There was nothing I didn't like",
+            "No complaints at all!", "N/A", "All good.", "I can't think of anything", "none",
+            "nothing to complain about", "Rain all week, not the hotel's fault"]
+    real = ["nothing works", "Nothing to eat nearby", "no hot water", "No wifi in the room",
+            "The room was small", "not much choice at breakfast", "There was nothing to do in the area"]
+    assert all(pp.is_non_complaint(t) for t in junk), [t for t in junk if not pp.is_non_complaint(t)]
+    assert not any(pp.is_non_complaint(t) for t in real), [t for t in real if pp.is_non_complaint(t)]
+    assert pp.non_complaint_mask(pd.Series(junk[:2] + real[:1])).tolist() == [True, True, False]
 
 if __name__ == "__main__":
     tests = [v for k, v in dict(globals()).items() if k.startswith("test_") and callable(v)]

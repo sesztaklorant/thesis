@@ -1,0 +1,4 @@
+aspect,mean_pairwise_ari,n_topics_per_seed
+facilities,0.831,"[11, 11, 12]"
+room,0.723,"[14, 11, 14]"
+bathroom,0.999,"[2, 2, 2]"

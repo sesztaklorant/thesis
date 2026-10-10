@@ -258,6 +258,54 @@ def build_field_units(df: pd.DataFrame, fields: tuple[str, ...] = ("review_posit
 # ==========================================================================
 # 3) SOR-SZINTŰ SZŰRÉS / ROW-LEVEL FILTERING
 # ==========================================================================
+# --------------------------------------------------------------------------
+# HU: NEM-PANASZ egységek: a panaszmezőbe írt "nothing", "no complaints", "all was perfect"
+#     stb. Ezek nem panaszok, de a tagadás miatt a modell gyakran negatívnak olvassa őket, és
+#     az altéma-modellben külön "szemét-témát" alkotnak. Az egységet vesszők/pontok mentén
+#     részekre vágjuk; csak akkor nem-panasz, ha MINDEN része illik valamelyik mintára
+#     (így a "nothing works" vagy a "nothing to eat nearby" panasz marad).
+# EN: NON-COMPLAINT units: "nothing", "no complaints", "all was perfect" etc. written into the
+#     complaint field. They are not complaints, but because of the negation the model often
+#     reads them as negative and they form a separate "junk topic" in the subtopic model. The
+#     unit is cut into parts at commas/full stops; it is a non-complaint only if EVERY part
+#     matches one of the patterns (so "nothing works" or "nothing to eat nearby" stays).
+# --------------------------------------------------------------------------
+_FILLER = r"(?:really|absolutely|honestly|literally|just|at all|whatsoever|in particular|so far|to be honest|tbh)"
+_NON_COMPLAINT_PARTS = [
+    rf"(?:there (?:was|is|were)\s+|there'?s\s+)?(?:{_FILLER}\s+)*(?:nothing|none|nil|nope|no|n/?a|na|-+)(?:\s+{_FILLER})*",
+    rf"nothing\s+(?:{_FILLER}\s+)*(?:to (?:complain|report|mention|say|dislike|add|comment)(?: about| on)?|bad|negative|wrong|special)(?:\s+{_FILLER})*",
+    r"(?:there (?:was|is) |there'?s )?(?:really |absolutely )?nothing (?:that )?(?:i |we )?(?:did ?n'?t|do ?n'?t|did not|do not|could ?n'?t) (?:like|liked|enjoy|love)(?: about it)?",
+    r"(?:i |we )?(?:can'?t|cannot|could ?n'?t|could not) (?:think of|find|say|name) anything(?: bad| negative| wrong| to complain about)?",
+    rf"no (?:complaints?|negatives?|cons|issues?|problems?|dislikes?|comments?)(?:\s+{_FILLER})*",
+    r"(?:everything|all|it|all of it) (?:was |is |were )?(?:just |really |absolutely )?(?:good|great|perfect|fine|ok|okay|excellent|amazing|wonderful|lovely|brilliant|superb|fantastic|as expected)",
+    r"(?:i |we )?(?:liked|loved|enjoyed) (?:everything|it all|all of it)",
+    r"not applicable|nothing comes to mind|all good|all perfect|everything ok",
+]
+_NON_COMPLAINT_RE = re.compile(r"^(?:" + "|".join(_NON_COMPLAINT_PARTS) + r")$", re.IGNORECASE)
+# HU: "...not the hotel's fault" — a vendég maga mondja, hogy nem a szálláshely hibája (nem kezelhető panasz).
+# EN: "...not the hotel's fault" — the guest says it is not the property's fault (not an actionable complaint).
+_NOT_THEIR_FAULT_RE = re.compile(
+    r"\b(?:not|no|nothing|wasn'?t|isn'?t|was not|is not)\b[^.]{0,25}\b(?:hotel|hotels|property|host|hosts|staff|"
+    r"owner|owners|apartment|place)'?s?\b[^.]{0,10}\bfault\b", re.IGNORECASE)
+
+
+def is_non_complaint(text: str) -> bool:
+    """HU: Igaz, ha az egység nem valódi panasz (lásd fent). / EN: True if the unit is not a real complaint (see above)."""
+    if not isinstance(text, str):
+        return True
+    norm = re.sub(r"[!?:\"()*~]+", " ", text.lower().replace("’", "'"))
+    if _NOT_THEIR_FAULT_RE.search(norm):
+        return True
+    parts = [re.sub(r"\s+", " ", p).strip(" -") for p in re.split(r"[,.;]+", norm)]
+    parts = [p for p in parts if p]
+    return bool(parts) and all(_NON_COMPLAINT_RE.match(p) for p in parts)
+
+
+def non_complaint_mask(texts: pd.Series) -> pd.Series:
+    """HU: Logikai maszk egy szöveg-oszlopra. / EN: Boolean mask for a text column."""
+    return texts.map(is_non_complaint).astype(bool)
+
+
 def filter_reviews(
     df: pd.DataFrame,
     min_chars: int = CFG.min_chars,

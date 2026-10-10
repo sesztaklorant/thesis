@@ -1,0 +1,9 @@
+segment,cold / air / hot,clean / carpet / furniture,window / windows / open,small / room small / room,small / rooms / room,room / booking / booked,smell / smelled / room,dark / lighting / light
+ApartHotel,1.102,1.538,1.456,0.682,0.241,0.51,0.976,1.864
+Apartment,1.348,1.073,1.577,0.767,0.501,0.331,0.76,1.195
+Bed and Breakfast,1.358,0.839,1.183,1.09,0.578,0.733,0.983,1.104
+Guest house,1.132,0.732,1.256,0.719,1.249,1.173,1.011,0.568
+Hostel,1.415,0.501,0.597,1.43,1.518,0.344,0.526,0.887
+Hotel,0.92,0.97,0.964,1.063,1.117,1.097,0.984,0.966
+Motel,0.871,1.408,0.315,0.377,0.4,1.128,1.782,1.273
+Resort,0.849,1.43,0.427,1.124,0.759,1.603,1.579,0.591
