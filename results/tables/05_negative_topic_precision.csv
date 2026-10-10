@@ -1,0 +1,71 @@
+,aspect,topic,topic_label,checked,precision
+0,bathroom,0,small / bathroom / bathroom small,20,0.35
+1,bathroom,1,toilet / flush / clean,20,0.5
+2,bathroom,2,hot / hot water / water,20,0.9
+3,bathroom,3,bath / shower / wet,20,0.7
+4,bathroom,4,floor / wet / curtain,20,0.75
+5,bathroom,5,smell / mould / bathroom,20,0.75
+6,bathroom,6,towels / towel / hang,20,1.0
+7,bathroom,7,pressure / water pressure / pressure shower,20,0.9
+8,bathroom,8,shower / head / shower head,20,0.8
+9,bathroom,9,soap / shampoo / shower gel,20,0.8
+10,bathroom,10,door / bathroom door / close,20,1.0
+11,bathroom,11,small / shower small / shower,20,0.7
+12,bathroom,12,paper / toilet paper / toilet,20,0.7
+13,bathroom,13,mirror / lighting / light,20,0.9
+14,bathroom,14,fan / fan bathroom / bathroom,20,0.85
+15,bathroom,15,need / bathrooms / bathroom needs,20,0.85
+16,bathroom,16,sink / plug / bathroom sink,20,0.9
+17,bathroom,17,drain / slow / slowly,20,0.9
+18,bathroom,18,dated / old / outdated,20,0.8
+19,bathroom,19,noise / tv / loud,20,0.75
+20,facilities,0,air / conditioning / air conditioning,20,0.8
+21,facilities,1,tv / channels / watch,20,1.0
+22,facilities,2,facilities / service / room service,20,0.9
+23,facilities,3,kitchen / cutlery / plates,20,0.9
+24,facilities,4,coffee / tea / tea coffee,20,1.0
+25,facilities,5,water / hot water / hot,20,0.45
+26,facilities,6,space / clothes / storage,20,0.8
+27,facilities,7,towels / towel / hang,20,1.0
+28,facilities,8,dryer / laundry / washing,20,0.7
+29,facilities,9,fridge / fridge room / refrigerator,20,1.0
+30,facilities,10,chair / chairs / furniture,20,0.8
+31,facilities,11,lights / light / lamp,20,1.0
+32,facilities,12,paper / toilet / toilet paper,20,0.95
+33,facilities,13,pool / tub / hot tub,20,0.75
+34,facilities,14,bathroom / shower / room,20,0.95
+35,facilities,15,soap / shampoo / shower,20,0.9
+36,facilities,16,sockets / plug / bed,20,1.0
+37,facilities,17,gym / sauna / gym small,20,1.0
+38,facilities,18,microwave / no microwave / microwave room,20,1.0
+39,facilities,19,kettle / kettle room / no kettle,20,1.0
+40,facilities,20,spa / massage / spa facilities,20,1.0
+41,room,0,air / cold / hot,20,0.95
+42,room,1,window / windows / open,20,0.8
+43,room,2,smell / smelled / smoke,20,0.9
+44,room,3,dark / lighting / lights,20,0.9
+45,room,4,room small / small / room,20,0.75
+46,room,5,clean / cleaned / dirty,20,0.65
+47,room,6,booking / booked / room,20,0.7
+48,room,7,rooms / dated / tired,20,0.7
+49,room,8,noisy / noise / loud,20,0.95
+50,room,9,door / lock / key,20,0.8
+51,room,10,rooms / rooms small / small,20,0.7
+52,room,11,shower / bathroom / toilet,20,0.75
+53,room,12,luggage / space / suitcases,20,0.95
+54,room,13,small / room small / small room,20,0.85
+55,room,14,coffee / tea / fridge,20,0.9
+56,room,15,mosquitoes / mosquitos / ants,20,0.95
+57,room,16,carpet / carpets / dirty,20,1.0
+58,room,17,furniture / old / worn,20,1.0
+59,room,18,breakfast / breakfast room / small,20,1.0
+60,staff,0,staff / friendly / not,20,0.8
+61,staff,1,room / cleaning / housekeeping,20,0.75
+62,staff,2,breakfast / food / staff,20,0.85
+63,staff,3,reception / reception staff / not,20,0.8
+64,staff,4,room / luggage / no,20,0.65
+65,staff,5,host / no / phone,20,0.5
+66,staff,6,guests / guest / like,20,0.6
+67,staff,7,booking / card / com,20,0.8
+68,staff,8,desk / desk staff / lady,20,0.85
+69,staff,9,check / time / staff,20,0.9
