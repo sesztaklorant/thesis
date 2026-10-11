@@ -1,0 +1,65 @@
+,segment,subtopic,lift,count,segment_n,q,significant,notable
+15,Greece,beach / sea / not,2.635,97,496,0.0,True,True
+23,Indonesia,beach / sea / not,2.405,78,437,0.0,True,True
+26,Italy,taxi / airport / bus,1.589,172,928,0.0,True,True
+62,United States of America,area / neighborhood / not,1.565,156,1223,0.0,True,True
+47,Thailand,beach / sea / not,1.549,79,687,0.0001,True,True
+3,Australia,restaurants / restaurant / food,1.358,57,377,0.0321,True,True
+45,Thailand,far / city / center,1.344,84,687,0.0086,True,True
+29,Italy,far / city / center,1.315,111,928,0.0039,True,True
+49,United Kingdom,road / property / busy,1.299,221,1390,0.0,True,True
+48,United Kingdom,not / hard / difficult,1.24,298,1390,0.0,True,True
+54,United Kingdom,area / neighborhood / not,0.777,88,1390,0.015,True,True
+40,Thailand,not / hard / difficult,0.766,91,687,0.0097,True,True
+27,Italy,restaurants / restaurant / food,0.687,71,928,0.0011,True,True
+31,Italy,beach / sea / not,0.668,46,928,0.0069,True,True
+58,United States of America,taxi / airport / bus,0.659,94,1223,0.0,True,True
+61,United States of America,far / city / center,0.656,73,1223,0.0001,True,True
+63,United States of America,beach / sea / not,0.617,56,1223,0.0001,True,True
+11,Greece,restaurants / restaurant / food,0.579,32,496,0.0023,True,True
+16,Indonesia,not / hard / difficult,0.542,41,437,0.0,True,True
+46,Thailand,area / neighborhood / not,0.536,30,687,0.0006,True,True
+55,United Kingdom,beach / sea / not,0.174,18,1390,0.0,True,True
+4,Australia,noisy / noise / loud,1.314,49,377,0.0909,False,False
+39,Spain,beach / sea / not,1.217,45,498,0.2654,False,False
+6,Australia,area / neighborhood / not,1.204,37,377,0.3559,False,False
+19,Indonesia,restaurants / restaurant / food,1.192,58,437,0.2559,False,False
+44,Thailand,noisy / noise / loud,1.177,80,687,0.2036,False,False
+30,Italy,area / neighborhood / not,1.15,87,928,0.2559,False,False
+56,United States of America,not / hard / difficult,1.149,243,1223,0.0235,True,False
+51,United Kingdom,restaurants / restaurant / food,1.131,175,1390,0.1136,False,False
+13,Greece,far / city / center,1.13,51,496,0.4797,False,False
+42,Thailand,taxi / airport / bus,1.098,88,687,0.4766,False,False
+59,United States of America,restaurants / restaurant / food,1.087,148,1223,0.3559,False,False
+12,Greece,noisy / noise / loud,1.08,53,496,0.7146,False,False
+17,Indonesia,road / property / busy,1.065,57,437,0.7631,False,False
+21,Indonesia,far / city / center,1.057,42,437,0.7967,False,False
+50,United Kingdom,taxi / airport / bus,1.055,171,1390,0.5533,False,False
+37,Spain,far / city / center,1.038,47,498,0.8623,False,False
+7,Australia,beach / sea / not,1.036,29,377,0.892,False,False
+35,Spain,restaurants / restaurant / food,1.028,57,498,0.8861,False,False
+36,Spain,noisy / noise / loud,1.015,50,498,0.9071,False,False
+52,United Kingdom,noisy / noise / loud,1.011,139,1390,0.9071,False,False
+57,United States of America,road / property / busy,1.008,151,1223,0.9071,False,False
+18,Indonesia,taxi / airport / bus,0.981,50,437,0.9071,False,False
+24,Italy,not / hard / difficult,0.972,156,928,0.7881,False,False
+43,Thailand,restaurants / restaurant / food,0.968,74,687,0.8408,False,False
+0,Australia,not / hard / difficult,0.951,62,377,0.7881,False,False
+33,Spain,road / property / busy,0.951,58,498,0.7881,False,False
+14,Greece,area / neighborhood / not,0.94,38,496,0.7881,False,False
+32,Spain,not / hard / difficult,0.94,81,498,0.7146,False,False
+1,Australia,road / property / busy,0.932,43,377,0.7636,False,False
+34,Spain,taxi / airport / bus,0.93,54,498,0.7206,False,False
+60,United States of America,noisy / noise / loud,0.926,112,1223,0.4797,False,False
+53,United Kingdom,far / city / center,0.894,113,1390,0.2654,False,False
+28,Italy,noisy / noise / loud,0.882,81,928,0.3238,False,False
+41,Thailand,road / property / busy,0.844,71,687,0.2036,False,False
+8,Greece,not / hard / difficult,0.839,72,496,0.1837,False,False
+5,Australia,far / city / center,0.817,28,377,0.3728,False,False
+38,Spain,area / neighborhood / not,0.813,33,498,0.3238,False,False
+25,Italy,road / property / busy,0.801,91,928,0.0384,True,False
+10,Greece,taxi / airport / bus,0.778,45,496,0.1338,False,False
+9,Greece,road / property / busy,0.774,47,496,0.1136,False,False
+20,Indonesia,noisy / noise / loud,0.763,33,437,0.1837,False,False
+2,Australia,taxi / airport / bus,0.682,30,377,0.0549,False,False
+22,Indonesia,area / neighborhood / not,0.646,23,437,0.0562,False,False

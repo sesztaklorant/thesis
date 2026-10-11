@@ -105,6 +105,8 @@ data/raw/val.csv ──► data_loading ──► preprocessing ──► [munka
 | altémák csak az aspektusonkénti 15 000-es mintán | a mintán kívüli mondatok a legközelebbi téma-középponthoz kerülnek (`assign_to_topics`) | teljes adatnál a panasztérkép minden mondatot számoljon |
 | pozitív altémák v4: vegyes listák (staff: „staff / friendly / location” 76%) | **v5:** a dicséretmezőben a vesszős felsorolás is egységekre bomlik (`split_list_items`) | a dicséretek tipikusan felsorolások, a panaszok leíró mondatok |
 | panasztérkép: kék–piros skála mindkét oldalon (dicséretnél a piros = gyakoribb dicséret) | szentiment-színű skála: gyakoribb = piros (panasz) / kék (dicséret), ritkább = szürke | a piros ne jelentsen dicséretet |
+| teljes adat, 15 ezres illesztési minta aspektusonként: óriásfürtök (negatív staff 97%, noise 94%, pozitív breakfast 88%) | **full2:** 5000-es illesztési minta + óriásfürt-védelem (> 50% → fürtméret felezése), a többi mondat a legközelebbi altémába | a HDBSCAN sűrűség-hierarchiája nagy mintán egy „szülőfürtöt” választ |
+| TF-IDF vs. BERT a gold mintán csak pontbecslés | páros próba: McNemar + bootstrap 95% CI (`paired_gold_test`) | 399 véleményen a kis különbség véletlen is lehet |
 | panasztérkép: nyers lift | lift + **arány-z-próba, Benjamini–Hochberg** + hatásméret (`*` = q < 0,05 ÉS \|lift − 1\| ≥ 0,2) | kis szegmensekben (n≈80) a nagy lift is lehet véletlen |
 | „nothing / didn't like” szemét-téma (3,7%) | **nem-panasz szűrő** (`is_non_complaint`) a negatív altémák előtt | nem valódi panaszok |
 | panasztérkép minden altémával (19–21 oszlop) | csak a **8 legnagyobb** altéma (a lift értéke nem változik) | olvashatatlan ábra |

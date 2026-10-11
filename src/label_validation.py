@@ -553,3 +553,47 @@ def plot_agreement_matrix(tab: pd.DataFrame, title: str, xlabel: str, ylabel: st
     if save_as:
         save_figure(save_as)
     return ax
+
+
+def paired_gold_test(gold: pd.DataFrame, pred_a: pd.Series, pred_b: pd.Series,
+                     names: tuple[str, str] = ("A", "B"), n_boot: int = 2000,
+                     seed: int = CFG.random_seed) -> pd.DataFrame:
+    """
+    HU: Két címkéző PÁROS összevetése ugyanazon a gold mintán: McNemar-próba (csak az egyik helyes
+        esetek aránya) és bootstrap 95%-os konfidenciaintervallum a különbségre (2. − 1.) pontosságban,
+        macro-F1-ben és kappában. Ha az intervallum tartalmazza a 0-t, a különbség nem szignifikáns.
+    EN: PAIRED comparison of two labellers on the same gold sample: McNemar test (cases where only one
+        is right) and a bootstrap 95% confidence interval for the difference (2nd − 1st) in accuracy,
+        macro-F1 and kappa. If the interval contains 0, the difference is not significant.
+    """
+    from scipy.stats import binomtest
+    from sklearn.metrics import accuracy_score, cohen_kappa_score, f1_score
+
+    y = gold["gold_label"]
+    a = pd.Series(pred_a).reindex(y.index)
+    b = pd.Series(pred_b).reindex(y.index)
+    ok = a.notna() & b.notna()
+    y, a, b = y[ok].to_numpy(), a[ok].to_numpy(), b[ok].to_numpy()
+    only_a, only_b = int(((a == y) & (b != y)).sum()), int(((a != y) & (b == y)).sum())
+    p_mcnemar = binomtest(only_b, only_a + only_b, 0.5).pvalue if only_a + only_b else 1.0
+
+    metrics = {"accuracy": accuracy_score,
+               "f1_macro": lambda t, p: f1_score(t, p, average="macro", labels=list(LABELS), zero_division=0),
+               "cohen_kappa": cohen_kappa_score}
+    rng = np.random.default_rng(seed)
+    idx = np.arange(len(y))
+    rows = []
+    for name, fn in metrics.items():
+        diffs = []
+        for _ in range(n_boot):
+            s = rng.choice(idx, len(idx))
+            diffs.append(fn(y[s], b[s]) - fn(y[s], a[s]))
+        lo, hi = np.percentile(diffs, [2.5, 97.5])
+        rows.append({"metric": name, f"{names[0]}": fn(y, a), f"{names[1]}": fn(y, b),
+                     f"diff ({names[1]} − {names[0]})": fn(y, b) - fn(y, a), "ci_low": lo, "ci_high": hi,
+                     "significant": not (lo <= 0 <= hi)})
+    table = pd.DataFrame(rows).set_index("metric").round(4)
+    table.attrs.update({"only_a_right": only_a, "only_b_right": only_b, "mcnemar_p": float(p_mcnemar)})
+    log.info("Paired gold test: only %s right %d | only %s right %d | McNemar p = %.3f",
+             names[0], only_a, names[1], only_b, p_mcnemar)
+    return table

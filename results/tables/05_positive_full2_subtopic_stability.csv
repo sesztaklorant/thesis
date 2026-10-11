@@ -1,0 +1,4 @@
+aspect,mean_pairwise_ari,n_topics_per_seed
+room,0.826,"[10, 10, 10]"
+location,0.653,"[10, 10, 10]"
+staff,0.652,"[10, 10, 10]"

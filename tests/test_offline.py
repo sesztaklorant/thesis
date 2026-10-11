@@ -334,6 +334,18 @@ def test_praise_list_split():
     assert units[units["field_polarity"] == "positive"]["sentence"].tolist() == ["Great location", "friendly staff"]
     assert len(units[units["field_polarity"] == "negative"]) == 1     # HU/EN: complaints not split at commas
 
+
+def test_giant_cluster_guard():
+    from src import topic_modeling as tm
+
+    sent, emb = fake_thematic_sentences()
+    bath = sent["asp_bathroom"] == 1
+    texts, e = sent.loc[bath, "sentence"], emb[bath.to_numpy()]
+    big = tm.fit_topics(texts, e, min_cluster_size=len(texts) // 2)          # HU/EN: too large -> 1 cluster
+    guarded = tm.fit_topics(texts, e, min_cluster_size=len(texts) // 2, max_initial_share=0.5)
+    assert big.metrics["n_topics"] <= 1 < guarded.metrics["n_topics"]
+    assert guarded.metrics["giant_cluster_retries"] >= 1
+
 if __name__ == "__main__":
     tests = [v for k, v in dict(globals()).items() if k.startswith("test_") and callable(v)]
     for test in tests:

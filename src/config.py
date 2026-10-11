@@ -84,7 +84,7 @@ class Config:
     #     közben kis mintán futtatunk; a végső futásnál None = teljes adat.
     # EN: BERT labelling on 200k rows takes ~15–30 min per model even on a GPU.
     #     During development we run on a small sample; None = full data.
-    labelling_sample_size: int | None = None # volt: 20_000
+    labelling_sample_size: int | None = None   # HU/EN: full run (was 20_000 during development)
 
     # ======================================================================
     # BERT-ALAPÚ CÍMKÉZÉS / BERT-BASED LABELLING
@@ -200,7 +200,15 @@ class Config:
     umap_n_components: int = 5
     topic_min_cluster_size: int = 40        # HU: ennél kisebb fürt nem téma / EN: smaller clusters are not topics
     topic_min_samples: int = 10
-    topic_sample_per_aspect: int = 15_000   # HU: aspektusonként legfeljebb ennyi mondat / EN: max sentences per aspect
+    # HU: Aspektusonként legfeljebb ennyi mondaton ILLESZTJÜK az altéma-modellt (a többi a legközelebbi
+    #     altémához kerül). A 20k-s futásban a beállításokat 1–4 ezer (negatív) és ≤15 ezer (pozitív)
+    #     mondaton validáltuk; a teljes adaton 15 ezernél a HDBSCAN több aspektusnál egyetlen óriásfürtöt
+    #     adott (pl. negatív staff 97%), ezért 5000 + óriásfürt-védelem (subtopic_max_initial_share).
+    # EN: The subtopic model is FITTED on at most this many sentences per aspect (the rest go to the
+    #     nearest subtopic). In the 20k run the settings were validated on 1–4k (negative) and ≤15k
+    #     (positive) sentences; on the full data at 15k HDBSCAN produced one giant cluster for several
+    #     aspects (e.g. negative staff 97%), hence 5000 + a giant-cluster guard (subtopic_max_initial_share).
+    topic_sample_per_aspect: int = 5_000
     topic_min_sentences: int = 300          # HU: ennél kevesebb mondatú aspektusra nincs altéma / EN: no subtopics below this
     topic_outlier_threshold: float = 0.45   # HU: zajpont áthelyezése, ha a koszinusz-hasonlóság ≥ ez / EN: reassign noise if cosine ≥ this
     topic_top_n_terms: int = 10
@@ -228,6 +236,9 @@ class Config:
     # EN: v4: a merged subtopic is at most 35% of the aspect (in v3 "snowball merging" created 40–55%
     #     catch-all topics, e.g. traffic + music + neighbours together for noise).
     subtopic_max_topic_share: float = 0.35
+    # HU: ha a finom fürtözés után egy fürt a mondatok > 50%-a, a fürtméretet felezve újrafürtözünk
+    # EN: if after fine clustering one cluster holds > 50% of the sentences, re-cluster with half the size
+    subtopic_max_initial_share: float = 0.50
     subtopic_sweep_shares: tuple[float, ...] = (0.01, 0.02)
     subtopic_sweep_max_topics: tuple = (None, 12, 10, 8, 6)   # HU/EN: None = no merging
     heatmap_max_subtopics: int = 8          # HU: panasztérképen legfeljebb ennyi altéma / EN: max subtopics on a complaint map
@@ -236,7 +247,7 @@ class Config:
     #     NEM írja felül a korábbi táblákat, ábrákat és a kitöltött kézi ellenőrzést.
     # EN: Version of the subtopic run: it is part of every 2/b output name, so a new parameter set
     #     does NOT overwrite earlier tables, figures and the filled-in manual check.
-    topic_version: str = "full" # volt: "v5"
+    topic_version: str = "full2"
     # HU: v5: a dicséretmezőben a vesszős felsorolásokat is egységekre bontjuk ("Great location,
     #     friendly staff, clean rooms" -> 3 egység). v4-ben a pozitív altémák nagy része vegyes volt
     #     (pl. staff: "staff / friendly / location" 76%), mert a dicséretek tipikusan listák.

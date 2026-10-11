@@ -275,7 +275,8 @@ def assign_to_topics(new_embeddings: np.ndarray, fit_embeddings: np.ndarray, fit
 def subtopic_params() -> dict:
     """HU: Az altéma-modell beállításai a configból. / EN: Subtopic model settings from the config."""
     return {"min_cluster_share": CFG.subtopic_min_cluster_share, "max_topics": CFG.subtopic_max_topics,
-            "merge_similarity": CFG.subtopic_merge_similarity, "max_topic_share": CFG.subtopic_max_topic_share}
+            "merge_similarity": CFG.subtopic_merge_similarity, "max_topic_share": CFG.subtopic_max_topic_share,
+            "max_initial_share": CFG.subtopic_max_initial_share}
 
 
 # ==========================================================================
@@ -380,6 +381,7 @@ def fit_topics(texts: pd.Series, embeddings: np.ndarray, seed: int = CFG.random_
                min_cluster_size: int | None = None, min_cluster_share: float = CFG.topic_overview_min_share,
                reduce_outliers: bool = True, n_examples: int = 3, max_topics: int | None = None,
                merge_similarity: float | None = None, max_topic_share: float | None = None,
+               max_initial_share: float | None = None,
                reduced: np.ndarray | None = None) -> TopicResult:
     """
     HU: Egy témamodell: UMAP -> HDBSCAN -> (zaj áthelyezése) -> c-TF-IDF -> minőség.
@@ -398,6 +400,24 @@ def fit_topics(texts: pd.Series, embeddings: np.ndarray, seed: int = CFG.random_
     if reduced is None:
         reduced = reduce_dimensions(embeddings, seed=seed)
     raw_labels = renumber_by_size(cluster(reduced, min_cluster_size))
+    # HU: ÓRIÁSFÜRT-VÉDELEM: ha a HDBSCAN egyetlen fürtbe sorolja a mondatok több mint
+    #     max_initial_share részét (a sűrűségi hierarchiában a "szülőfürtöt" választja), a
+    #     fürtméretet felezzük és újrafürtözünk (a UMAP-ot nem kell újraszámolni), legfeljebb
+    #     CFG.topic_min_cluster_size-ig. Ezután az összevonás úgyis visszaviszi ~10 altémára.
+    # EN: GIANT-CLUSTER GUARD: if HDBSCAN puts more than max_initial_share of the sentences into
+    #     one cluster (it picks the "parent" in the density hierarchy), the cluster size is halved
+    #     and clustering is redone (UMAP need not be recomputed), down to CFG.topic_min_cluster_size.
+    #     The merging step then brings it back to ~10 subtopics anyway.
+    n_retries = 0
+    while max_initial_share is not None and min_cluster_size > CFG.topic_min_cluster_size:
+        sizes = np.bincount(raw_labels[raw_labels >= 0]) if (raw_labels >= 0).any() else np.array([n])
+        if sizes.max() / n <= max_initial_share:
+            break
+        min_cluster_size = max(CFG.topic_min_cluster_size, min_cluster_size // 2)
+        raw_labels = renumber_by_size(cluster(reduced, min_cluster_size))
+        n_retries += 1
+        log.info("Giant cluster (%.0f%%) -> retry with min_cluster_size=%d", 100 * sizes.max() / n,
+                 min_cluster_size)
     noise_before = float((raw_labels < 0).mean())
     labels = reassign_outliers(embeddings, raw_labels) if reduce_outliers else raw_labels
     n_before_merge = int(len(np.unique(labels[labels >= 0])))
@@ -432,7 +452,7 @@ def fit_topics(texts: pd.Series, embeddings: np.ndarray, seed: int = CFG.random_
         {"topic": int, "size": int, "share": float, "coherence_npmi": float})
     metrics = {
         "n_sentences": n, "n_topics": len(info), "n_topics_before_merge": n_before_merge,
-        "n_merges": len(merges), "min_cluster_size": min_cluster_size,
+        "n_merges": len(merges), "min_cluster_size": min_cluster_size, "giant_cluster_retries": n_retries,
         "noise_share_before": round(noise_before, 4), "noise_share_after": round(float((labels < 0).mean()), 4),
         "mean_coherence_npmi": round(float(info["coherence_npmi"].mean()), 4) if len(info) else float("nan"),
         "topic_diversity": round(topic_diversity([t.split(", ") for t in info.get("top_terms", [])]), 4),
@@ -487,7 +507,7 @@ def granularity_sweep(texts: pd.Series, embeddings: np.ndarray,
             result = fit_topics(texts, embeddings, seed=seed, min_cluster_share=share, reduced=reduced,
                                 max_topics=max_topics,
                                 merge_similarity=merge_similarity if max_topics is not None else None,
-                                max_topic_share=max_topic_share)
+                                max_topic_share=max_topic_share, max_initial_share=CFG.subtopic_max_initial_share)
             info = result.topic_info
             rows.append({"min_cluster_share": share, "max_topics": max_topics if max_topics else "none",
                          **{k: result.metrics[k] for k in
@@ -560,6 +580,7 @@ def fit_subtopics_per_aspect(sentences: pd.DataFrame, embeddings: np.ndarray, as
     assignments = pd.concat(assigns, ignore_index=True) if assigns else pd.DataFrame(
         columns=["row", "aspect", "topic", "topic_label", "in_fit_sample"])
     summary_cols = ["aspect", "n_sentences", "n_topics_before_merge", "n_topics", "min_cluster_size",
+                    "giant_cluster_retries",
                     "noise_share_before",
                     "noise_share_after", "mean_coherence_npmi", "topic_diversity"]
     summary = pd.DataFrame(summary, columns=summary_cols).set_index("aspect")

@@ -1,0 +1,4 @@
+metric,BERT final,TF-IDF logreg,diff (TF-IDF logreg − BERT final),ci_low,ci_high,significant
+accuracy,0.8045,0.812,0.0075,-0.0326,0.0501,False
+f1_macro,0.6405,0.6515,0.011,-0.0676,0.0929,False
+cohen_kappa,0.5046,0.5676,0.0629,-0.0326,0.1555,False

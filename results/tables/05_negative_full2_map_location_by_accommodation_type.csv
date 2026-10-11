@@ -1,0 +1,65 @@
+,segment,subtopic,lift,count,segment_n,q,significant,notable
+62,Resort,beach / sea / not,3.586,264,918,0.0,True,True
+53,Motel,noisy / noise / loud,1.902,52,278,0.0,True,True
+39,Hostel,area / neighborhood / not,1.803,59,421,0.0,True,True
+11,Apartment,road / property / busy,1.705,167,931,0.0,True,True
+55,Motel,area / neighborhood / not,1.666,36,278,0.0026,True,True
+13,Apartment,noisy / noise / loud,1.584,145,931,0.0,True,True
+36,Hostel,far / city / center,1.463,63,421,0.0026,True,True
+19,Bed and Breakfast,road / property / busy,1.442,81,534,0.0009,True,True
+4,ApartHotel,far / city / center,1.441,79,536,0.001,True,True
+51,Motel,road / property / busy,1.436,42,278,0.0218,True,True
+27,Guest house,road / property / busy,1.392,104,710,0.0006,True,True
+58,Resort,restaurants / restaurant / food,1.355,139,918,0.0002,True,True
+17,Bed and Breakfast,taxi / airport / bus,1.279,83,534,0.0246,True,True
+29,Guest house,noisy / noise / loud,1.275,89,710,0.0226,True,True
+9,Apartment,taxi / airport / bus,0.796,90,931,0.0257,True,True
+60,Resort,far / city / center,0.788,74,918,0.0386,True,True
+46,Hotel,beach / sea / not,0.779,409,6544,0.0,True,True
+57,Resort,taxi / airport / bus,0.771,86,918,0.0136,True,True
+16,Bed and Breakfast,not / hard / difficult,0.759,74,534,0.0136,True,True
+56,Resort,not / hard / difficult,0.734,123,918,0.0002,True,True
+10,Apartment,restaurants / restaurant / food,0.682,71,931,0.0009,True,True
+14,Apartment,beach / sea / not,0.67,50,931,0.0041,True,True
+8,Apartment,not / hard / difficult,0.659,112,931,0.0,True,True
+7,ApartHotel,area / neighborhood / not,0.648,27,536,0.0257,True,True
+26,Guest house,restaurants / restaurant / food,0.618,49,710,0.0006,True,True
+34,Hostel,restaurants / restaurant / food,0.616,29,421,0.0094,True,True
+61,Resort,noisy / noise / loud,0.609,55,918,0.0002,True,True
+59,Resort,road / property / busy,0.59,57,918,0.0,True,True
+38,Hostel,beach / sea / not,0.563,19,421,0.0136,True,True
+0,ApartHotel,not / hard / difficult,0.562,55,536,0.0,True,True
+35,Hostel,road / property / busy,0.474,21,421,0.0005,True,True
+22,Bed and Breakfast,beach / sea / not,0.444,19,534,0.0003,True,True
+63,Resort,area / neighborhood / not,0.406,29,918,0.0,True,True
+49,Motel,taxi / airport / bus,0.118,4,278,0.0,True,True
+21,Bed and Breakfast,noisy / noise / loud,1.257,66,534,0.0709,False,False
+6,ApartHotel,beach / sea / not,1.186,51,536,0.2607,False,False
+37,Hostel,noisy / noise / loud,1.16,48,421,0.3391,False,False
+40,Hotel,not / hard / difficult,1.157,1382,6544,0.0,True,False
+2,ApartHotel,restaurants / restaurant / food,1.152,69,536,0.2677,False,False
+31,Guest house,area / neighborhood / not,1.142,63,710,0.329,False,False
+20,Bed and Breakfast,far / city / center,1.135,62,534,0.3442,False,False
+41,Hotel,taxi / airport / bus,1.099,874,6544,0.0,True,False
+5,ApartHotel,noisy / noise / loud,1.082,57,536,0.5796,False,False
+42,Hotel,restaurants / restaurant / food,1.069,782,6544,0.0037,True,False
+15,Apartment,area / neighborhood / not,1.036,75,931,0.7715,False,False
+48,Motel,not / hard / difficult,1.024,52,278,0.8723,False,False
+47,Hotel,area / neighborhood / not,1.02,519,6544,0.5299,False,False
+28,Guest house,far / city / center,1.005,73,710,0.9611,False,False
+1,ApartHotel,taxi / airport / bus,0.983,64,536,0.8925,False,False
+44,Hotel,far / city / center,0.973,651,6544,0.3083,False,False
+12,Apartment,far / city / center,0.956,91,931,0.675,False,False
+33,Hostel,taxi / airport / bus,0.938,48,421,0.675,False,False
+32,Hostel,not / hard / difficult,0.924,71,421,0.5299,False,False
+3,ApartHotel,road / property / busy,0.922,52,536,0.5796,False,False
+18,Bed and Breakfast,restaurants / restaurant / food,0.922,55,534,0.5796,False,False
+43,Hotel,road / property / busy,0.9,620,6544,0.0001,True,False
+24,Guest house,not / hard / difficult,0.895,116,710,0.2376,False,False
+23,Bed and Breakfast,area / neighborhood / not,0.891,37,534,0.5299,False,False
+45,Hotel,noisy / noise / loud,0.866,557,6544,0.0,True,False
+25,Guest house,taxi / airport / bus,0.835,72,710,0.1309,False,False
+30,Guest house,beach / sea / not,0.773,44,710,0.0957,False,False
+54,Motel,beach / sea / not,0.718,16,278,0.226,False,False
+50,Motel,restaurants / restaurant / food,0.676,21,278,0.0815,False,False
+52,Motel,far / city / center,0.668,19,278,0.0892,False,False
