@@ -1,0 +1,65 @@
+,segment,subtopic,lift,count,segment_n,q,significant,notable
+11,Apartment,host / hosts / friendly,3.952,308,1052,0.0,True,True
+19,Bed and Breakfast,host / hosts / friendly,2.898,222,1034,0.0,True,True
+27,Guest house,host / hosts / friendly,2.546,225,1193,0.0,True,True
+29,Guest house,lady / especially / gave,1.786,74,1193,0.0,True,True
+21,Bed and Breakfast,lady / especially / gave,1.754,63,1034,0.0,True,True
+10,Apartment,check / helped / welcome,1.605,194,1052,0.0,True,True
+13,Apartment,lady / especially / gave,1.56,57,1052,0.0009,True,True
+5,ApartHotel,lady / especially / gave,1.547,26,484,0.0428,True,True
+15,Apartment,thank / thanks / return,1.534,49,1052,0.0034,True,True
+36,Hostel,helpful / friendly / kind,1.51,59,629,0.0019,True,True
+26,Guest house,check / helped / welcome,1.437,197,1193,0.0,True,True
+57,Resort,breakfast / staff / clean,1.239,186,600,0.0014,True,True
+40,Hotel,staff / friendly / helpful,1.223,3191,7528,0.0,True,True
+46,Hotel,reception / reception staff / staff reception,1.22,291,7528,0.0,True,True
+25,Guest house,breakfast / staff / clean,0.761,227,1193,0.0,True,True
+45,Hotel,lady / especially / gave,0.711,186,7528,0.0,True,True
+9,Apartment,breakfast / staff / clean,0.54,142,1052,0.0,True,True
+16,Bed and Breakfast,staff / friendly / helpful,0.536,192,1034,0.0,True,True
+24,Guest house,staff / friendly / helpful,0.534,221,1193,0.0,True,True
+30,Guest house,reception / reception staff / staff reception,0.529,20,1193,0.0047,True,True
+8,Apartment,staff / friendly / helpful,0.362,132,1052,0.0,True,True
+14,Apartment,reception / reception staff / staff reception,0.36,12,1052,0.0003,True,True
+22,Bed and Breakfast,reception / reception staff / staff reception,0.305,10,1034,0.0001,True,True
+53,Motel,lady / especially / gave,0.198,2,291,0.0191,True,True
+43,Hotel,host / hosts / friendly,0.178,99,7528,0.0,True,True
+59,Resort,host / hosts / friendly,0.112,5,600,0.0,True,True
+55,Motel,thank / thanks / return,1.698,15,291,0.0643,False,False
+54,Motel,reception / reception staff / staff reception,1.518,14,291,0.1652,False,False
+6,ApartHotel,reception / reception staff / staff reception,1.499,23,484,0.0804,False,False
+23,Bed and Breakfast,thank / thanks / return,1.338,42,1034,0.0824,False,False
+39,Hostel,thank / thanks / return,1.257,24,629,0.3172,False,False
+18,Bed and Breakfast,check / helped / welcome,1.178,140,1034,0.0623,False,False
+34,Hostel,check / helped / welcome,1.176,85,629,0.1643,False,False
+2,ApartHotel,check / helped / welcome,1.169,65,484,0.2401,False,False
+20,Bed and Breakfast,helpful / friendly / kind,1.167,75,1034,0.216,False,False
+3,ApartHotel,host / hosts / friendly,1.144,41,484,0.4461,False,False
+48,Motel,staff / friendly / helpful,1.14,115,291,0.1365,False,False
+41,Hotel,breakfast / staff / clean,1.126,2120,7528,0.0,True,False
+28,Guest house,helpful / friendly / kind,1.079,80,1193,0.5548,False,False
+63,Resort,thank / thanks / return,1.043,19,600,0.8764,False,False
+56,Resort,staff / friendly / helpful,1.033,215,600,0.6294,False,False
+32,Hostel,staff / friendly / helpful,1.032,225,629,0.632,False,False
+61,Resort,lady / especially / gave,1.008,21,600,0.9711,False,False
+60,Resort,helpful / friendly / kind,0.992,37,600,0.9711,False,False
+49,Motel,breakfast / staff / clean,0.975,71,291,0.8625,False,False
+4,ApartHotel,helpful / friendly / kind,0.964,29,484,0.8764,False,False
+62,Resort,reception / reception staff / staff reception,0.947,18,600,0.8625,False,False
+44,Hotel,helpful / friendly / kind,0.943,441,7528,0.0831,False,False
+52,Motel,helpful / friendly / kind,0.94,17,291,0.8625,False,False
+38,Hostel,reception / reception staff / staff reception,0.903,18,629,0.7317,False,False
+0,ApartHotel,staff / friendly / helpful,0.9,151,484,0.1643,False,False
+50,Motel,check / helped / welcome,0.897,30,291,0.6197,False,False
+1,ApartHotel,breakfast / staff / clean,0.892,108,484,0.2297,False,False
+12,Apartment,helpful / friendly / kind,0.887,58,1052,0.4175,False,False
+33,Hostel,breakfast / staff / clean,0.883,139,629,0.1398,False,False
+47,Hotel,thank / thanks / return,0.875,200,7528,0.0064,True,False
+31,Guest house,thank / thanks / return,0.856,31,1193,0.445,False,False
+58,Resort,check / helped / welcome,0.856,59,600,0.2566,False,False
+17,Bed and Breakfast,breakfast / staff / clean,0.82,212,1034,0.0013,True,False
+42,Hotel,check / helped / welcome,0.812,702,7528,0.0,True,False
+35,Hostel,host / hosts / friendly,0.794,37,629,0.1997,False,False
+37,Hostel,lady / especially / gave,0.732,16,629,0.2566,False,False
+7,ApartHotel,thank / thanks / return,0.612,9,484,0.1889,False,False
+51,Motel,host / hosts / friendly,0.557,12,291,0.0623,False,False

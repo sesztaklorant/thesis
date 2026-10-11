@@ -1,0 +1,65 @@
+,segment,subtopic,lift,count,segment_n,q,significant,notable
+34,Spain,apartment / view / balcony,1.829,90,400,0.0,True,True
+18,Greece,apartment / view / balcony,1.758,72,333,0.0,True,True
+7,Australia,spacious / clean spacious / space,1.7,32,538,0.0084,True,True
+54,United Kingdom,breakfast / good / good breakfast,1.62,122,2083,0.0,True,True
+26,Italy,apartment / view / balcony,1.388,125,732,0.0003,True,True
+50,United Kingdom,apartment / view / balcony,0.796,204,2083,0.0002,True,True
+58,United States of America,apartment / view / balcony,0.696,102,1191,0.0002,True,True
+27,Italy,comfortable / clean comfortable / clean,0.688,51,732,0.0116,True,True
+43,Thailand,comfortable / clean comfortable / clean,0.494,15,300,0.0116,True,True
+62,United States of America,breakfast / good / good breakfast,0.488,21,1191,0.0012,True,True
+36,Spain,comfortable / bed / room,0.473,15,400,0.0084,True,True
+6,Australia,breakfast / good / good breakfast,0.308,6,538,0.0084,True,True
+11,France,comfortable / clean comfortable / clean,1.246,43,341,0.2573,False,False
+13,France,bathroom / shower / room bathroom,1.218,16,341,0.6349,False,False
+60,United States of America,comfortable / bed / room,1.218,115,1191,0.0503,False,False
+39,Spain,spacious / clean spacious / space,1.215,17,400,0.6343,False,False
+53,United Kingdom,bathroom / shower / room bathroom,1.209,97,2083,0.0579,False,False
+3,Australia,comfortable / clean comfortable / clean,1.194,65,538,0.2573,False,False
+17,Greece,clean / room clean / room,1.185,80,333,0.2134,False,False
+12,France,comfortable / bed / room,1.184,32,341,0.5123,False,False
+57,United States of America,clean / room clean / room,1.164,281,1191,0.0084,True,False
+41,Thailand,clean / room clean / room,1.151,70,300,0.3324,False,False
+29,Italy,bathroom / shower / room bathroom,1.135,32,732,0.6487,False,False
+51,United Kingdom,comfortable / clean comfortable / clean,1.134,239,2083,0.0441,True,False
+42,Thailand,apartment / view / balcony,1.111,41,300,0.664,False,False
+25,Italy,clean / room clean / room,1.105,164,732,0.2676,False,False
+40,Thailand,room / rooms / spacious,1.1,109,300,0.3886,False,False
+0,Australia,room / rooms / spacious,1.097,195,538,0.2383,False,False
+31,Italy,spacious / clean spacious / space,1.094,28,732,0.7602,False,False
+52,United Kingdom,comfortable / bed / room,1.042,172,2083,0.6754,False,False
+8,France,room / rooms / spacious,1.03,116,341,0.819,False,False
+56,United States of America,room / rooms / spacious,1.027,404,1191,0.664,False,False
+30,Italy,breakfast / good / good breakfast,1.02,27,732,0.97,False,False
+46,Thailand,breakfast / good / good breakfast,1.014,11,300,0.984,False,False
+48,United Kingdom,room / rooms / spacious,1.013,697,2083,0.7602,False,False
+59,United States of America,comfortable / clean comfortable / clean,1.012,122,1191,0.97,False,False
+32,Spain,room / rooms / spacious,1.007,133,400,0.97,False,False
+9,France,clean / room clean / room,0.998,69,341,0.984,False,False
+2,Australia,apartment / view / balcony,0.997,66,538,0.984,False,False
+4,Australia,comfortable / bed / room,0.985,42,538,0.97,False,False
+14,France,breakfast / good / good breakfast,0.973,12,341,0.97,False,False
+28,Italy,comfortable / bed / room,0.965,56,732,0.8946,False,False
+35,Spain,comfortable / clean comfortable / clean,0.963,39,400,0.9126,False,False
+55,United Kingdom,spacious / clean spacious / space,0.92,67,2083,0.6324,False,False
+20,Greece,comfortable / bed / room,0.909,24,333,0.7602,False,False
+49,United Kingdom,clean / room clean / room,0.89,376,2083,0.009,True,False
+1,Australia,clean / room clean / room,0.889,97,538,0.3324,False,False
+5,Australia,bathroom / shower / room bathroom,0.868,18,538,0.7104,False,False
+45,Thailand,bathroom / shower / room bathroom,0.865,10,300,0.7625,False,False
+24,Italy,room / rooms / spacious,0.864,209,732,0.0251,True,False
+23,Greece,spacious / clean spacious / space,0.859,10,333,0.7602,False,False
+63,United States of America,spacious / clean spacious / space,0.84,35,1191,0.4151,False,False
+15,France,spacious / clean spacious / space,0.838,10,341,0.7445,False,False
+16,Greece,room / rooms / spacious,0.836,92,333,0.0896,False,False
+61,United States of America,bathroom / shower / room bathroom,0.806,37,1191,0.2689,False,False
+33,Spain,clean / room clean / room,0.777,63,400,0.06,False,False
+47,Thailand,spacious / clean spacious / space,0.762,8,300,0.642,False,False
+19,Greece,comfortable / clean comfortable / clean,0.742,25,333,0.2454,False,False
+37,Spain,bathroom / shower / room bathroom,0.714,11,400,0.4151,False,False
+10,France,apartment / view / balcony,0.667,28,341,0.0579,False,False
+38,Spain,breakfast / good / good breakfast,0.622,9,400,0.2676,False,False
+44,Thailand,comfortable / bed / room,0.547,13,300,0.0579,False,False
+21,Greece,bathroom / shower / room bathroom,0.546,7,333,0.2241,False,False
+22,Greece,breakfast / good / good breakfast,0.498,6,333,0.189,False,False

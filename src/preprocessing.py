@@ -225,8 +225,39 @@ def split_clauses(text: str, min_words: int = 2) -> list[str]:
     return [p for p in parts if len(p.split()) >= min_words]
 
 
+def split_list_items(clause: str, min_words: int = 2) -> list[str]:
+    """
+    HU: FELSOROLÁS bontása vesszők mentén: "Great location, friendly staff, clean rooms" -> három
+        egység. A dicséretek jellemzően ilyen listák; egyben hagyva a témamodell "location / staff /
+        clean" vegyes témákat ad. A min_words-nél rövidebb darab a KÖVETKEZŐHÖZ tapad (az utolsó az
+        előzőhöz): "Clean, comfortable, great location" így egyben marad.
+    EN: Splitting an ENUMERATION at commas: "Great location, friendly staff, clean rooms" -> three
+        units. Praise typically comes as such lists; left together, the topic model gives mixed
+        "location / staff / clean" topics. A piece shorter than min_words sticks to the NEXT one (the
+        last to the previous one): "Clean, comfortable, great location" thus stays together.
+    """
+    pieces = [p.strip(" .-") for p in clause.split(",")]
+    pieces = [p for p in pieces if p]
+    out: list[str] = []
+    carry = ""
+    for piece in pieces:
+        piece = f"{carry}, {piece}" if carry else piece
+        if len(piece.split()) < min_words:
+            carry = piece
+            continue
+        out.append(piece)
+        carry = ""
+    if carry:
+        if out:
+            out[-1] = f"{out[-1]}, {carry}"
+        else:
+            out.append(carry)
+    return out
+
+
 def build_field_units(df: pd.DataFrame, fields: tuple[str, ...] = ("review_positive", "review_negative"),
-                      id_col: str = "review_id", min_words: int = 2) -> pd.DataFrame:
+                      id_col: str = "review_id", min_words: int = 2,
+                      list_fields: tuple[str, ...] | None = None) -> pd.DataFrame:
     """
     HU: Elemzési egységek MEZŐNKÉNT: a Booking dicséret- és panaszmezőjét külön bontjuk
         tagmondatokra, így a kettő soha nem olvad egy "mondatba" (ez okozta a vegyes témákat).
@@ -235,15 +266,31 @@ def build_field_units(df: pd.DataFrame, fields: tuple[str, ...] = ("review_posit
         separately, so the two never merge into one "sentence" (this caused the mixed topics).
         field_polarity = which field it comes from (the guest's own classification).
 
+    HU: list_fields: ezekben a mezőkben a felsorolásokat is szétbontjuk (split_list_items); alapból
+        a dicséretmezőben, ha CFG.split_praise_lists igaz. A panaszmezőt NEM bontjuk vesszőnél,
+        mert ott a vessző többnyire egy panaszon belüli tagolás.
+    EN: list_fields: in these fields enumerations are split too (split_list_items); by default the
+        praise field, if CFG.split_praise_lists is true. The complaint field is NOT split at commas,
+        because there a comma usually structures a single complaint.
+
     Returns: review_id | field | field_polarity | unit_idx | sentence
     """
+    if list_fields is None:
+        list_fields = ("review_positive",) if CFG.split_praise_lists else ()
+
+    def units_of(text: str, split_lists: bool) -> list[str]:
+        clauses = split_clauses(text, min_words)
+        if not split_lists:
+            return clauses
+        return [item for c in clauses for item in split_list_items(c, min_words)]
+
     frames = []
     for field in fields:
         if field not in df.columns:
             log.warning("Field not found, skipped: %s", field)
             continue
         part = df[[id_col, field]].copy()
-        part["sentence"] = part[field].map(lambda t: split_clauses(t, min_words))
+        part["sentence"] = part[field].map(lambda t, sl=field in list_fields: units_of(t, sl))
         part = part.drop(columns=[field]).explode("sentence").dropna(subset=["sentence"])
         part["field"] = field
         part["field_polarity"] = "positive" if "positive" in field else "negative"

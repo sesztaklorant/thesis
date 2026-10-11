@@ -236,7 +236,14 @@ class Config:
     #     NEM írja felül a korábbi táblákat, ábrákat és a kitöltött kézi ellenőrzést.
     # EN: Version of the subtopic run: it is part of every 2/b output name, so a new parameter set
     #     does NOT overwrite earlier tables, figures and the filled-in manual check.
-    topic_version: str = "v4"
+    topic_version: str = "v5"
+    # HU: v5: a dicséretmezőben a vesszős felsorolásokat is egységekre bontjuk ("Great location,
+    #     friendly staff, clean rooms" -> 3 egység). v4-ben a pozitív altémák nagy része vegyes volt
+    #     (pl. staff: "staff / friendly / location" 76%), mert a dicséretek tipikusan listák.
+    # EN: v5: comma enumerations are split into units in the praise field too ("Great location,
+    #     friendly staff, clean rooms" -> 3 units). In v4 most positive subtopics were mixed
+    #     (e.g. staff: "staff / friendly / location" 76%), because praise typically comes as lists.
+    split_praise_lists: bool = True
 
     # --- Kézi annotáció / Manual annotation (gold standard) ---
     gold_sample_size: int = 400

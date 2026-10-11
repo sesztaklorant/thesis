@@ -773,20 +773,37 @@ def plot_aspect_subtopics(topic_table: pd.DataFrame, aspects: list[str] | None =
     return axes
 
 
-def plot_segment_heatmap(lift: pd.DataFrame, title: str, save_as: str | None = None):
+def lift_colormap(sentiment: str = "negative"):
     """
-    HU: Divergens hőtérkép a liftre (kék = ritkább, piros = gyakoribb a szegmensben, mint átlagosan).
-    EN: Diverging heatmap of the lift (blue = rarer, red = more common in the segment than on average).
+    HU: Színskála a lifthez: ATLAGNÁL GYAKORIBB = a szentiment színe (panasz: piros, dicséret: kék),
+        átlagnál RITKÁBB = szürke, 1 körül fehér. Így a szín mindkét oldalon ugyanazt jelenti:
+        "ez a téma jellemző erre a szegmensre", és a piros sosem jelent dicséretet.
+    EN: Colour scale for the lift: MORE common than average = the sentiment colour (complaint: red,
+        praise: blue), LESS common = grey, white around 1. So the colour means the same on both
+        sides: "this topic is typical of this segment", and red never stands for praise.
+    """
+    from matplotlib.colors import LinearSegmentedColormap, to_rgb
+
+    base = np.array(to_rgb(SENTIMENT_COLORS.get(sentiment, SENTIMENT_COLORS["negative"])))
+    light, dark = base + (1 - base) * 0.55, base * 0.62
+    return LinearSegmentedColormap.from_list(
+        f"lift_{sentiment}", ["#5f636b", "#c9cbcf", "#f7f7f7", tuple(light), tuple(base), tuple(dark)])
+
+
+def plot_segment_heatmap(lift: pd.DataFrame, title: str, save_as: str | None = None,
+                         sentiment: str = "negative"):
+    """
+    HU: Hőtérkép a liftre: a szentiment színe = gyakoribb a szegmensben, szürke = ritkább (lift_colormap).
+    EN: Heatmap of the lift: sentiment colour = more common in the segment, grey = rarer (lift_colormap).
     """
     import matplotlib.pyplot as plt
-    from matplotlib.colors import LinearSegmentedColormap, TwoSlopeNorm
+    from matplotlib.colors import TwoSlopeNorm
 
-    from .config import DIVERGING_BLUE_RED
     from .evaluation import save_figure
 
     vals = lift.to_numpy(dtype=float)
     span = max(np.nanmax(np.abs(vals - 1)), 0.15)
-    cmap = LinearSegmentedColormap.from_list("div_br", DIVERGING_BLUE_RED)
+    cmap = lift_colormap(sentiment)
     norm = TwoSlopeNorm(vmin=max(0.0, 1 - span), vcenter=1.0, vmax=1 + span)
     fig, ax = plt.subplots(figsize=(1.25 * lift.shape[1] + 3.6, 0.55 * lift.shape[0] + 2.4))
     sig = lift.attrs.get("notable", lift.attrs.get("significant"))
@@ -805,7 +822,7 @@ def plot_segment_heatmap(lift: pd.DataFrame, title: str, save_as: str | None = N
             ax.text(j, i, f"{v:.2f}" + ("*" if sig[i, j] else ""), ha="center", va="center", fontsize=8.5,
                     color="white" if strong else (INK["primary"] if sig[i, j] else INK["muted"]))
     cb = fig.colorbar(im, ax=ax, shrink=0.8, pad=0.02)
-    cb.set_label("Share in segment / overall share", fontsize=9.5)
+    cb.set_label("Lift (share in segment / overall)", fontsize=9.5)
     cb.outline.set_visible(False)
     ax.set_title(title, loc="left", pad=12)
     fig.text(0.01, 0.005, f"* significant (two-proportion z-test, Benjamini–Hochberg q < 0.05) and "

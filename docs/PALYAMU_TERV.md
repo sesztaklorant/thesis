@@ -103,6 +103,8 @@ data/raw/val.csv ──► data_loading ──► preprocessing ──► [munka
 | 2/b v2: 3% fürtméret — a fürdőszoba 18 → 2 altémára „ugrott” (86%-os óriásfürt) | **v3:** 2%-os finom fürtözés + **téma-összevonás** (max. 10 altéma, közel-duplikátumok ≥ 0,90 hasonlóságnál), `merged_from` oszlop | egy globális fürtméret nem jó minden aspektusra; „rooms are small” / „the room was quite small” két fürt volt |
 | 2/b v3: középpont-alapú összevonás → 40–55%-os gyűjtőtémák (zaj: forgalom + zene + szomszédok egyben) | **v4:** átlagos kapcsolás + legfeljebb 35%-os összevont téma | „hógolyó-hatás”: az összevont középpont mindenhez hasonló |
 | altémák csak az aspektusonkénti 15 000-es mintán | a mintán kívüli mondatok a legközelebbi téma-középponthoz kerülnek (`assign_to_topics`) | teljes adatnál a panasztérkép minden mondatot számoljon |
+| pozitív altémák v4: vegyes listák (staff: „staff / friendly / location” 76%) | **v5:** a dicséretmezőben a vesszős felsorolás is egységekre bomlik (`split_list_items`) | a dicséretek tipikusan felsorolások, a panaszok leíró mondatok |
+| panasztérkép: kék–piros skála mindkét oldalon (dicséretnél a piros = gyakoribb dicséret) | szentiment-színű skála: gyakoribb = piros (panasz) / kék (dicséret), ritkább = szürke | a piros ne jelentsen dicséretet |
 | panasztérkép: nyers lift | lift + **arány-z-próba, Benjamini–Hochberg** + hatásméret (`*` = q < 0,05 ÉS \|lift − 1\| ≥ 0,2) | kis szegmensekben (n≈80) a nagy lift is lehet véletlen |
 | „nothing / didn't like” szemét-téma (3,7%) | **nem-panasz szűrő** (`is_non_complaint`) a negatív altémák előtt | nem valódi panaszok |
 | panasztérkép minden altémával (19–21 oszlop) | csak a **8 legnagyobb** altéma (a lift értéke nem változik) | olvashatatlan ábra |

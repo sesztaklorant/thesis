@@ -1,0 +1,65 @@
+,segment,subtopic,lift,count,segment_n,q,significant,notable
+37,Spain,door / bathroom door / close,3.1,7,73,0.0612,False,False
+44,Thailand,paper / toilet paper / toilet,2.542,5,62,0.5159,False,False
+6,Australia,fan / bathroom / fan bathroom,2.032,6,98,0.5759,False,False
+13,France,door / bathroom door / close,1.96,4,66,0.6101,False,False
+38,Spain,fan / bathroom / fan bathroom,1.818,4,73,0.6878,False,False
+46,Thailand,fan / bathroom / fan bathroom,1.606,3,62,0.7829,False,False
+15,France,soap / shampoo / wash,1.508,3,66,0.7829,False,False
+35,Spain,towels / towel / hang,1.502,6,73,0.767,False,False
+59,United States of America,towels / towel / hang,1.401,22,287,0.5759,False,False
+28,Italy,paper / toilet paper / toilet,1.397,7,158,0.7829,False,False
+16,Greece,shower / water / floor,1.383,31,67,0.5159,False,False
+39,Spain,soap / shampoo / wash,1.364,3,73,0.7965,False,False
+3,Australia,towels / towel / hang,1.305,7,98,0.7829,False,False
+31,Italy,soap / shampoo / wash,1.26,6,158,0.7829,False,False
+61,United States of America,door / bathroom door / close,1.239,11,287,0.7829,False,False
+58,United States of America,hot / water / hot water,1.236,36,287,0.6101,False,False
+1,Australia,bathroom / toilet / room,1.22,40,98,0.6101,False,False
+43,Thailand,towels / towel / hang,1.179,4,62,0.8813,False,False
+24,Italy,shower / water / floor,1.173,62,158,0.6101,False,False
+33,Spain,bathroom / toilet / room,1.146,28,73,0.7829,False,False
+9,France,bathroom / toilet / room,1.132,25,66,0.7829,False,False
+42,Thailand,hot / water / hot water,1.112,7,62,0.9014,False,False
+54,United Kingdom,fan / bathroom / fan bathroom,1.106,15,450,0.8276,False,False
+8,France,shower / water / floor,1.087,24,66,0.8276,False,False
+41,Thailand,bathroom / toilet / room,1.06,22,62,0.8813,False,False
+50,United Kingdom,hot / water / hot water,1.051,48,450,0.8507,False,False
+52,United Kingdom,paper / toilet paper / toilet,1.051,15,450,0.9231,False,False
+55,United Kingdom,soap / shampoo / wash,1.032,14,450,0.971,False,False
+18,Greece,hot / water / hot water,1.029,7,67,0.9892,False,False
+48,United Kingdom,shower / water / floor,1.023,154,450,0.8594,False,False
+7,Australia,soap / shampoo / wash,1.016,3,98,0.9914,False,False
+26,Italy,hot / water / hot water,0.998,16,158,0.9914,False,False
+25,Italy,bathroom / toilet / room,0.983,52,158,0.971,False,False
+49,United Kingdom,bathroom / toilet / room,0.969,146,450,0.7965,False,False
+4,Australia,paper / toilet paper / toilet,0.965,3,98,0.9892,False,False
+21,Greece,door / bathroom door / close,0.965,2,67,0.9892,False,False
+56,United States of America,shower / water / floor,0.947,91,287,0.7829,False,False
+20,Greece,paper / toilet paper / toilet,0.941,2,67,0.9892,False,False
+17,Greece,bathroom / toilet / room,0.937,21,67,0.8813,False,False
+63,United States of America,soap / shampoo / wash,0.925,8,287,0.9231,False,False
+57,United States of America,bathroom / toilet / room,0.916,88,287,0.719,False,False
+40,Thailand,shower / water / floor,0.868,18,62,0.7829,False,False
+51,United Kingdom,towels / towel / hang,0.812,20,450,0.7139,False,False
+27,Italy,towels / towel / hang,0.81,7,158,0.7829,False,False
+62,United States of America,fan / bathroom / fan bathroom,0.809,7,287,0.7829,False,False
+53,United Kingdom,door / bathroom door / close,0.79,11,450,0.7829,False,False
+0,Australia,shower / water / floor,0.762,25,98,0.6101,False,False
+32,Spain,shower / water / floor,0.696,17,73,0.5759,False,False
+5,Australia,door / bathroom door / close,0.66,2,98,0.7829,False,False
+60,United States of America,paper / toilet paper / toilet,0.659,6,287,0.7139,False,False
+30,Italy,fan / bathroom / fan bathroom,0.63,3,158,0.7829,False,False
+2,Australia,hot / water / hot water,0.603,6,98,0.6163,False,False
+10,France,hot / water / hot water,0.597,4,66,0.719,False,False
+19,Greece,towels / towel / hang,0.546,2,67,0.7829,False,False
+34,Spain,hot / water / hot water,0.54,4,73,0.6163,False,False
+47,Thailand,soap / shampoo / wash,0.535,1,62,0.7829,False,False
+45,Thailand,door / bathroom door / close,0.522,1,62,0.7829,False,False
+12,France,paper / toilet paper / toilet,0.478,1,66,0.7829,False,False
+36,Spain,paper / toilet paper / toilet,0.432,1,73,0.7829,False,False
+11,France,towels / towel / hang,0.277,1,66,0.6101,False,False
+29,Italy,door / bathroom door / close,0.205,1,158,0.5759,False,False
+14,France,fan / bathroom / fan bathroom,0.0,0,66,0.6101,False,False
+22,Greece,fan / bathroom / fan bathroom,0.0,0,67,0.6101,False,False
+23,Greece,soap / shampoo / wash,0.0,0,67,0.6101,False,False

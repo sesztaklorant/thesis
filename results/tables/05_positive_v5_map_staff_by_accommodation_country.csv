@@ -1,0 +1,65 @@
+,segment,subtopic,lift,count,segment_n,q,significant,notable
+38,Spain,reception / reception staff / staff reception,1.939,36,620,0.0001,True,True
+14,France,reception / reception staff / staff reception,1.922,24,417,0.0025,True,True
+21,Greece,lady / especially / gave,1.827,42,638,0.0001,True,True
+27,Italy,host / hosts / friendly,1.786,180,1214,0.0,True,True
+19,Greece,host / hosts / friendly,1.661,88,638,0.0,True,True
+29,Italy,lady / especially / gave,1.531,67,1214,0.0005,True,True
+23,Greece,thank / thanks / return,1.526,27,638,0.0478,True,True
+20,Greece,helpful / friendly / kind,1.518,58,638,0.0022,True,True
+56,United States of America,staff / friendly / helpful,1.286,537,1189,0.0,True,True
+18,Greece,check / helped / welcome,1.261,86,638,0.0448,True,True
+8,France,staff / friendly / helpful,1.249,183,417,0.0005,True,True
+51,United Kingdom,host / hosts / friendly,1.225,229,2251,0.0005,True,True
+24,Italy,staff / friendly / helpful,0.79,337,1214,0.0,True,True
+53,United Kingdom,lady / especially / gave,0.727,59,2251,0.0082,True,True
+16,Greece,staff / friendly / helpful,0.678,152,638,0.0,True,True
+35,Spain,host / hosts / friendly,0.66,34,620,0.0227,True,True
+63,United States of America,thank / thanks / return,0.516,17,1189,0.0068,True,True
+62,United States of America,reception / reception staff / staff reception,0.365,13,1189,0.0001,True,True
+11,France,host / hosts / friendly,0.318,11,417,0.0001,True,True
+43,Thailand,host / hosts / friendly,0.257,9,421,0.0,True,True
+59,United States of America,host / hosts / friendly,0.142,14,1189,0.0,True,True
+6,Australia,reception / reception staff / staff reception,1.512,21,464,0.1001,False,False
+12,France,helpful / friendly / kind,1.402,35,417,0.0782,False,False
+7,Australia,thank / thanks / return,1.244,16,464,0.4999,False,False
+44,Thailand,helpful / friendly / kind,1.23,31,421,0.3617,False,False
+39,Spain,thank / thanks / return,1.222,21,620,0.4686,False,False
+26,Italy,check / helped / welcome,1.195,155,1214,0.0281,True,False
+57,United States of America,breakfast / staff / clean,1.172,353,1189,0.0007,True,False
+40,Thailand,staff / friendly / helpful,1.129,167,421,0.1001,False,False
+46,Thailand,reception / reception staff / staff reception,1.111,14,421,0.7647,False,False
+55,United Kingdom,thank / thanks / return,1.106,69,2251,0.4472,False,False
+42,Thailand,check / helped / welcome,1.067,48,421,0.7336,False,False
+49,United Kingdom,breakfast / staff / clean,1.067,608,2251,0.0658,False,False
+32,Spain,staff / friendly / helpful,1.061,231,620,0.3821,False,False
+0,Australia,staff / friendly / helpful,1.043,170,464,0.5916,False,False
+33,Spain,breakfast / staff / clean,1.032,162,620,0.7336,False,False
+54,United Kingdom,reception / reception staff / staff reception,0.994,67,2251,0.9526,False,False
+41,Thailand,breakfast / staff / clean,0.985,105,421,0.8789,False,False
+31,Italy,thank / thanks / return,0.98,33,1214,0.9141,False,False
+1,Australia,breakfast / staff / clean,0.979,115,464,0.8201,False,False
+48,United Kingdom,staff / friendly / helpful,0.957,757,2251,0.1458,False,False
+61,United States of America,lady / especially / gave,0.957,41,1189,0.8026,False,False
+50,United Kingdom,check / helped / welcome,0.944,227,2251,0.4025,False,False
+36,Spain,helpful / friendly / kind,0.943,35,620,0.7788,False,False
+10,France,check / helped / welcome,0.942,42,417,0.7647,False,False
+4,Australia,helpful / friendly / kind,0.936,26,464,0.7788,False,False
+52,United Kingdom,helpful / friendly / kind,0.927,125,2251,0.4376,False,False
+34,Spain,check / helped / welcome,0.921,61,620,0.5916,False,False
+2,Australia,check / helped / welcome,0.887,44,464,0.5234,False,False
+3,Australia,host / hosts / friendly,0.882,34,464,0.5517,False,False
+28,Italy,helpful / friendly / kind,0.867,63,1214,0.334,False,False
+47,Thailand,thank / thanks / return,0.857,10,421,0.7336,False,False
+9,France,breakfast / staff / clean,0.852,90,417,0.1449,False,False
+25,Italy,breakfast / staff / clean,0.852,262,1214,0.0036,True,False
+58,United States of America,check / helped / welcome,0.85,108,1189,0.1068,False,False
+60,United States of America,helpful / friendly / kind,0.829,59,1189,0.1878,False,False
+17,Greece,breakfast / staff / clean,0.817,132,638,0.0146,True,False
+13,France,lady / especially / gave,0.798,12,417,0.5385,False,False
+30,Italy,reception / reception staff / staff reception,0.798,29,1214,0.3023,False,False
+45,Thailand,lady / especially / gave,0.791,12,421,0.5234,False,False
+37,Spain,lady / especially / gave,0.761,17,620,0.3653,False,False
+22,Greece,reception / reception staff / staff reception,0.628,12,638,0.158,False,False
+15,France,thank / thanks / return,0.605,7,417,0.2863,False,False
+5,Australia,lady / especially / gave,0.598,10,464,0.158,False,False

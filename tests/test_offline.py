@@ -322,6 +322,18 @@ def test_topic_merging_and_significance():
     assert np.allclose(q, [0.04, 0.0533333, 0.0533333, 0.5])
     assert tm._two_proportion_p(np.array([50]), np.array([100]), np.array([10]), np.array([100]))[0] < 1e-6
 
+
+def test_praise_list_split():
+    assert pp.split_list_items("Great location, friendly staff, clean rooms") == \
+        ["Great location", "friendly staff", "clean rooms"]
+    assert pp.split_list_items("Clean, comfortable, great location") == ["Clean, comfortable", "great location"]
+    assert pp.split_list_items("Very clean") == ["Very clean"]
+    df = pd.DataFrame({"review_id": ["r1"], "review_positive": ["Great location, friendly staff."],
+                       "review_negative": ["The room was warm, the AC was broken."]})
+    units = pp.build_field_units(df, list_fields=("review_positive",))
+    assert units[units["field_polarity"] == "positive"]["sentence"].tolist() == ["Great location", "friendly staff"]
+    assert len(units[units["field_polarity"] == "negative"]) == 1     # HU/EN: complaints not split at commas
+
 if __name__ == "__main__":
     tests = [v for k, v in dict(globals()).items() if k.startswith("test_") and callable(v)]
     for test in tests:

@@ -1,0 +1,65 @@
+,segment,subtopic,lift,count,segment_n,q,significant,notable
+59,Resort,beach / sea / pool,3.848,211,574,0.0,True,True
+15,Apartment,clean / comfortable / cleanliness,1.563,97,1967,0.0,True,True
+51,Motel,beach / sea / pool,1.513,76,526,0.0003,True,True
+3,ApartHotel,beach / sea / pool,1.417,124,916,0.0001,True,True
+50,Motel,restaurants / shops / food,1.351,82,526,0.0086,True,True
+44,Hotel,located / location / city,1.324,1004,9718,0.0,True,True
+33,Hostel,station / walk / close,1.3,193,640,0.0001,True,True
+45,Hotel,airport / close airport / shuttle,1.247,772,9718,0.0,True,True
+2,ApartHotel,restaurants / shops / food,1.24,131,916,0.0172,True,True
+14,Apartment,staff / room / location,1.232,150,1967,0.0125,True,True
+10,Apartment,restaurants / shops / food,1.216,276,1967,0.0007,True,True
+30,Guest house,staff / room / location,0.738,60,1314,0.024,True,True
+13,Apartment,airport / close airport / shuttle,0.63,79,1967,0.0,True,True
+28,Guest house,located / location / city,0.624,64,1314,0.0001,True,True
+29,Guest house,airport / close airport / shuttle,0.573,48,1314,0.0001,True,True
+52,Motel,located / location / city,0.56,23,526,0.0083,True,True
+20,Bed and Breakfast,located / location / city,0.535,37,886,0.0001,True,True
+62,Resort,staff / room / location,0.535,19,574,0.0095,True,True
+5,ApartHotel,airport / close airport / shuttle,0.531,31,916,0.0004,True,True
+4,ApartHotel,located / location / city,0.518,37,916,0.0001,True,True
+35,Hostel,beach / sea / pool,0.507,31,640,0.0001,True,True
+63,Resort,clean / comfortable / cleanliness,0.442,8,574,0.0289,True,True
+57,Resort,station / walk / close,0.413,55,574,0.0,True,True
+12,Apartment,located / location / city,0.313,48,1967,0.0,True,True
+55,Motel,clean / comfortable / cleanliness,1.386,23,526,0.1635,False,False
+38,Hostel,staff / room / location,1.237,49,640,0.1777,False,False
+24,Guest house,location / great / great location,1.17,419,1314,0.0003,True,False
+8,Apartment,location / great / great location,1.158,621,1967,0.0,True,False
+25,Guest house,station / walk / close,1.125,343,1314,0.0224,True,False
+19,Bed and Breakfast,beach / sea / pool,1.099,93,886,0.434,False,False
+48,Motel,location / great / great location,1.074,154,526,0.401,False,False
+32,Hostel,location / great / great location,1.066,186,640,0.401,False,False
+16,Bed and Breakfast,location / great / great location,1.044,252,886,0.4998,False,False
+27,Guest house,beach / sea / pool,1.044,131,1314,0.676,False,False
+0,ApartHotel,location / great / great location,1.041,260,916,0.5085,False,False
+7,ApartHotel,clean / comfortable / cleanliness,1.038,30,916,0.8506,False,False
+23,Bed and Breakfast,clean / comfortable / cleanliness,1.037,29,886,0.8506,False,False
+17,Bed and Breakfast,station / walk / close,1.036,213,886,0.6327,False,False
+9,Apartment,station / walk / close,1.032,471,1967,0.4998,False,False
+1,ApartHotel,station / walk / close,1.03,219,916,0.6769,False,False
+46,Hotel,staff / room / location,1.024,616,9718,0.4424,False,False
+54,Motel,staff / room / location,1.013,33,526,0.9359,False,False
+41,Hotel,station / walk / close,0.996,2245,9718,0.7725,False,False
+34,Hostel,restaurants / shops / food,0.975,72,640,0.8506,False,False
+31,Guest house,clean / comfortable / cleanliness,0.965,40,1314,0.8506,False,False
+42,Hotel,restaurants / shops / food,0.954,1069,9718,0.0233,True,False
+22,Bed and Breakfast,staff / room / location,0.948,52,886,0.7537,False,False
+40,Hotel,location / great / great location,0.937,2481,9718,0.0,True,False
+26,Guest house,restaurants / shops / food,0.91,138,1314,0.3157,False,False
+47,Hotel,clean / comfortable / cleanliness,0.91,279,9718,0.0264,True,False
+36,Hostel,located / location / city,0.881,44,640,0.4657,False,False
+11,Apartment,beach / sea / pool,0.878,165,1967,0.1062,False,False
+56,Resort,location / great / great location,0.863,135,574,0.0747,False,False
+58,Resort,restaurants / shops / food,0.861,57,574,0.3157,False,False
+21,Bed and Breakfast,airport / close airport / shuttle,0.833,47,886,0.2697,False,False
+18,Bed and Breakfast,restaurants / shops / food,0.812,83,886,0.0714,False,False
+49,Motel,station / walk / close,0.811,99,526,0.0311,True,False
+43,Hotel,beach / sea / pool,0.807,749,9718,0.0,True,False
+6,ApartHotel,staff / room / location,0.794,45,916,0.1578,False,False
+39,Hostel,clean / comfortable / cleanliness,0.792,16,640,0.4351,False,False
+60,Resort,located / location / city,0.759,34,574,0.1431,False,False
+37,Hostel,airport / close airport / shuttle,0.736,30,640,0.1266,False,False
+61,Resort,airport / close airport / shuttle,0.684,25,574,0.0784,False,False
+53,Motel,airport / close airport / shuttle,0.656,22,526,0.0711,False,False
