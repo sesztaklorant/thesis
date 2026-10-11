@@ -1,0 +1,17 @@
+,segment,subtopic,lift,count,segment_n,q,significant,notable
+15,United States of America,staff / friendly / helpful,1.32,365,1128,0.0,True,True
+3,France,staff / friendly / helpful,1.241,115,378,0.0118,True,True
+5,Greece,staff / friendly / helpful,0.728,102,572,0.0004,True,True
+4,Greece,staff / friendly / location,1.088,470,572,0.0004,True,False
+11,Thailand,staff / friendly / helpful,1.068,100,382,0.4969,False,False
+6,Italy,staff / friendly / location,1.058,874,1094,0.0006,True,False
+9,Spain,staff / friendly / helpful,1.041,149,584,0.5546,False,False
+0,Australia,staff / friendly / location,1.021,333,432,0.4969,False,False
+12,United Kingdom,staff / friendly / location,1.019,1616,2101,0.1065,False,False
+8,Spain,staff / friendly / location,0.987,435,584,0.5546,False,False
+10,Thailand,staff / friendly / location,0.978,282,382,0.4969,False,False
+13,United Kingdom,staff / friendly / helpful,0.942,485,2101,0.1065,False,False
+1,Australia,staff / friendly / helpful,0.935,99,432,0.4969,False,False
+2,France,staff / friendly / location,0.922,263,378,0.0118,True,False
+14,United States of America,staff / friendly / location,0.896,763,1128,0.0,True,False
+7,Italy,staff / friendly / helpful,0.82,220,1094,0.0006,True,False

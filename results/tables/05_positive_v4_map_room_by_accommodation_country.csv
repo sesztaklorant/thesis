@@ -1,0 +1,65 @@
+,segment,subtopic,lift,count,segment_n,q,significant,notable
+18,Greece,location / view / room,1.479,54,320,0.014,True,True
+42,Thailand,location / view / room,1.46,46,276,0.0284,True,True
+34,Spain,location / view / room,1.437,61,372,0.014,True,True
+26,Italy,location / view / room,1.357,109,704,0.0036,True,True
+3,Australia,comfortable / clean comfortable / clean,1.354,72,506,0.0271,True,True
+52,United Kingdom,breakfast / good / room,1.347,219,2003,0.0,True,True
+16,Greece,room / clean / room clean,0.765,62,320,0.0434,True,True
+50,United Kingdom,location / view / room,0.739,169,2003,0.0,True,True
+60,United States of America,breakfast / good / room,0.734,68,1141,0.0201,True,True
+29,Italy,bed / comfortable / beds,0.681,38,704,0.0378,True,True
+27,Italy,comfortable / clean comfortable / clean,0.676,50,704,0.014,True,True
+43,Thailand,comfortable / clean comfortable / clean,0.552,16,276,0.0378,True,True
+4,Australia,breakfast / good / room,0.438,18,506,0.0013,True,True
+46,Thailand,staff / friendly / friendly staff,1.367,24,276,0.2329,False,False
+6,Australia,staff / friendly / friendly staff,1.305,42,506,0.163,False,False
+9,France,rooms / room / clean,1.218,67,321,0.1659,False,False
+1,Australia,rooms / room / clean,1.211,105,506,0.0844,False,False
+56,United States of America,room / clean / room clean,1.197,346,1141,0.0003,True,False
+63,United States of America,kitchen / coffee / fridge,1.188,67,1141,0.2329,False,False
+51,United Kingdom,comfortable / clean comfortable / clean,1.145,241,2003,0.0301,True,False
+61,United States of America,bed / comfortable / beds,1.14,103,1141,0.2592,False,False
+2,Australia,location / view / room,1.126,65,506,0.4848,False,False
+14,France,staff / friendly / friendly staff,1.126,23,321,0.8093,False,False
+62,United States of America,staff / friendly / friendly staff,1.116,81,1141,0.4504,False,False
+53,United Kingdom,bed / comfortable / beds,1.103,175,2003,0.2191,False,False
+28,Italy,breakfast / good / room,1.085,62,704,0.7387,False,False
+24,Italy,room / clean / room clean,1.071,191,704,0.4448,False,False
+41,Thailand,rooms / room / clean,1.057,50,276,0.9356,False,False
+45,Thailand,bed / comfortable / beds,1.052,23,276,0.9704,False,False
+55,United Kingdom,kitchen / coffee / fridge,1.05,104,2003,0.7981,False,False
+15,France,kitchen / coffee / fridge,1.008,16,321,0.9911,False,False
+57,United States of America,rooms / room / clean,1.008,197,1141,0.9871,False,False
+49,United Kingdom,rooms / room / clean,0.999,343,2003,0.9911,False,False
+12,France,breakfast / good / room,0.998,26,321,0.9911,False,False
+48,United Kingdom,room / clean / room clean,0.997,506,2003,0.9871,False,False
+21,Greece,bed / comfortable / beds,0.986,25,320,0.9871,False,False
+8,France,room / clean / room clean,0.983,80,321,0.9816,False,False
+22,Greece,staff / friendly / friendly staff,0.982,20,320,0.9871,False,False
+44,Thailand,breakfast / good / room,0.982,22,276,0.9871,False,False
+59,United States of America,comfortable / clean comfortable / clean,0.976,117,1141,0.9637,False,False
+5,Australia,bed / comfortable / beds,0.973,39,506,0.9816,False,False
+33,Spain,rooms / room / clean,0.973,62,372,0.9704,False,False
+30,Italy,staff / friendly / friendly staff,0.96,43,704,0.9637,False,False
+10,France,location / view / room,0.955,35,321,0.9637,False,False
+23,Greece,kitchen / coffee / fridge,0.948,15,320,0.9806,False,False
+31,Italy,kitchen / coffee / fridge,0.948,33,704,0.9637,False,False
+35,Spain,comfortable / clean comfortable / clean,0.946,37,372,0.9637,False,False
+13,France,bed / comfortable / beds,0.944,24,321,0.9637,False,False
+19,Greece,comfortable / clean comfortable / clean,0.922,31,320,0.9046,False,False
+54,United Kingdom,staff / friendly / friendly staff,0.871,111,2003,0.163,False,False
+0,Australia,room / clean / room clean,0.866,111,506,0.1659,False,False
+11,France,comfortable / clean comfortable / clean,0.86,29,321,0.6156,False,False
+17,Greece,rooms / room / clean,0.839,46,320,0.3543,False,False
+32,Spain,room / clean / room clean,0.838,79,372,0.163,False,False
+47,Thailand,kitchen / coffee / fridge,0.806,11,276,0.722,False,False
+58,United States of America,location / view / room,0.806,105,1141,0.0378,True,False
+25,Italy,rooms / room / clean,0.804,97,704,0.0434,True,False
+36,Spain,breakfast / good / room,0.795,24,372,0.4213,False,False
+40,Thailand,room / clean / room clean,0.786,55,276,0.1145,False,False
+39,Spain,kitchen / coffee / fridge,0.761,14,372,0.4793,False,False
+7,Australia,kitchen / coffee / fridge,0.759,19,506,0.3799,False,False
+20,Greece,breakfast / good / room,0.732,19,320,0.2926,False,False
+37,Spain,bed / comfortable / beds,0.679,20,372,0.163,False,False
+38,Spain,staff / friendly / friendly staff,0.634,15,372,0.163,False,False

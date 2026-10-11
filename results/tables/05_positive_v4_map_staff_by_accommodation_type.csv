@@ -1,0 +1,17 @@
+,segment,subtopic,lift,count,segment_n,q,significant,notable
+11,Hotel,staff / friendly / helpful,1.211,2005,6927,0.0,True,True
+2,Apartment,staff / friendly / location,1.201,879,962,0.0,True,True
+7,Guest house,staff / friendly / helpful,0.592,151,1068,0.0,True,True
+5,Bed and Breakfast,staff / friendly / helpful,0.579,131,947,0.0,True,True
+3,Apartment,staff / friendly / helpful,0.361,83,962,0.0,True,True
+4,Bed and Breakfast,staff / friendly / location,1.132,816,947,0.0,True,False
+6,Guest house,staff / friendly / location,1.128,917,1068,0.0,True,False
+13,Motel,staff / friendly / helpful,1.115,73,274,0.4132,False,False
+15,Resort,staff / friendly / helpful,1.029,133,541,0.7024,False,False
+0,ApartHotel,staff / friendly / location,1.026,353,452,0.4132,False,False
+8,Hostel,staff / friendly / location,1.012,445,578,0.6938,False,False
+14,Resort,staff / friendly / location,0.991,408,541,0.7024,False,False
+12,Motel,staff / friendly / location,0.964,201,274,0.4132,False,False
+9,Hostel,staff / friendly / helpful,0.963,133,578,0.6938,False,False
+10,Hotel,staff / friendly / location,0.934,4922,6927,0.0,True,False
+1,ApartHotel,staff / friendly / helpful,0.916,99,452,0.4132,False,False

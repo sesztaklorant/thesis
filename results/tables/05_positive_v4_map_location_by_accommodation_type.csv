@@ -1,0 +1,65 @@
+,segment,subtopic,lift,count,segment_n,q,significant,notable
+58,Resort,beach / pool / sea,3.919,213,512,0.0,True,True
+37,Hostel,station / train / train station,1.708,75,547,0.0,True,True
+23,Bed and Breakfast,definitely / rome / trip,1.6,49,793,0.0011,True,True
+31,Guest house,definitely / rome / trip,1.58,70,1147,0.0001,True,True
+51,Motel,restaurants / shops / close,1.576,74,469,0.0001,True,True
+50,Motel,beach / pool / sea,1.486,74,469,0.0005,True,True
+15,Apartment,definitely / rome / trip,1.44,96,1726,0.0002,True,True
+46,Hotel,airport / close airport / shuttle,1.431,555,8605,0.0,True,True
+2,ApartHotel,beach / pool / sea,1.374,113,775,0.0005,True,True
+44,Hotel,located / location / good,1.374,1058,8605,0.0,True,True
+8,Apartment,location / clean / staff,1.24,674,1726,0.0,True,True
+49,Motel,location / great / walk,1.214,113,469,0.0347,True,True
+19,Bed and Breakfast,restaurants / shops / close,0.756,60,793,0.0345,True,True
+56,Resort,location / clean / staff,0.676,109,512,0.0,True,True
+57,Resort,location / great / walk,0.64,65,512,0.0001,True,True
+28,Guest house,located / location / good,0.555,57,1147,0.0,True,True
+52,Motel,located / location / good,0.548,23,469,0.0038,True,True
+34,Hostel,beach / pool / sea,0.465,27,547,0.0,True,True
+4,ApartHotel,located / location / good,0.418,29,775,0.0,True,True
+20,Bed and Breakfast,located / location / good,0.395,28,793,0.0,True,True
+14,Apartment,airport / close airport / shuttle,0.373,29,1726,0.0,True,True
+6,ApartHotel,airport / close airport / shuttle,0.372,13,775,0.0002,True,True
+54,Motel,airport / close airport / shuttle,0.331,7,469,0.0029,True,True
+53,Motel,station / train / train station,0.319,12,469,0.0,True,True
+62,Resort,airport / close airport / shuttle,0.303,7,512,0.0011,True,True
+30,Guest house,airport / close airport / shuttle,0.29,15,1147,0.0,True,True
+38,Hostel,airport / close airport / shuttle,0.243,6,547,0.0002,True,True
+61,Resort,station / train / train station,0.243,10,512,0.0,True,True
+12,Apartment,located / location / good,0.188,29,1726,0.0,True,True
+5,ApartHotel,station / train / train station,1.222,76,775,0.091,False,False
+39,Hostel,definitely / rome / trip,1.183,25,547,0.421,False,False
+17,Bed and Breakfast,location / great / walk,1.176,185,793,0.0221,True,False
+1,ApartHotel,location / great / walk,1.144,176,775,0.0653,False,False
+32,Hostel,location / clean / staff,1.143,197,547,0.0365,True,False
+26,Guest house,beach / pool / sea,1.133,138,1147,0.1367,False,False
+3,ApartHotel,restaurants / shops / close,1.121,87,775,0.2848,False,False
+25,Guest house,location / great / walk,1.107,252,1147,0.091,False,False
+11,Apartment,restaurants / shops / close,1.094,189,1726,0.2045,False,False
+45,Hotel,station / train / train station,1.091,754,8605,0.0002,True,False
+16,Bed and Breakfast,location / clean / staff,1.077,269,793,0.1648,False,False
+24,Guest house,location / clean / staff,1.074,388,1147,0.1102,False,False
+9,Apartment,location / great / walk,1.069,366,1726,0.1648,False,False
+35,Hostel,restaurants / shops / close,1.059,58,547,0.6806,False,False
+18,Bed and Breakfast,beach / pool / sea,1.022,86,793,0.8555,False,False
+63,Resort,definitely / rome / trip,1.011,20,512,0.9588,False,False
+43,Hotel,restaurants / shops / close,0.984,848,8605,0.4887,False,False
+36,Hostel,located / location / good,0.981,48,547,0.8996,False,False
+48,Motel,location / clean / staff,0.981,145,469,0.8202,False,False
+41,Hotel,location / great / walk,0.959,1637,8605,0.0058,True,False
+40,Hotel,location / clean / staff,0.952,2581,8605,0.0,True,False
+0,ApartHotel,location / clean / staff,0.934,228,775,0.2412,False,False
+33,Hostel,location / great / walk,0.903,98,547,0.2848,False,False
+27,Guest house,restaurants / shops / close,0.897,103,1147,0.2673,False,False
+10,Apartment,beach / pool / sea,0.884,162,1726,0.1102,False,False
+13,Apartment,station / train / train station,0.873,121,1726,0.13,False,False
+47,Hotel,definitely / rome / trip,0.806,268,8605,0.0,True,False
+42,Hotel,beach / pool / sea,0.804,734,8605,0.0,True,False
+7,ApartHotel,definitely / rome / trip,0.802,24,775,0.2866,False,False
+29,Guest house,station / train / train station,0.793,73,1147,0.0518,False,False
+59,Resort,restaurants / shops / close,0.78,40,512,0.1247,False,False
+21,Bed and Breakfast,station / train / train station,0.77,49,793,0.0781,False,False
+22,Bed and Breakfast,airport / close airport / shuttle,0.699,25,793,0.091,False,False
+60,Resort,located / location / good,0.699,32,512,0.051,False,False
+55,Motel,definitely / rome / trip,0.607,11,469,0.1155,False,False
