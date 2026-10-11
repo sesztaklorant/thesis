@@ -1,0 +1,65 @@
+,segment,subtopic,lift,count,segment_n,q,significant,notable
+13,Apartment,coffee / tea / milk,2.462,50,289,0.0,True,True
+57,Resort,food / dinner / not,2.139,361,912,0.0,True,True
+46,Inn,eggs / bacon / scrambled,1.798,32,310,0.0021,True,True
+47,Inn,fruit / fresh / juice,1.723,23,310,0.0239,True,True
+48,Motel,breakfast / not / options,1.662,95,234,0.0,True,True
+19,Bed and Breakfast,breakfast / staff / early,1.605,98,623,0.0,True,True
+27,Guest house,breakfast / staff / early,1.463,67,467,0.0034,True,True
+42,Inn,breakfast / room / no,0.671,31,310,0.0416,True,True
+56,Resort,breakfast / not / options,0.669,149,912,0.0,True,True
+17,Bed and Breakfast,food / dinner / not,0.633,73,623,0.0001,True,True
+3,ApartHotel,breakfast / staff / early,0.615,22,365,0.0416,True,True
+59,Resort,breakfast / staff / early,0.615,55,912,0.0004,True,True
+63,Resort,fruit / fresh / juice,0.586,23,912,0.0239,True,True
+60,Resort,breakfast / included / price,0.564,41,912,0.0004,True,True
+30,Guest house,eggs / bacon / scrambled,0.56,15,467,0.0471,True,True
+49,Motel,food / dinner / not,0.508,22,234,0.0015,True,True
+12,Apartment,breakfast / included / price,0.478,11,289,0.0296,True,True
+14,Apartment,eggs / bacon / scrambled,0.422,7,289,0.0416,True,True
+62,Resort,eggs / bacon / scrambled,0.363,19,912,0.0,True,True
+5,ApartHotel,coffee / tea / milk,1.364,35,365,0.1244,False,False
+43,Inn,breakfast / staff / early,1.316,40,310,0.1312,False,False
+23,Bed and Breakfast,fruit / fresh / juice,1.304,35,623,0.1817,False,False
+28,Guest house,breakfast / included / price,1.29,48,467,0.1312,False,False
+9,Apartment,food / dinner / not,1.216,65,289,0.1552,False,False
+4,ApartHotel,breakfast / included / price,1.204,35,365,0.3666,False,False
+41,Inn,food / dinner / not,1.168,67,310,0.259,False,False
+7,ApartHotel,fruit / fresh / juice,1.145,18,365,0.6789,False,False
+16,Bed and Breakfast,breakfast / not / options,1.117,170,623,0.1687,False,False
+18,Bed and Breakfast,breakfast / room / no,1.109,103,623,0.3666,False,False
+26,Guest house,breakfast / room / no,1.106,77,467,0.445,False,False
+55,Motel,fruit / fresh / juice,1.091,11,234,0.8296,False,False
+0,ApartHotel,breakfast / not / options,1.088,97,365,0.445,False,False
+38,Hotel,eggs / bacon / scrambled,1.073,688,11172,0.0004,True,False
+36,Hotel,breakfast / included / price,1.056,940,11172,0.0012,True,False
+24,Guest house,breakfast / not / options,1.043,119,467,0.6999,False,False
+29,Guest house,coffee / tea / milk,1.036,34,467,0.8831,False,False
+53,Motel,coffee / tea / milk,1.034,17,234,0.9168,False,False
+34,Hotel,breakfast / room / no,1.022,1703,11172,0.0974,False,False
+32,Hotel,breakfast / not / options,1.011,2759,11172,0.2643,False,False
+39,Hotel,fruit / fresh / juice,1.002,482,11172,0.9352,False,False
+35,Hotel,breakfast / staff / early,0.994,1089,11172,0.768,False,False
+22,Bed and Breakfast,eggs / bacon / scrambled,0.979,35,623,0.9168,False,False
+54,Motel,eggs / bacon / scrambled,0.968,13,234,0.9168,False,False
+37,Hotel,coffee / tea / milk,0.967,759,11172,0.1037,False,False
+10,Apartment,breakfast / room / no,0.951,41,289,0.8022,False,False
+33,Hotel,food / dinner / not,0.94,1943,11172,0.0,True,False
+61,Resort,coffee / tea / milk,0.936,60,912,0.6999,False,False
+45,Inn,coffee / tea / milk,0.918,20,310,0.7729,False,False
+2,ApartHotel,breakfast / room / no,0.9,49,365,0.5263,False,False
+31,Guest house,fruit / fresh / juice,0.895,18,467,0.7264,False,False
+8,Apartment,breakfast / not / options,0.864,61,289,0.2876,False,False
+50,Motel,breakfast / room / no,0.86,30,234,0.4772,False,False
+25,Guest house,food / dinner / not,0.833,72,467,0.1572,False,False
+1,ApartHotel,food / dinner / not,0.829,56,365,0.1997,False,False
+51,Motel,breakfast / staff / early,0.828,19,234,0.4895,False,False
+44,Inn,breakfast / included / price,0.81,20,310,0.4441,False,False
+40,Inn,breakfast / not / options,0.805,61,310,0.1206,False,False
+58,Resort,breakfast / room / no,0.802,109,912,0.0321,True,False
+21,Bed and Breakfast,coffee / tea / milk,0.799,35,623,0.2615,False,False
+20,Bed and Breakfast,breakfast / included / price,0.786,39,623,0.1915,False,False
+6,ApartHotel,eggs / bacon / scrambled,0.764,16,365,0.3767,False,False
+15,Apartment,fruit / fresh / juice,0.723,9,289,0.4441,False,False
+11,Apartment,breakfast / staff / early,0.671,19,289,0.1312,False,False
+52,Motel,breakfast / included / price,0.59,11,234,0.1312,False,False

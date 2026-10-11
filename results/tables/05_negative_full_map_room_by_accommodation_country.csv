@@ -1,0 +1,65 @@
+,segment,subtopic,lift,count,segment_n,q,significant,notable
+24,Japan,room / small / room small,1.851,610,1009,0.0,True,True
+41,Thailand,smell / room / clean,1.707,140,634,0.0,True,True
+57,United States of America,smell / room / clean,1.646,847,3980,0.0,True,True
+3,Australia,light / lighting / curtains,1.547,237,1628,0.0,True,True
+8,France,room / small / room small,1.406,562,1224,0.0,True,True
+7,Australia,door / lock / key,1.378,115,1628,0.0005,True,True
+4,Australia,rooms / dated / furniture,1.368,194,1628,0.0,True,True
+38,Spain,noisy / noise / loud,1.36,90,1229,0.0041,True,True
+53,United Kingdom,window / windows / open,1.353,585,6388,0.0,True,True
+63,United States of America,door / lock / key,1.353,276,3980,0.0,True,True
+18,Italy,hot / cold / air,1.301,240,1700,0.0,True,True
+22,Italy,noisy / noise / loud,1.3,119,1700,0.0041,True,True
+50,United Kingdom,hot / cold / air,1.291,895,6388,0.0,True,True
+60,United States of America,rooms / dated / furniture,1.269,440,3980,0.0,True,True
+34,Spain,hot / cold / air,0.787,105,1229,0.0131,True,True
+40,Thailand,room / small / room small,0.787,163,634,0.0004,True,True
+56,United States of America,room / small / room small,0.726,943,3980,0.0,True,True
+0,Australia,room / small / room small,0.724,385,1628,0.0,True,True
+12,France,rooms / dated / furniture,0.722,77,1224,0.0041,True,True
+14,France,noisy / noise / loud,0.713,47,1224,0.024,True,True
+49,United Kingdom,smell / room / clean,0.707,584,6388,0.0,True,True
+58,United States of America,hot / cold / air,0.701,303,3980,0.0,True,True
+29,Japan,window / windows / open,0.688,47,1009,0.0117,True,True
+9,France,smell / room / clean,0.663,105,1224,0.0,True,True
+17,Italy,smell / room / clean,0.623,137,1700,0.0,True,True
+31,Japan,door / lock / key,0.58,30,1009,0.0033,True,True
+26,Japan,hot / cold / air,0.557,61,1009,0.0,True,True
+28,Japan,rooms / dated / furniture,0.535,47,1009,0.0,True,True
+27,Japan,light / lighting / curtains,0.527,50,1009,0.0,True,True
+61,United States of America,window / windows / open,0.527,142,3980,0.0,True,True
+15,France,door / lock / key,0.51,32,1224,0.0001,True,True
+30,Japan,noisy / noise / loud,0.46,25,1009,0.0001,True,True
+46,Thailand,noisy / noise / loud,1.347,46,634,0.058,False,False
+44,Thailand,rooms / dated / furniture,1.213,67,634,0.1394,False,False
+21,Italy,window / windows / open,1.147,132,1700,0.1328,False,False
+43,Thailand,light / lighting / curtains,1.106,66,634,0.4758,False,False
+1,Australia,smell / room / clean,1.083,228,1628,0.2401,False,False
+37,Spain,window / windows / open,1.082,90,1229,0.5185,False,False
+39,Spain,door / lock / key,1.064,67,1229,0.6527,False,False
+16,Italy,room / small / room small,1.045,580,1700,0.2401,False,False
+32,Spain,room / small / room small,1.042,418,1229,0.3755,False,False
+59,United States of America,light / lighting / curtains,1.031,386,3980,0.5632,False,False
+48,United Kingdom,room / small / room small,1.03,2149,6388,0.0603,False,False
+35,Spain,light / lighting / curtains,1.029,119,1229,0.7692,False,False
+36,Spain,rooms / dated / furniture,1.027,110,1229,0.783,False,False
+54,United Kingdom,noisy / noise / loud,1.015,349,6388,0.7692,False,False
+19,Italy,light / lighting / curtains,1.007,161,1700,0.9268,False,False
+10,France,hot / cold / air,0.971,129,1224,0.7692,False,False
+47,Thailand,door / lock / key,0.954,31,634,0.7959,False,False
+33,Spain,smell / room / clean,0.95,151,1229,0.5632,False,False
+20,Italy,rooms / dated / furniture,0.945,140,1700,0.5601,False,False
+6,Australia,noisy / noise / loud,0.935,82,1628,0.588,False,False
+62,United States of America,noisy / noise / loud,0.933,200,3980,0.3322,False,False
+51,United Kingdom,light / lighting / curtains,0.927,557,6388,0.0328,True,False
+45,Thailand,window / windows / open,0.909,39,634,0.5947,False,False
+13,France,window / windows / open,0.881,73,1224,0.3286,False,False
+55,United Kingdom,door / lock / key,0.88,288,6388,0.0104,True,False
+5,Australia,window / windows / open,0.871,96,1628,0.2026,False,False
+52,United Kingdom,rooms / dated / furniture,0.854,475,6388,0.0,True,False
+11,France,light / lighting / curtains,0.851,98,1224,0.1306,False,False
+23,Italy,door / lock / key,0.838,73,1700,0.1484,False,False
+25,Japan,smell / room / clean,0.835,109,1009,0.0622,False,False
+42,Thailand,hot / cold / air,0.814,56,634,0.1426,False,False
+2,Australia,hot / cold / air,0.804,142,1628,0.0077,True,False

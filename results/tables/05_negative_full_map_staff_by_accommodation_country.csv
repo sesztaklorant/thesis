@@ -1,0 +1,17 @@
+,segment,subtopic,lift,count,segment_n,q,significant,notable
+11,Thailand,english / speak / speak english,3.977,42,573,0.0,True,True
+9,Spain,english / speak / speak english,2.699,30,603,0.0,True,True
+7,Italy,english / speak / speak english,2.119,30,768,0.0,True,True
+15,United States of America,english / speak / speak english,0.439,21,2598,0.0,True,True
+1,Australia,english / speak / speak english,0.42,5,646,0.0477,True,True
+13,United Kingdom,english / speak / speak english,0.291,15,2799,0.0,True,True
+5,France,english / speak / speak english,1.481,11,403,0.2007,False,False
+3,Canada,english / speak / speak english,1.101,7,345,0.7935,False,False
+12,United Kingdom,staff / not / no,1.013,2784,2799,0.0,True,False
+0,Australia,staff / not / no,1.011,641,646,0.0477,True,False
+14,United States of America,staff / not / no,1.011,2577,2598,0.0,True,False
+2,Canada,staff / not / no,0.998,338,345,0.7935,False,False
+4,France,staff / not / no,0.991,392,403,0.2007,False,False
+6,Italy,staff / not / no,0.979,738,768,0.0,True,False
+8,Spain,staff / not / no,0.968,573,603,0.0,True,False
+10,Thailand,staff / not / no,0.944,531,573,0.0,True,False

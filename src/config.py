@@ -84,7 +84,7 @@ class Config:
     #     közben kis mintán futtatunk; a végső futásnál None = teljes adat.
     # EN: BERT labelling on 200k rows takes ~15–30 min per model even on a GPU.
     #     During development we run on a small sample; None = full data.
-    labelling_sample_size: int | None = 20_000
+    labelling_sample_size: int | None = None # volt: 20_000
 
     # ======================================================================
     # BERT-ALAPÚ CÍMKÉZÉS / BERT-BASED LABELLING
@@ -236,7 +236,7 @@ class Config:
     #     NEM írja felül a korábbi táblákat, ábrákat és a kitöltött kézi ellenőrzést.
     # EN: Version of the subtopic run: it is part of every 2/b output name, so a new parameter set
     #     does NOT overwrite earlier tables, figures and the filled-in manual check.
-    topic_version: str = "v5"
+    topic_version: str = "full" # volt: "v5"
     # HU: v5: a dicséretmezőben a vesszős felsorolásokat is egységekre bontjuk ("Great location,
     #     friendly staff, clean rooms" -> 3 egység). v4-ben a pozitív altémák nagy része vegyes volt
     #     (pl. staff: "staff / friendly / location" 76%), mert a dicséretek tipikusan listák.

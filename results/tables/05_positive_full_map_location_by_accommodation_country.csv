@@ -1,0 +1,65 @@
+,segment,subtopic,lift,count,segment_n,q,significant,notable
+21,Greece,beach / sea / close beach,2.724,1269,6425,0.0,True,True
+5,Australia,beach / sea / close beach,1.583,957,8338,0.0,True,True
+54,United Kingdom,airport / close airport / shuttle,1.551,2013,27659,0.0,True,True
+45,Spain,beach / sea / close beach,1.545,971,8665,0.0,True,True
+32,Japan,station / location / walk,1.408,2110,5413,0.0,True,True
+3,Australia,restaurants / shops / close,1.396,1340,8338,0.0,True,True
+35,Japan,restaurants / shops / close,1.383,862,5413,0.0,True,True
+12,France,located / location / city,1.373,667,6692,0.0,True,True
+36,Japan,located / location / city,1.343,528,5413,0.0,True,True
+24,Italy,station / location / walk,1.245,5331,15469,0.0,True,True
+8,France,station / location / walk,1.204,2231,6692,0.0,True,True
+16,Greece,station / location / walk,0.799,1422,6425,0.0,True,True
+17,Greece,location / great / great location,0.773,1006,6425,0.0,True,True
+14,France,airport / close airport / shuttle,0.739,232,6692,0.0,True,True
+53,United Kingdom,beach / sea / close beach,0.724,1452,27659,0.0,True,True
+51,United Kingdom,restaurants / shops / close,0.69,2197,27659,0.0,True,True
+29,Italy,beach / sea / close beach,0.673,755,15469,0.0,True,True
+34,Japan,clean / location / room,0.649,411,5413,0.0,True,True
+46,Spain,airport / close airport / shuttle,0.598,243,8665,0.0,True,True
+4,Australia,located / location / city,0.571,346,8338,0.0,True,True
+38,Japan,airport / close airport / shuttle,0.5,127,5413,0.0,True,True
+13,France,beach / sea / close beach,0.387,188,6692,0.0,True,True
+6,Australia,airport / close airport / shuttle,0.146,57,8338,0.0,True,True
+37,Japan,beach / sea / close beach,0.12,47,5413,0.0,True,True
+28,Italy,located / location / city,1.194,1341,15469,0.0,True,False
+59,United States of America,restaurants / shops / close,1.185,2127,15586,0.0,True,False
+23,Greece,quiet / quiet location / property,1.179,280,6425,0.0049,True,False
+2,Australia,clean / location / room,1.167,1138,8338,0.0,True,False
+50,United Kingdom,clean / location / room,1.12,3623,27659,0.0,True,False
+55,United Kingdom,quiet / quiet location / property,1.093,1117,27659,0.0005,True,False
+1,Australia,location / great / great location,1.09,1840,8338,0.0,True,False
+11,France,restaurants / shops / close,1.086,837,6692,0.0114,True,False
+57,United States of America,location / great / great location,1.086,3426,15586,0.0,True,False
+49,United Kingdom,location / great / great location,1.084,6068,27659,0.0,True,False
+19,Greece,restaurants / shops / close,1.079,798,6425,0.0238,True,False
+22,Greece,airport / close airport / shuttle,1.065,321,6425,0.261,False,False
+43,Spain,restaurants / shops / close,1.063,1061,8665,0.0316,True,False
+61,United States of America,beach / sea / close beach,1.057,1195,15586,0.0343,True,False
+58,United States of America,clean / location / room,1.049,1911,15586,0.0202,True,False
+62,United States of America,airport / close airport / shuttle,1.039,760,15586,0.261,False,False
+42,Spain,clean / location / room,1.025,1038,8665,0.4143,False,False
+7,Australia,quiet / quiet location / property,1.022,315,8338,0.7099,False,False
+31,Italy,quiet / quiet location / property,1.002,573,15469,0.9658,False,False
+41,Spain,location / great / great location,0.999,1753,8665,0.9752,False,False
+47,Spain,quiet / quiet location / property,0.981,314,8665,0.7328,False,False
+20,Greece,located / location / city,0.971,453,6425,0.5325,False,False
+9,France,location / great / great location,0.966,1309,6692,0.1705,False,False
+40,Spain,station / location / walk,0.944,2264,8665,0.001,True,False
+48,United Kingdom,station / location / walk,0.942,7210,27659,0.0,True,False
+44,Spain,located / location / city,0.941,592,8665,0.1231,False,False
+52,United Kingdom,located / location / city,0.933,1874,27659,0.0003,True,False
+30,Italy,airport / close airport / shuttle,0.923,670,15469,0.0251,True,False
+60,United States of America,located / location / city,0.922,1043,15586,0.0038,True,False
+27,Italy,restaurants / shops / close,0.916,1631,15469,0.0001,True,False
+26,Italy,clean / location / room,0.9,1628,15469,0.0,True,False
+25,Italy,location / great / great location,0.879,2753,15469,0.0,True,False
+15,France,quiet / quiet location / property,0.873,216,6692,0.0418,True,False
+63,United States of America,quiet / quiet location / property,0.873,503,15586,0.001,True,False
+10,France,clean / location / room,0.844,660,6692,0.0,True,False
+33,Japan,location / great / great location,0.843,924,5413,0.0,True,False
+56,United States of America,station / location / walk,0.842,3634,15586,0.0,True,False
+39,Japan,quiet / quiet location / property,0.825,165,5413,0.0124,True,False
+0,Australia,station / location / walk,0.819,1890,8338,0.0,True,False
+18,Greece,clean / location / room,0.812,610,6425,0.0,True,False

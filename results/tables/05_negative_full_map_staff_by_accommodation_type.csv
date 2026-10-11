@@ -1,0 +1,17 @@
+,segment,subtopic,lift,count,segment_n,q,significant,notable
+5,Bed and Breakfast,english / speak / speak english,1.709,20,402,0.0466,True,True
+7,Guest house,english / speak / speak english,1.525,29,653,0.0466,True,True
+13,Motel,english / speak / speak english,0.203,2,338,0.0466,True,True
+9,Hostel,english / speak / speak english,1.48,25,580,0.0821,False,False
+15,Resort,english / speak / speak english,1.087,39,1232,0.6212,False,False
+12,Motel,staff / not / no,1.024,336,338,0.0466,True,False
+0,ApartHotel,staff / not / no,1.003,603,619,0.6212,False,False
+2,Apartment,staff / not / no,1.003,941,966,0.6212,False,False
+10,Hotel,staff / not / no,1.002,9937,10218,0.1364,False,False
+14,Resort,staff / not / no,0.997,1193,1232,0.6212,False,False
+8,Hostel,staff / not / no,0.986,555,580,0.0821,False,False
+6,Guest house,staff / not / no,0.984,624,653,0.0466,True,False
+4,Bed and Breakfast,staff / not / no,0.979,382,402,0.0466,True,False
+11,Hotel,english / speak / speak english,0.944,281,10218,0.1364,False,False
+3,Apartment,english / speak / speak english,0.889,25,966,0.6212,False,False
+1,ApartHotel,english / speak / speak english,0.888,16,619,0.6212,False,False

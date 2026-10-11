@@ -1,0 +1,65 @@
+,segment,subtopic,lift,count,segment_n,q,significant,notable
+12,France,breakfast / included / price,1.84,70,485,0.0,True,True
+5,Australia,coffee / tea / milk,1.637,49,414,0.0008,True,True
+1,Australia,food / dinner / not,1.538,113,414,0.0,True,True
+33,Spain,food / dinner / not,1.476,148,565,0.0,True,True
+37,Spain,coffee / tea / milk,1.371,56,565,0.0282,True,True
+56,United States of America,breakfast / not / options,1.324,767,2420,0.0,True,True
+24,Italy,breakfast / not / options,1.313,253,805,0.0,True,True
+40,Thailand,breakfast / not / options,1.306,161,515,0.0003,True,True
+49,United Kingdom,food / dinner / not,1.305,770,3326,0.0,True,True
+54,United Kingdom,eggs / bacon / scrambled,1.232,286,3326,0.0,True,True
+26,Italy,breakfast / room / no,1.217,138,805,0.025,True,True
+48,United Kingdom,breakfast / not / options,0.77,613,3326,0.0,True,True
+60,United States of America,breakfast / included / price,0.764,145,2420,0.0003,True,True
+27,Italy,breakfast / staff / early,0.74,63,805,0.0224,True,True
+9,France,food / dinner / not,0.686,59,485,0.0032,True,True
+43,Thailand,breakfast / staff / early,0.679,37,515,0.0262,True,True
+45,Thailand,coffee / tea / milk,0.644,24,515,0.0433,True,True
+46,Thailand,eggs / bacon / scrambled,0.612,22,515,0.0316,True,True
+25,Italy,food / dinner / not,0.602,86,805,0.0,True,True
+3,Australia,breakfast / staff / early,0.594,26,414,0.0114,True,True
+57,United States of America,food / dinner / not,0.543,233,2420,0.0,True,True
+47,Thailand,fruit / fresh / juice,0.536,13,515,0.0364,True,True
+30,Italy,eggs / bacon / scrambled,0.516,29,805,0.0003,True,True
+0,Australia,breakfast / not / options,0.504,50,414,0.0,True,True
+7,Australia,fruit / fresh / juice,0.41,8,414,0.0193,True,True
+20,Ireland,breakfast / included / price,1.371,33,307,0.0893,False,False
+19,Ireland,breakfast / staff / early,1.355,44,307,0.0592,False,False
+31,Italy,fruit / fresh / juice,1.319,50,805,0.0671,False,False
+13,France,coffee / tea / milk,1.312,46,485,0.0866,False,False
+22,Ireland,eggs / bacon / scrambled,1.213,26,307,0.3893,False,False
+42,Thailand,breakfast / room / no,1.199,87,515,0.095,False,False
+41,Thailand,food / dinner / not,1.182,108,515,0.0866,False,False
+51,United Kingdom,breakfast / staff / early,1.168,411,3326,0.0001,True,False
+58,United States of America,breakfast / room / no,1.159,395,2420,0.0008,True,False
+63,United States of America,fruit / fresh / juice,1.15,131,2420,0.0893,False,False
+29,Italy,coffee / tea / milk,1.117,65,805,0.4255,False,False
+10,France,breakfast / room / no,1.054,72,485,0.711,False,False
+52,United Kingdom,breakfast / included / price,1.051,274,3326,0.3768,False,False
+62,United States of America,eggs / bacon / scrambled,1.048,177,2420,0.5562,False,False
+4,Australia,breakfast / included / price,1.047,34,414,0.8395,False,False
+55,United Kingdom,fruit / fresh / juice,1.016,159,3326,0.8546,False,False
+28,Italy,breakfast / included / price,1.014,64,805,0.9318,False,False
+11,France,breakfast / staff / early,1.013,52,485,0.9318,False,False
+59,United States of America,breakfast / staff / early,1.004,257,2420,0.9412,False,False
+23,Ireland,fruit / fresh / juice,0.969,14,307,0.9318,False,False
+2,Australia,breakfast / room / no,0.96,56,414,0.8198,False,False
+61,United States of America,coffee / tea / milk,0.96,168,2420,0.6276,False,False
+39,Spain,fruit / fresh / juice,0.94,25,565,0.8198,False,False
+17,Ireland,food / dinner / not,0.936,51,307,0.6952,False,False
+36,Spain,breakfast / included / price,0.925,41,565,0.6952,False,False
+8,France,breakfast / not / options,0.896,104,485,0.2577,False,False
+53,United Kingdom,coffee / tea / milk,0.886,213,3326,0.0433,True,False
+34,Spain,breakfast / room / no,0.867,69,565,0.2577,False,False
+50,United Kingdom,breakfast / room / no,0.843,395,3326,0.0,True,False
+14,France,eggs / bacon / scrambled,0.827,28,485,0.3768,False,False
+32,Spain,breakfast / not / options,0.82,111,565,0.0316,True,False
+21,Ireland,coffee / tea / milk,0.811,18,307,0.4346,False,False
+44,Thailand,breakfast / included / price,0.792,32,515,0.2278,False,False
+16,Ireland,breakfast / not / options,0.775,57,307,0.0508,False,False
+18,Ireland,breakfast / room / no,0.763,33,307,0.1357,False,False
+38,Spain,eggs / bacon / scrambled,0.76,30,565,0.1629,False,False
+35,Spain,breakfast / staff / early,0.753,45,565,0.069,False,False
+15,France,fruit / fresh / juice,0.701,16,485,0.1964,False,False
+6,Australia,eggs / bacon / scrambled,0.657,19,414,0.0872,False,False

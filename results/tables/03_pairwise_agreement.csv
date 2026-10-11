@@ -1,11 +1,11 @@
 pair,n,agreement,cohen_kappa,weighted_kappa
-A vs B,10331,0.767,0.2508,0.342
-A vs C,10331,0.4551,0.0706,0.1147
-A vs final,10331,0.767,0.2508,0.342
-A vs score cut (reference),10331,0.5906,0.1123,0.1511
-B vs C,10331,0.5961,0.308,0.3553
-B vs final,10331,1.0,1.0,1.0
-B vs score cut (reference),10331,0.5941,0.2193,0.2929
-C vs final,10331,0.5961,0.308,0.3553
-C vs score cut (reference),10331,0.5133,0.1995,0.2576
-final vs score cut (reference),10331,0.5941,0.2193,0.2929
+A vs B,193659,0.8047,0.2601,0.3604
+A vs C,193659,0.639,0.1231,0.1934
+A vs final,193659,0.8047,0.2601,0.3604
+A vs score cut (reference),193659,0.6564,0.1252,0.1707
+B vs C,193659,0.7701,0.4966,0.5438
+B vs final,193659,1.0,1.0,1.0
+B vs score cut (reference),193659,0.6615,0.254,0.3257
+C vs final,193659,0.7701,0.4966,0.5438
+C vs score cut (reference),193659,0.6156,0.2597,0.3218
+final vs score cut (reference),193659,0.6615,0.254,0.3257
