@@ -75,8 +75,11 @@ A 05-ös kézi ellenőrző Excelt (`topic_check_*_full.xlsx`) MÉG NE töltsd ki
 - [ ] 05: `05_negative_full_*` és `05_positive_full_*` táblák és ábrák léteznek
 - [ ] commit: `git add -A` → `git commit -m "Full run"` (tag csak a kézi ellenőrzés után: `v1.0-full`)
 
-## 6. Utána
+## 6. Utána (full2) — elnevezés és lezárás
 
-1. `TOPIC_NAMES`: beszédes nevek (a közel-duplikátumoknak ugyanaz a név).
-2. Kézi ellenőrzés a `topic_check_negative_full.xlsx` és `topic_check_positive_full.xlsx` fájlokon.
-3. `git tag v1.0-full`.
+1. Kézi ellenőrzés: kész (pontosság: pozitív 0,927, negatív 0,840).
+2. Nevek: `src/topic_names.py` (188 + 191 fürt → 167 + 167 elnevezett altéma). A notebook 05 a `full2` verziónál
+   automatikusan alkalmazza; ha a fürtök megváltoztak, az ujjlenyomat-ellenőrzés hibát dob.
+3. Notebook 05 újrafuttatása: `SENTIMENT = "negative"` → Restart → Run All, majd `"positive"` → Restart → Run All
+   (minden cache-ből jön; a `topic_check_*_full2.xlsx` létezik, ezért csak kiértékel, nem írja felül).
+4. `git add -A` → `git commit -m "Topic names, v1.0"` → `git tag v1.0-full` → `git push` → `git push origin v1.0-full`.

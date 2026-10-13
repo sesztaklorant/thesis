@@ -1,65 +1,65 @@
 ,segment,subtopic,lift,count,segment_n,q,significant,notable
-31,Japan,luggage / stairs / space,3.158,144,998,0.0,True,True
-42,Thailand,smell / room / clean,1.688,134,620,0.0,True,True
-58,United States of America,smell / room / clean,1.603,803,3912,0.0,True,True
-24,Japan,small / room / rooms,1.561,477,998,0.0,True,True
-3,Australia,light / lighting / dark,1.511,238,1593,0.0,True,True
-4,Australia,door / lock / doors,1.363,130,1593,0.0004,True,True
-8,France,small / room / rooms,1.327,491,1209,0.0,True,True
-21,Italy,breakfast / coffee / tea,1.302,103,1658,0.0083,True,True
-60,United States of America,door / lock / doors,1.302,305,3912,0.0,True,True
-13,France,breakfast / coffee / tea,1.3,75,1209,0.0298,True,True
-54,United Kingdom,bathroom / shower / small,1.284,371,6231,0.0,True,True
-49,United Kingdom,air / room / hot,1.268,1442,6231,0.0,True,True
-17,Italy,air / room / hot,1.232,373,1658,0.0,True,True
-11,France,light / lighting / dark,0.786,94,1209,0.0213,True,True
-57,United States of America,air / room / hot,0.717,512,3912,0.0,True,True
-7,Australia,luggage / stairs / space,0.714,52,1593,0.0183,True,True
-50,United Kingdom,smell / room / clean,0.708,565,6231,0.0,True,True
-62,United States of America,bathroom / shower / small,0.689,125,3912,0.0,True,True
-18,Italy,smell / room / clean,0.678,144,1658,0.0,True,True
-6,Australia,bathroom / shower / small,0.677,50,1593,0.0067,True,True
-10,France,smell / room / clean,0.666,103,1209,0.0,True,True
-25,Japan,air / room / hot,0.565,103,998,0.0,True,True
-30,Japan,bathroom / shower / small,0.562,26,998,0.0041,True,True
-29,Japan,breakfast / coffee / tea,0.546,26,998,0.0024,True,True
-28,Japan,door / lock / doors,0.536,32,998,0.0004,True,True
-27,Japan,light / lighting / dark,0.496,49,998,0.0,True,True
-63,United States of America,luggage / stairs / space,0.481,86,3912,0.0,True,True
-12,France,door / lock / doors,0.47,34,1209,0.0,True,True
-14,France,bathroom / shower / small,1.195,67,1209,0.1809,False,False
-37,Spain,breakfast / coffee / tea,1.189,68,1199,0.1862,False,False
-46,Thailand,bathroom / shower / small,1.182,34,620,0.3651,False,False
-22,Italy,bathroom / shower / small,1.17,90,1658,0.1644,False,False
-43,Thailand,light / lighting / dark,1.158,71,620,0.2519,False,False
-32,Spain,small / room / rooms,1.141,419,1199,0.002,True,False
-15,France,luggage / stairs / space,1.14,63,1209,0.3366,False,False
-2,Australia,smell / room / clean,1.113,227,1593,0.114,False,False
-55,United Kingdom,luggage / stairs / space,1.085,309,6231,0.1113,False,False
-36,Spain,door / lock / doors,1.059,76,1199,0.6684,False,False
-35,Spain,light / lighting / dark,1.037,123,1199,0.7118,False,False
-16,Italy,small / room / rooms,1.036,526,1658,0.365,False,False
-19,Italy,light / lighting / dark,1.031,169,1658,0.7118,False,False
-59,United States of America,light / lighting / dark,1.018,394,3912,0.7118,False,False
-5,Australia,breakfast / coffee / tea,1.013,77,1593,0.9011,False,False
-61,United States of America,breakfast / coffee / tea,1.013,189,3912,0.8525,False,False
-34,Spain,smell / room / clean,0.971,149,1199,0.7215,False,False
-48,United Kingdom,small / room / rooms,0.958,1827,6231,0.0122,True,False
-51,United Kingdom,light / lighting / dark,0.949,585,6231,0.1521,False,False
-44,Thailand,door / lock / doors,0.943,35,620,0.7376,False,False
-23,Italy,luggage / stairs / space,0.937,71,1658,0.6355,False,False
-52,United Kingdom,door / lock / doors,0.925,345,6231,0.1063,False,False
-33,Spain,air / room / hot,0.923,202,1199,0.2547,False,False
-53,United Kingdom,breakfast / coffee / tea,0.905,269,6231,0.0662,False,False
-9,France,air / room / hot,0.902,199,1209,0.1503,False,False
-39,Spain,luggage / stairs / space,0.894,49,1199,0.4734,False,False
-41,Thailand,air / room / hot,0.892,101,620,0.2576,False,False
-40,Thailand,small / room / rooms,0.88,167,620,0.0764,False,False
-20,Italy,door / lock / doors,0.866,86,1658,0.2069,False,False
-0,Australia,small / room / rooms,0.861,420,1593,0.0003,True,False
-1,Australia,air / room / hot,0.853,248,1593,0.0082,True,False
-56,United States of America,small / room / rooms,0.84,1006,3912,0.0,True,False
-26,Japan,smell / room / clean,0.822,105,998,0.0496,True,False
-45,Thailand,breakfast / coffee / tea,0.811,24,620,0.3503,False,False
-38,Spain,bathroom / shower / small,0.809,45,1199,0.1862,False,False
-47,Thailand,luggage / stairs / space,0.777,22,620,0.2753,False,False
+31,Japan,no space for luggage,3.158,144,998,0.0,True,True
+42,Thailand,smell & cleanliness,1.688,134,620,0.0,True,True
+58,United States of America,smell & cleanliness,1.603,803,3912,0.0,True,True
+24,Japan,"small, dated room",1.561,477,998,0.0,True,True
+3,Australia,poor lighting / curtains,1.511,238,1593,0.0,True,True
+4,Australia,door & lock problems,1.363,130,1593,0.0004,True,True
+8,France,"small, dated room",1.327,491,1209,0.0,True,True
+21,Italy,no fridge / coffee in room,1.302,103,1658,0.0083,True,True
+60,United States of America,door & lock problems,1.302,305,3912,0.0,True,True
+13,France,no fridge / coffee in room,1.3,75,1209,0.0298,True,True
+54,United Kingdom,small bathroom,1.284,371,6231,0.0,True,True
+49,United Kingdom,temperature & ventilation,1.268,1442,6231,0.0,True,True
+17,Italy,temperature & ventilation,1.232,373,1658,0.0,True,True
+11,France,poor lighting / curtains,0.786,94,1209,0.0213,True,True
+57,United States of America,temperature & ventilation,0.717,512,3912,0.0,True,True
+7,Australia,no space for luggage,0.714,52,1593,0.0183,True,True
+50,United Kingdom,smell & cleanliness,0.708,565,6231,0.0,True,True
+62,United States of America,small bathroom,0.689,125,3912,0.0,True,True
+18,Italy,smell & cleanliness,0.678,144,1658,0.0,True,True
+6,Australia,small bathroom,0.677,50,1593,0.0067,True,True
+10,France,smell & cleanliness,0.666,103,1209,0.0,True,True
+25,Japan,temperature & ventilation,0.565,103,998,0.0,True,True
+30,Japan,small bathroom,0.562,26,998,0.0041,True,True
+29,Japan,no fridge / coffee in room,0.546,26,998,0.0024,True,True
+28,Japan,door & lock problems,0.536,32,998,0.0004,True,True
+27,Japan,poor lighting / curtains,0.496,49,998,0.0,True,True
+63,United States of America,no space for luggage,0.481,86,3912,0.0,True,True
+12,France,door & lock problems,0.47,34,1209,0.0,True,True
+14,France,small bathroom,1.195,67,1209,0.1809,False,False
+37,Spain,no fridge / coffee in room,1.189,68,1199,0.1862,False,False
+46,Thailand,small bathroom,1.182,34,620,0.3651,False,False
+22,Italy,small bathroom,1.17,90,1658,0.1644,False,False
+43,Thailand,poor lighting / curtains,1.158,71,620,0.2519,False,False
+32,Spain,"small, dated room",1.141,419,1199,0.002,True,False
+15,France,no space for luggage,1.14,63,1209,0.3366,False,False
+2,Australia,smell & cleanliness,1.113,227,1593,0.114,False,False
+55,United Kingdom,no space for luggage,1.085,309,6231,0.1113,False,False
+36,Spain,door & lock problems,1.059,76,1199,0.6684,False,False
+35,Spain,poor lighting / curtains,1.037,123,1199,0.7118,False,False
+16,Italy,"small, dated room",1.036,526,1658,0.365,False,False
+19,Italy,poor lighting / curtains,1.031,169,1658,0.7118,False,False
+59,United States of America,poor lighting / curtains,1.018,394,3912,0.7118,False,False
+5,Australia,no fridge / coffee in room,1.013,77,1593,0.9011,False,False
+61,United States of America,no fridge / coffee in room,1.013,189,3912,0.8525,False,False
+34,Spain,smell & cleanliness,0.971,149,1199,0.7215,False,False
+48,United Kingdom,"small, dated room",0.958,1827,6231,0.0122,True,False
+51,United Kingdom,poor lighting / curtains,0.949,585,6231,0.1521,False,False
+44,Thailand,door & lock problems,0.943,35,620,0.7376,False,False
+23,Italy,no space for luggage,0.937,71,1658,0.6355,False,False
+52,United Kingdom,door & lock problems,0.925,345,6231,0.1063,False,False
+33,Spain,temperature & ventilation,0.923,202,1199,0.2547,False,False
+53,United Kingdom,no fridge / coffee in room,0.905,269,6231,0.0662,False,False
+9,France,temperature & ventilation,0.902,199,1209,0.1503,False,False
+39,Spain,no space for luggage,0.894,49,1199,0.4734,False,False
+41,Thailand,temperature & ventilation,0.892,101,620,0.2576,False,False
+40,Thailand,"small, dated room",0.88,167,620,0.0764,False,False
+20,Italy,door & lock problems,0.866,86,1658,0.2069,False,False
+0,Australia,"small, dated room",0.861,420,1593,0.0003,True,False
+1,Australia,temperature & ventilation,0.853,248,1593,0.0082,True,False
+56,United States of America,"small, dated room",0.84,1006,3912,0.0,True,False
+26,Japan,smell & cleanliness,0.822,105,998,0.0496,True,False
+45,Thailand,no fridge / coffee in room,0.811,24,620,0.3503,False,False
+38,Spain,small bathroom,0.809,45,1199,0.1862,False,False
+47,Thailand,no space for luggage,0.777,22,620,0.2753,False,False

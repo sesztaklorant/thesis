@@ -1,65 +1,65 @@
 ,segment,subtopic,lift,count,segment_n,q,significant,notable
-15,Apartment,no / asked / answer,2.712,144,740,0.0,True,True
-31,Guest house,no / asked / answer,1.888,68,502,0.0,True,True
-37,Hostel,guests / not / guest,1.718,72,458,0.0,True,True
-14,Apartment,booking / com / booking com,1.674,93,740,0.0,True,True
-4,ApartHotel,reception / reception staff / no,1.646,92,512,0.0,True,True
-7,ApartHotel,no / asked / answer,1.606,59,512,0.0005,True,True
-3,ApartHotel,cleaning / housekeeping / room,1.342,81,512,0.0145,True,True
-60,Resort,reception / reception staff / no,0.726,83,1048,0.005,True,True
-8,Apartment,staff / not / service,0.697,90,740,0.0005,True,True
-1,ApartHotel,breakfast / staff / restaurant,0.538,37,512,0.0002,True,True
-33,Hostel,breakfast / staff / restaurant,0.52,32,458,0.0002,True,True
-25,Guest house,breakfast / staff / restaurant,0.341,23,502,0.0,True,True
-49,Motel,breakfast / staff / restaurant,0.331,12,270,0.0001,True,True
-9,Apartment,breakfast / staff / restaurant,0.181,18,740,0.0,True,True
-51,Motel,cleaning / housekeeping / room,1.32,42,270,0.1391,False,False
-50,Motel,room / check / staff,1.315,46,270,0.1254,False,False
-34,Hostel,room / check / staff,1.281,76,458,0.0585,False,False
-17,Bed and Breakfast,breakfast / staff / restaurant,1.265,52,306,0.1475,False,False
-26,Guest house,room / check / staff,1.245,81,502,0.0931,False,False
-48,Motel,staff / not / service,1.209,57,270,0.2198,False,False
-32,Hostel,staff / not / service,1.188,95,458,0.1458,False,False
-23,Bed and Breakfast,no / asked / answer,1.184,26,306,0.4579,False,False
-29,Guest house,guests / not / guest,1.176,54,502,0.336,False,False
-61,Resort,guests / not / guest,1.158,111,1048,0.1871,False,False
-41,Hotel,breakfast / staff / restaurant,1.153,1361,8789,0.0,True,False
-12,Apartment,reception / reception staff / no,1.151,93,740,0.251,False,False
-11,Apartment,cleaning / housekeeping / room,1.147,100,740,0.2505,False,False
-57,Resort,breakfast / staff / restaurant,1.144,161,1048,0.143,False,False
-62,Resort,booking / com / booking com,1.144,90,1048,0.2878,False,False
-18,Bed and Breakfast,room / check / staff,1.135,45,306,0.4579,False,False
-28,Guest house,reception / reception staff / no,1.113,61,502,0.4579,False,False
-10,Apartment,room / check / staff,1.105,106,740,0.3873,False,False
-22,Bed and Breakfast,booking / com / booking com,1.088,25,306,0.7007,False,False
-56,Resort,staff / not / service,1.066,195,1048,0.4257,False,False
-59,Resort,cleaning / housekeeping / room,1.02,126,1048,0.8299,False,False
-40,Hotel,staff / not / service,1.018,1562,8789,0.2816,False,False
-30,Guest house,booking / com / booking com,1.008,38,502,0.9579,False,False
-44,Hotel,reception / reception staff / no,0.987,947,8789,0.5179,False,False
-36,Hostel,reception / reception staff / no,0.98,49,458,0.8938,False,False
-43,Hotel,cleaning / housekeeping / room,0.98,1015,8789,0.3361,False,False
-45,Hotel,guests / not / guest,0.968,778,8789,0.177,False,False
-58,Resort,room / check / staff,0.965,131,1048,0.6991,False,False
-42,Hotel,room / check / staff,0.958,1091,8789,0.0205,True,False
-24,Guest house,staff / not / service,0.947,83,502,0.649,False,False
-46,Hotel,booking / com / booking com,0.938,619,8789,0.0105,True,False
-21,Bed and Breakfast,guests / not / guest,0.929,26,306,0.7228,False,False
-6,ApartHotel,booking / com / booking com,0.91,35,512,0.6346,False,False
-2,ApartHotel,room / check / staff,0.904,60,512,0.4847,False,False
-54,Motel,booking / com / booking com,0.888,18,270,0.6571,False,False
-16,Bed and Breakfast,staff / not / service,0.88,47,306,0.437,False,False
-13,Apartment,guests / not / guest,0.872,59,740,0.3873,False,False
-38,Hostel,booking / com / booking com,0.872,30,458,0.507,False,False
-35,Hostel,cleaning / housekeeping / room,0.871,47,458,0.4257,False,False
-20,Bed and Breakfast,reception / reception staff / no,0.868,29,306,0.5002,False,False
-0,ApartHotel,staff / not / service,0.839,75,512,0.1864,False,False
-47,Hotel,no / asked / answer,0.818,516,8789,0.0,True,False
-52,Motel,reception / reception staff / no,0.814,24,270,0.4175,False,False
-27,Guest house,cleaning / housekeeping / room,0.811,48,502,0.2225,False,False
-53,Motel,guests / not / guest,0.81,20,270,0.43,False,False
-19,Bed and Breakfast,cleaning / housekeeping / room,0.804,29,306,0.336,False,False
-55,Motel,no / asked / answer,0.774,15,270,0.4257,False,False
-5,ApartHotel,guests / not / guest,0.747,35,512,0.1475,False,False
-63,Resort,no / asked / answer,0.745,56,1048,0.0551,False,False
-39,Hostel,no / asked / answer,0.669,22,458,0.1254,False,False
+15,Apartment,no response to requests,2.712,144,740,0.0,True,True
+31,Guest house,no response to requests,1.888,68,502,0.0,True,True
+37,Hostel,atmosphere & other guests,1.718,72,458,0.0,True,True
+14,Apartment,booking & payment disputes,1.674,93,740,0.0,True,True
+7,ApartHotel,no response to requests,1.606,59,512,0.0005,True,True
+4,ApartHotel,housekeeping,1.342,81,512,0.0137,True,True
+1,ApartHotel,unhelpful reception / front desk,1.294,113,512,0.0084,True,True
+57,Resort,unhelpful reception / front desk,0.794,142,1048,0.0068,True,True
+33,Hostel,unhelpful reception / front desk,0.755,59,458,0.047,True,True
+63,Resort,no response to requests,0.745,56,1048,0.0476,True,True
+8,Apartment,"unfriendly, unhelpful staff",0.697,90,740,0.0005,True,True
+17,Bed and Breakfast,unhelpful reception / front desk,0.67,35,306,0.026,True,True
+2,ApartHotel,restaurant & bar service,0.538,37,512,0.0002,True,True
+34,Hostel,restaurant & bar service,0.52,32,458,0.0002,True,True
+26,Guest house,restaurant & bar service,0.341,23,502,0.0,True,True
+50,Motel,restaurant & bar service,0.331,12,270,0.0001,True,True
+10,Apartment,restaurant & bar service,0.181,18,740,0.0,True,True
+52,Motel,housekeeping,1.32,42,270,0.1151,False,False
+51,Motel,check-in & room access,1.315,46,270,0.103,False,False
+35,Hostel,check-in & room access,1.281,76,458,0.0509,False,False
+49,Motel,unhelpful reception / front desk,1.281,59,270,0.0847,False,False
+18,Bed and Breakfast,restaurant & bar service,1.265,52,306,0.1251,False,False
+27,Guest house,check-in & room access,1.245,81,502,0.0782,False,False
+48,Motel,"unfriendly, unhelpful staff",1.209,57,270,0.1901,False,False
+32,Hostel,"unfriendly, unhelpful staff",1.188,95,458,0.1223,False,False
+23,Bed and Breakfast,no response to requests,1.184,26,306,0.4325,False,False
+29,Guest house,atmosphere & other guests,1.176,54,502,0.3048,False,False
+61,Resort,atmosphere & other guests,1.158,111,1048,0.1611,False,False
+42,Hotel,restaurant & bar service,1.153,1361,8789,0.0,True,False
+12,Apartment,housekeeping,1.147,100,740,0.2184,False,False
+58,Resort,restaurant & bar service,1.144,161,1048,0.1191,False,False
+62,Resort,booking & payment disputes,1.144,90,1048,0.2597,False,False
+19,Bed and Breakfast,check-in & room access,1.135,45,306,0.4309,False,False
+11,Apartment,check-in & room access,1.105,106,740,0.3461,False,False
+22,Bed and Breakfast,booking & payment disputes,1.088,25,306,0.6892,False,False
+56,Resort,"unfriendly, unhelpful staff",1.066,195,1048,0.3917,False,False
+41,Hotel,unhelpful reception / front desk,1.044,1566,8789,0.0029,True,False
+60,Resort,housekeeping,1.02,126,1048,0.8167,False,False
+40,Hotel,"unfriendly, unhelpful staff",1.018,1562,8789,0.2535,False,False
+30,Guest house,booking & payment disputes,1.008,38,502,0.9579,False,False
+44,Hotel,housekeeping,0.98,1015,8789,0.3056,False,False
+45,Hotel,atmosphere & other guests,0.968,778,8789,0.151,False,False
+59,Resort,check-in & room access,0.965,131,1048,0.6874,False,False
+43,Hotel,check-in & room access,0.958,1091,8789,0.0194,True,False
+24,Guest house,"unfriendly, unhelpful staff",0.947,83,502,0.6378,False,False
+46,Hotel,booking & payment disputes,0.938,619,8789,0.0099,True,False
+21,Bed and Breakfast,atmosphere & other guests,0.929,26,306,0.7111,False,False
+6,ApartHotel,booking & payment disputes,0.91,35,512,0.6234,False,False
+3,ApartHotel,check-in & room access,0.904,60,512,0.4583,False,False
+54,Motel,booking & payment disputes,0.888,18,270,0.646,False,False
+25,Guest house,unhelpful reception / front desk,0.887,76,502,0.3452,False,False
+16,Bed and Breakfast,"unfriendly, unhelpful staff",0.88,47,306,0.4034,False,False
+13,Apartment,atmosphere & other guests,0.872,59,740,0.3461,False,False
+38,Hostel,booking & payment disputes,0.872,30,458,0.4889,False,False
+36,Hostel,housekeeping,0.871,47,458,0.3917,False,False
+0,ApartHotel,"unfriendly, unhelpful staff",0.839,75,512,0.1598,False,False
+9,Apartment,unhelpful reception / front desk,0.824,104,740,0.0667,False,False
+47,Hotel,no response to requests,0.818,516,8789,0.0,True,False
+28,Guest house,housekeeping,0.811,48,502,0.1932,False,False
+53,Motel,atmosphere & other guests,0.81,20,270,0.3963,False,False
+20,Bed and Breakfast,housekeeping,0.804,29,306,0.3048,False,False
+55,Motel,no response to requests,0.774,15,270,0.3917,False,False
+5,ApartHotel,atmosphere & other guests,0.747,35,512,0.1251,False,False
+39,Hostel,no response to requests,0.669,22,458,0.103,False,False

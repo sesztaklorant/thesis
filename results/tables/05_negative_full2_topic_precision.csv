@@ -1,0 +1,41 @@
+,aspect,topic,auto_label,checked,precision,label
+0,cleanliness,0,room / not / cleaning,20,0.75,room not cleaned
+1,cleanliness,1,bathroom / shower / toilet,20,1.0,dirty bathroom & mould
+2,cleanliness,2,cleaning / clean / cleanliness,20,1.0,cleaning could be better
+3,cleanliness,3,floor / dust / dusty,20,0.85,dust & dirty floors
+4,cleanliness,4,smell / room / smelled,20,1.0,bad smell
+5,cleanliness,5,bed / sheets / stains,20,0.75,dirty sheets & stains
+6,cleanliness,6,carpet / carpets / old,20,0.95,"dirty, worn carpets"
+7,cleanliness,7,ants / room / cockroaches,20,1.0,insects & pests
+8,cleanliness,8,towels / towel / clean towels,20,0.95,towels not changed
+9,cleanliness,9,pool / pool not / beach,20,0.75,dirty pool / beach
+10,location,0,not / hard / difficult,20,0.65,hard to find or reach
+11,location,1,taxi / airport / bus,20,0.95,transport & taxi links
+12,location,2,restaurants / restaurant / food,20,0.75,few restaurants & shops nearby
+13,location,3,road / property / busy,20,0.9,busy or steep road
+14,location,4,far / city / center,20,0.85,far from the centre
+15,location,5,noisy / noise / loud,20,0.85,noisy surroundings
+16,location,6,beach / sea / not,20,0.75,beach-related issues
+17,location,7,area / neighborhood / not,20,0.6,area & neighbourhood
+18,location,8,location / location not / not,20,0.95,location not ideal (general)
+19,location,9,walk / walking / not,20,0.9,long walk
+20,room,0,small / room / rooms,20,0.7,"small, dated room"
+21,room,1,air / room / hot,20,0.7,temperature & ventilation
+22,room,2,smell / room / clean,20,1.0,smell & cleanliness
+23,room,3,light / lighting / dark,20,1.0,poor lighting / curtains
+24,room,4,door / lock / doors,20,0.9,door & lock problems
+25,room,5,breakfast / coffee / tea,20,0.85,no fridge / coffee in room
+26,room,6,luggage / stairs / space,20,0.8,no space for luggage
+27,room,7,bathroom / shower / small,20,0.85,small bathroom
+28,room,8,carpet / carpets / dirty,20,0.85,dirty carpet
+29,room,9,price / room / paid,20,0.5,room price & charges
+30,staff,0,staff / not / service,20,0.9,"unfriendly, unhelpful staff"
+31,staff,1,breakfast / staff / restaurant,20,0.9,restaurant & bar service
+32,staff,2,cleaning / housekeeping / room,20,0.8,housekeeping
+33,staff,3,room / check / staff,20,0.7,check-in & room access
+34,staff,4,reception / reception staff / no,20,0.85,unhelpful reception / front desk
+35,staff,5,guests / not / guest,20,0.6,atmosphere & other guests
+36,staff,6,booking / com / booking com,20,0.8,booking & payment disputes
+37,staff,7,no / asked / answer,20,0.9,no response to requests
+38,staff,8,desk / desk staff / staff,20,0.95,unhelpful reception / front desk
+39,staff,9,english / speak / speak english,20,0.9,language barrier

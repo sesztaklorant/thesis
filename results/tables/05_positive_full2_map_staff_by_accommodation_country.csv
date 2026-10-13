@@ -1,65 +1,65 @@
 ,segment,subtopic,lift,count,segment_n,q,significant,notable
-23,Greece,helped / help / luggage,1.683,478,5066,0.0,True,True
-19,Greece,host / hosts / communication,1.629,736,5066,0.0,True,True
-31,Italy,helped / help / luggage,1.629,995,10894,0.0,True,True
-27,Italy,host / hosts / communication,1.623,1577,10894,0.0,True,True
-57,United States of America,staff / staff friendly / friendly,1.566,3326,10959,0.0,True,True
-52,United Kingdom,breakfast / food / good,1.324,2458,21256,0.0,True,True
-42,Thailand,clean / location / staff,1.313,671,3856,0.0,True,True
-40,Thailand,staff / friendly staff / friendly,1.29,1129,3856,0.0,True,True
-38,Spain,reception / reception staff / receptionist,1.264,459,5081,0.0,True,True
-6,Australia,reception / reception staff / receptionist,1.235,381,4317,0.0,True,True
-8,France,staff / friendly staff / friendly,1.226,1102,3958,0.0,True,True
-21,Greece,friendly / welcome / welcoming,1.222,518,5066,0.0,True,True
-51,United Kingdom,host / hosts / communication,1.215,2303,21256,0.0,True,True
-46,Thailand,reception / reception staff / receptionist,0.791,218,3856,0.0004,True,True
-25,Italy,staff / staff friendly / friendly,0.761,1608,10894,0.0,True,True
-36,Spain,breakfast / food / good,0.757,336,5081,0.0,True,True
-62,United States of America,reception / reception staff / receptionist,0.748,586,10959,0.0,True,True
-16,Greece,staff / friendly staff / friendly,0.72,828,5066,0.0,True,True
-4,Australia,breakfast / food / good,0.711,268,4317,0.0,True,True
-55,United Kingdom,helped / help / luggage,0.71,846,21256,0.0,True,True
-7,Australia,helped / help / luggage,0.707,171,4317,0.0,True,True
-44,Thailand,breakfast / food / good,0.689,232,3856,0.0,True,True
-17,Greece,staff / staff friendly / friendly,0.671,659,5066,0.0,True,True
-11,France,host / hosts / communication,0.603,213,3958,0.0,True,True
-43,Thailand,host / hosts / communication,0.34,117,3856,0.0,True,True
-59,United States of America,host / hosts / communication,0.189,185,10959,0.0,True,True
-32,Spain,staff / friendly staff / friendly,1.193,1376,5081,0.0,True,False
-2,Australia,clean / location / staff,1.187,679,4317,0.0,True,False
-14,France,reception / reception staff / receptionist,1.167,330,3958,0.0039,True,False
-34,Spain,clean / location / staff,1.125,757,5081,0.0005,True,False
-9,France,staff / staff friendly / friendly,1.088,835,3958,0.0071,True,False
-56,United States of America,staff / friendly staff / friendly,1.08,2686,10959,0.0,True,False
-58,United States of America,clean / location / staff,1.073,1558,10959,0.0016,True,False
-1,Australia,staff / staff friendly / friendly,1.061,888,4317,0.0535,False,False
-30,Italy,reception / reception staff / receptionist,1.056,822,10894,0.0931,False,False
-53,United Kingdom,friendly / welcome / welcoming,1.042,1852,21256,0.0354,True,False
-22,Greece,reception / reception staff / receptionist,1.025,371,5066,0.6711,False,False
-28,Italy,breakfast / food / good,1.016,967,10894,0.6385,False,False
-29,Italy,friendly / welcome / welcoming,1.011,921,10894,0.7406,False,False
-47,Thailand,helped / help / luggage,1.004,217,3856,0.9535,False,False
-45,Thailand,friendly / welcome / welcoming,0.992,320,3856,0.8911,False,False
-54,United Kingdom,reception / reception staff / receptionist,0.991,1505,21256,0.699,False,False
-0,Australia,staff / friendly staff / friendly,0.988,968,4317,0.699,False,False
-48,United Kingdom,staff / friendly staff / friendly,0.987,4763,21256,0.2572,False,False
-13,France,friendly / welcome / welcoming,0.982,325,3958,0.7406,False,False
-18,Greece,clean / location / staff,0.979,657,5066,0.6177,False,False
-10,France,clean / location / staff,0.973,510,3958,0.566,False,False
-37,Spain,friendly / welcome / welcoming,0.946,402,5081,0.2653,False,False
-33,Spain,staff / staff friendly / friendly,0.945,931,5081,0.0577,False,False
-41,Thailand,staff / staff friendly / friendly,0.932,697,3856,0.0442,True,False
-50,United Kingdom,clean / location / staff,0.924,2601,21256,0.0,True,False
-61,United States of America,friendly / welcome / welcoming,0.912,836,10959,0.0034,True,False
-49,United Kingdom,staff / staff friendly / friendly,0.906,3732,21256,0.0,True,False
-39,Spain,helped / help / luggage,0.881,251,5081,0.042,True,False
-15,France,helped / help / luggage,0.856,190,3958,0.0319,True,False
-3,Australia,host / hosts / communication,0.854,329,4317,0.003,True,False
-26,Italy,clean / location / staff,0.852,1230,10894,0.0,True,False
-63,United States of America,helped / help / luggage,0.843,518,10959,0.0,True,False
-60,United States of America,breakfast / food / good,0.84,804,10959,0.0,True,False
-12,France,breakfast / food / good,0.833,288,3958,0.0013,True,False
-35,Spain,host / hosts / communication,0.821,372,5081,0.0001,True,False
-5,Australia,friendly / welcome / welcoming,0.82,296,4317,0.0004,True,False
-20,Greece,breakfast / food / good,0.811,359,5066,0.0,True,False
-24,Italy,staff / friendly staff / friendly,0.805,1992,10894,0.0,True,False
+22,Greece,extra help & luggage,1.683,478,5066,0.0,True,True
+18,Greece,helpful host,1.629,736,5066,0.0,True,True
+30,Italy,extra help & luggage,1.629,995,10894,0.0,True,True
+26,Italy,helpful host,1.623,1577,10894,0.0,True,True
+7,Australia,service,1.429,185,4317,0.0,True,True
+51,United Kingdom,breakfast & restaurant staff,1.324,2458,21256,0.0,True,True
+41,Thailand,staff + cleanliness (list),1.313,671,3856,0.0,True,True
+56,United States of America,"friendly, helpful staff",1.303,6012,10959,0.0,True,True
+37,Spain,reception staff,1.264,459,5081,0.0,True,True
+47,Thailand,service,1.254,145,3856,0.006,True,True
+5,Australia,reception staff,1.235,381,4317,0.0,True,True
+20,Greece,welcoming staff,1.222,518,5066,0.0,True,True
+50,United Kingdom,helpful host,1.215,2303,21256,0.0,True,True
+45,Thailand,reception staff,0.791,218,3856,0.0004,True,True
+24,Italy,"friendly, helpful staff",0.785,3600,10894,0.0,True,True
+35,Spain,breakfast & restaurant staff,0.757,336,5081,0.0,True,True
+15,France,service,0.75,89,3958,0.006,True,True
+61,United States of America,reception staff,0.748,586,10959,0.0,True,True
+39,Spain,service,0.735,112,5081,0.0009,True,True
+3,Australia,breakfast & restaurant staff,0.711,268,4317,0.0,True,True
+54,United Kingdom,extra help & luggage,0.71,846,21256,0.0,True,True
+6,Australia,extra help & luggage,0.707,171,4317,0.0,True,True
+16,Greece,"friendly, helpful staff",0.697,1487,5066,0.0,True,True
+43,Thailand,breakfast & restaurant staff,0.689,232,3856,0.0,True,True
+10,France,helpful host,0.603,213,3958,0.0,True,True
+42,Thailand,helpful host,0.34,117,3856,0.0,True,True
+58,United States of America,helpful host,0.189,185,10959,0.0,True,True
+1,Australia,staff + cleanliness (list),1.187,679,4317,0.0,True,False
+23,Greece,service,1.172,178,5066,0.0338,True,False
+13,France,reception staff,1.167,330,3958,0.0039,True,False
+8,France,"friendly, helpful staff",1.163,1937,3958,0.0,True,False
+33,Spain,staff + cleanliness (list),1.125,757,5081,0.0005,True,False
+40,Thailand,"friendly, helpful staff",1.125,1826,3856,0.0,True,False
+31,Italy,service,1.096,358,10894,0.0681,False,False
+32,Spain,"friendly, helpful staff",1.079,2307,5081,0.0,True,False
+57,United States of America,staff + cleanliness (list),1.073,1558,10959,0.0016,True,False
+29,Italy,reception staff,1.056,822,10894,0.0931,False,False
+63,United States of America,service,1.053,346,10959,0.3344,False,False
+52,United Kingdom,welcoming staff,1.042,1852,21256,0.034,True,False
+21,Greece,reception staff,1.025,371,5066,0.6598,False,False
+0,Australia,"friendly, helpful staff",1.022,1856,4317,0.2568,False,False
+27,Italy,breakfast & restaurant staff,1.016,967,10894,0.6275,False,False
+28,Italy,welcoming staff,1.011,921,10894,0.7406,False,False
+46,Thailand,extra help & luggage,1.004,217,3856,0.9535,False,False
+44,Thailand,welcoming staff,0.992,320,3856,0.8911,False,False
+53,United Kingdom,reception staff,0.991,1505,21256,0.699,False,False
+12,France,welcoming staff,0.982,325,3958,0.7406,False,False
+17,Greece,staff + cleanliness (list),0.979,657,5066,0.6069,False,False
+9,France,staff + cleanliness (list),0.973,510,3958,0.5559,False,False
+48,United Kingdom,"friendly, helpful staff",0.95,8495,21256,0.0,True,False
+36,Spain,welcoming staff,0.946,402,5081,0.2653,False,False
+49,United Kingdom,staff + cleanliness (list),0.924,2601,21256,0.0,True,False
+60,United States of America,welcoming staff,0.912,836,10959,0.0034,True,False
+38,Spain,extra help & luggage,0.881,251,5081,0.0403,True,False
+55,United Kingdom,service,0.86,548,21256,0.0,True,False
+14,France,extra help & luggage,0.856,190,3958,0.0312,True,False
+2,Australia,helpful host,0.854,329,4317,0.003,True,False
+25,Italy,staff + cleanliness (list),0.852,1230,10894,0.0,True,False
+62,United States of America,extra help & luggage,0.843,518,10959,0.0,True,False
+59,United States of America,breakfast & restaurant staff,0.84,804,10959,0.0,True,False
+11,France,breakfast & restaurant staff,0.833,288,3958,0.0013,True,False
+34,Spain,helpful host,0.821,372,5081,0.0001,True,False
+4,Australia,welcoming staff,0.82,296,4317,0.0004,True,False
+19,Greece,breakfast & restaurant staff,0.811,359,5066,0.0,True,False

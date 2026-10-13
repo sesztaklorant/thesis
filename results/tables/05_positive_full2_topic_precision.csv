@@ -1,0 +1,41 @@
+,aspect,topic,auto_label,checked,precision,label
+0,cleanliness,0,clean / location / cleanliness,20,1.0,very clean (general)
+1,cleanliness,1,room / rooms / room clean,20,1.0,clean room
+2,cleanliness,2,staff / friendly / friendly staff,20,0.9,clean + friendly staff (list)
+3,cleanliness,3,clean comfortable / comfortable / clean,20,1.0,clean & comfortable
+4,cleanliness,4,clean / staff / good,20,1.0,clean hotel
+5,cleanliness,5,bed / beds / comfortable,20,0.95,clean + comfortable bed
+6,cleanliness,6,towels / day / cleaned,20,0.9,daily housekeeping & fresh towels
+7,cleanliness,7,breakfast / clean breakfast / good,20,1.0,clean + breakfast (list)
+8,cleanliness,8,bathroom / shower / bathroom clean,20,1.0,clean bathroom
+9,cleanliness,9,apartment / apartment clean / clean apartment,20,1.0,clean apartment
+10,location,0,location / great / great location,20,0.95,great location
+11,location,1,clean / location / room,20,0.85,great location
+12,location,2,station / walk / train,20,0.8,near station / walkable
+13,location,3,restaurants / shops / food,20,0.85,restaurants & shops nearby
+14,location,4,beach / pool / close beach,20,1.0,near the beach
+15,location,5,center / town / central,20,1.0,central location
+16,location,6,airport / shuttle / close airport,20,0.85,near the airport
+17,location,7,quiet / quiet location / area,20,0.85,quiet location
+18,location,8,staff / friendly / friendly staff,20,0.95,location + staff (list)
+19,location,9,breakfast / breakfast good / good,20,0.9,location + breakfast (list)
+20,room,0,room / spacious / rooms,20,0.9,spacious room
+21,room,1,clean / room clean / room,20,1.0,clean room
+22,room,2,room / spacious / room spacious,20,0.8,spacious room
+23,room,3,comfortable / clean comfortable / clean,20,1.0,clean & comfortable
+24,room,4,breakfast / staff / friendly,20,0.95,room + breakfast + staff (list)
+25,room,5,cozy / air / warm,20,0.9,"cosy room, pleasant temperature"
+26,room,6,apartment / spacious apartment / apartment clean,20,1.0,spacious apartment
+27,room,7,bed / bed comfortable / beds,20,0.7,comfortable bed
+28,room,8,kitchen / kitchenette / fridge,20,1.0,kitchenette
+29,room,9,balcony / terrace / room balcony,20,0.9,balcony / terrace
+30,staff,0,staff / friendly staff / friendly,20,1.0,"friendly, helpful staff"
+31,staff,1,staff / staff friendly / friendly,20,1.0,"friendly, helpful staff"
+32,staff,2,clean / location / staff,20,0.9,staff + cleanliness (list)
+33,staff,3,friendly / welcome / welcoming,20,0.8,welcoming staff
+34,staff,4,breakfast / food / good,20,1.0,breakfast & restaurant staff
+35,staff,5,host / hosts / communication,20,1.0,helpful host
+36,staff,6,helped / help / luggage,20,0.85,extra help & luggage
+37,staff,7,reception / reception staff / receptionist,20,0.7,reception staff
+38,staff,8,owner / owners / owner friendly,20,0.95,owner
+39,staff,9,service / great service / customer,20,1.0,service

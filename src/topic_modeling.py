@@ -598,10 +598,34 @@ def rename_topics(topic_table: pd.DataFrame, assignments: pd.DataFrame,
         (the 3 most characteristic terms) is a starting point; meaningful names suit the thesis.
     """
     topic_table, assignments = topic_table.copy(), assignments.copy()
+    # HU: Az eredeti automatikus címke megmarad (átláthatóság, ujjlenyomat).
+    # EN: The original automatic label is kept (transparency, fingerprint).
+    if "auto_label" not in topic_table.columns:
+        topic_table.insert(topic_table.columns.get_loc("label") + 1, "auto_label", topic_table["label"])
     for (aspect, topic), name in names.items():
         topic_table.loc[(topic_table["aspect"] == aspect) & (topic_table["topic"] == topic), "label"] = name
         assignments.loc[(assignments["aspect"] == aspect) & (assignments["topic"] == topic), "topic_label"] = name
     return topic_table, assignments
+
+
+def collapse_named_topics(topic_table: pd.DataFrame) -> pd.DataFrame:
+    """
+    HU: Az azonos nevű fürtök összevonása aspektuson belül (a közel-duplikátumok egy sort kapnak).
+        Kimenet: aspect | label | size | share_within_aspect | n_clusters | clusters, méret szerint.
+    EN: Merges the clusters sharing a name within an aspect (near-duplicates become one row).
+        Output: aspect | label | size | share_within_aspect | n_clusters | clusters, by size.
+    """
+    if topic_table.empty:
+        return topic_table
+    out = (topic_table.groupby(["aspect", "label"], sort=False)
+           .agg(size=("size", "sum"), share_within_aspect=("share_within_aspect", "sum"),
+                n_clusters=("topic", "size"),
+                clusters=("topic", lambda t: ", ".join(str(int(x)) for x in sorted(t))))
+           .reset_index())
+    order = {a: i for i, a in enumerate(topic_table["aspect"].unique())}
+    return (out.assign(_o=out["aspect"].map(order))
+               .sort_values(["_o", "size"], ascending=[True, False]).drop(columns="_o")
+               .reset_index(drop=True))
 
 
 def segment_table(assignments: pd.DataFrame, sentences: pd.DataFrame, aspect: str, segment_col: str,
@@ -770,6 +794,8 @@ def plot_aspect_subtopics(topic_table: pd.DataFrame, aspects: list[str] | None =
     if topic_table.empty:
         log.warning("Empty topic table, nothing to plot.")
         return None
+    # HU: Az azonos nevű (összevont) altémák egy sávot kapnak. / EN: Same-named (merged) subtopics get one bar.
+    topic_table = collapse_named_topics(topic_table)
     aspects = aspects or (topic_table.groupby("aspect")["size"].sum().sort_values(ascending=False).index.tolist())
     nrows = int(np.ceil(len(aspects) / ncols))
     fig, axes = plt.subplots(nrows, ncols, figsize=(5.6 * ncols, 2.6 * nrows), squeeze=False)

@@ -1,0 +1,168 @@
+,aspect,label,size,share_within_aspect,n_clusters,clusters
+0,room,"small, dated room",1601,0.3202,1,0
+1,room,temperature & ventilation,1089,0.2178,1,1
+2,room,smell & cleanliness,601,0.1202,1,2
+3,room,poor lighting / curtains,488,0.0976,1,3
+4,room,door & lock problems,242,0.0484,1,4
+5,room,no fridge / coffee in room,207,0.0414,1,5
+6,room,no space for luggage,187,0.0374,1,6
+7,room,small bathroom,162,0.0324,1,7
+8,room,dirty carpet,144,0.0288,1,8
+9,room,room price & charges,136,0.0272,1,9
+10,location,hard to find or reach,937,0.1874,1,0
+11,location,transport & taxi links,559,0.1118,1,1
+12,location,few restaurants & shops nearby,515,0.103,1,2
+13,location,busy or steep road,512,0.1024,1,3
+14,location,far from the centre,449,0.0898,1,4
+15,location,noisy surroundings,438,0.0876,1,5
+16,location,beach-related issues,347,0.0694,1,6
+17,location,area & neighbourhood,315,0.063,1,7
+18,location,location not ideal (general),237,0.0474,1,8
+19,location,long walk,176,0.0352,1,9
+20,staff,"unfriendly, unhelpful staff",858,0.1716,1,0
+21,staff,unhelpful reception / front desk,707,0.1414,2,"4, 8"
+22,staff,restaurant & bar service,644,0.1288,1,1
+23,staff,housekeeping,569,0.1138,1,2
+24,staff,check-in & room access,569,0.1138,1,3
+25,staff,atmosphere & other guests,342,0.0684,1,5
+26,staff,booking & payment disputes,318,0.0636,1,6
+27,staff,no response to requests,307,0.0614,1,7
+28,staff,language barrier,145,0.029,1,9
+29,cleanliness,room not cleaned,1262,0.2524,1,0
+30,cleanliness,dirty bathroom & mould,832,0.1664,1,1
+31,cleanliness,cleaning could be better,515,0.103,1,2
+32,cleanliness,dust & dirty floors,494,0.0988,1,3
+33,cleanliness,bad smell,421,0.0842,1,4
+34,cleanliness,dirty sheets & stains,401,0.0802,1,5
+35,cleanliness,"dirty, worn carpets",329,0.0658,1,6
+36,cleanliness,insects & pests,247,0.0494,1,7
+37,cleanliness,towels not changed,228,0.0456,1,8
+38,cleanliness,dirty pool / beach,124,0.0248,1,9
+39,facilities,no fridge / kitchen / microwave,1118,0.2236,1,0
+40,facilities,air conditioning,945,0.189,1,1
+41,facilities,no towels / soap,545,0.109,1,2
+42,facilities,no kettle / coffee,413,0.0826,1,3
+43,facilities,TV not working,401,0.0802,1,4
+44,facilities,little clothes storage,305,0.061,1,5
+45,facilities,"spa, gym & pool",287,0.0574,1,6
+46,facilities,few power sockets,180,0.036,1,7
+47,facilities,drinking & hot water,160,0.032,1,8
+48,facilities,lamps & lighting,158,0.0316,1,9
+49,comfort,"small, cramped room",1667,0.33340000000000003,2,"1, 2"
+50,comfort,uncomfortable bed,1027,0.2054,1,0
+51,comfort,bed too small for two,607,0.1214,1,3
+52,comfort,pillows,561,0.1122,1,4
+53,comfort,small bathroom,447,0.0894,1,5
+54,comfort,uncomfortable (general),175,0.035,1,6
+55,comfort,sofa bed,161,0.0322,1,7
+56,comfort,very small (unspecified),157,0.0314,1,8
+57,comfort,no space for luggage,145,0.029,1,9
+58,breakfast,limited / poor breakfast,1185,0.237,1,0
+59,breakfast,dinner & menu,938,0.1876,1,1
+60,breakfast,breakfast room & area,704,0.1408,1,2
+61,breakfast,expensive / not included,451,0.0902,1,3
+62,breakfast,breakfast times / unavailable,438,0.0876,1,4
+63,breakfast,coffee & tea,392,0.0784,1,5
+64,breakfast,eggs & bacon,296,0.0592,1,6
+65,breakfast,little fresh fruit,207,0.0414,1,7
+66,breakfast,buffet,174,0.0348,1,8
+67,breakfast,cold food,133,0.0266,1,9
+68,bathroom,shower problems,1492,0.2984,1,0
+69,bathroom,small / dirty bathroom,1424,0.2848,1,1
+70,bathroom,no hot water,424,0.0848,1,2
+71,bathroom,towels & hooks,384,0.0768,1,3
+72,bathroom,smell & extractor fan,360,0.072,1,4
+73,bathroom,no soap / shampoo,202,0.0404,1,5
+74,bathroom,low water pressure,180,0.036,1,6
+75,bathroom,bathroom door & privacy,178,0.0356,1,7
+76,bathroom,mirror & lighting,153,0.0306,1,8
+77,bathroom,sink & drain,144,0.0288,1,9
+78,noise,hearing the neighbours,1476,0.2952,1,0
+79,noise,night noise & music,1472,0.2944,1,1
+80,noise,traffic & trains,469,0.0938,1,2
+81,noise,thin walls / no soundproofing,368,0.0736,2,"5, 9"
+82,noise,noise via windows & doors,342,0.0684,1,3
+83,noise,noisy (unspecified),287,0.0574,1,4
+84,noise,air-conditioning noise,226,0.0452,1,6
+85,noise,creaky beds & floors,160,0.032,1,7
+86,noise,construction work,135,0.027,1,8
+87,bed,uncomfortable mattress / bed,1974,0.39480000000000004,3,"0, 5, 8"
+88,bed,bed too small,913,0.1826,1,1
+89,bed,pillows,820,0.164,1,2
+90,bed,dirty sheets,645,0.129,1,3
+91,bed,sofa bed,209,0.0418,1,4
+92,bed,"hard to sleep (light, noise)",203,0.0406,1,6
+93,bed,"squeaky, noisy bed",202,0.0404,1,7
+94,reception,booking & room mix-ups,1311,0.2622,1,0
+95,reception,unhelpful reception / front desk,1234,0.24680000000000002,2,"1, 4"
+96,reception,check-in time & delays,858,0.1716,1,2
+97,reception,"key, card & code problems",353,0.0706,1,3
+98,reception,requests not handled,240,0.048,1,5
+99,reception,luggage storage,223,0.0446,1,6
+100,reception,pre-arrival communication,200,0.04,1,7
+101,reception,unwelcoming check-in staff,197,0.0394,1,8
+102,reception,rude receptionist,190,0.038,1,9
+103,value_for_money,room overpriced,1320,0.264,1,0
+104,value_for_money,high price (general),1017,0.2034,2,"2, 5"
+105,value_for_money,food & breakfast overpriced,881,0.1762,1,1
+106,value_for_money,extra charges & deposit,731,0.1462,1,3
+107,value_for_money,parking fee,377,0.0754,1,4
+108,value_for_money,taxi / shuttle cost,158,0.0316,1,6
+109,value_for_money,drink prices,141,0.0282,1,7
+110,value_for_money,not worth its stars,126,0.0252,1,8
+111,value_for_money,poor value for money,114,0.0228,1,9
+112,view,no / poor view,1357,0.6311627906976744,2,"0, 2"
+113,view,no balcony,358,0.16651162790697674,1,1
+114,view,balcony door,96,0.044651162790697675,1,3
+115,view,poor view from balcony,86,0.04,1,4
+116,view,balcony privacy,72,0.03348837209302326,1,5
+117,view,terrace,59,0.02744186046511628,1,6
+118,view,view among other complaints,49,0.022790697674418603,1,7
+119,view,noisy street-facing room,46,0.021395348837209303,1,8
+120,parking,limited parking,1960,0.40884438881935753,2,"0, 1"
+121,parking,no parking,760,0.15853149770546515,1,2
+122,parking,parking away / not included,696,0.14518147684605756,1,3
+123,parking,expensive parking,619,0.12911973299958282,1,4
+124,parking,paid parking,313,0.06528994576554026,1,5
+125,parking,small or hard-to-find car park,222,0.04630788485607009,1,6
+126,parking,carrying luggage from car park,154,0.03212348769294952,1,7
+127,pool,small / closed pool,1328,0.32969215491559084,1,0
+128,pool,disappointing pool,704,0.17477656405163852,1,1
+129,pool,dirty pool,535,0.13282025819265145,1,2
+130,pool,cold pool,441,0.10948361469712016,1,3
+131,pool,sun loungers,274,0.06802383316782522,1,4
+132,pool,pool opening hours,208,0.05163853028798411,1,5
+133,pool,pool towels,151,0.0374875868917577,1,6
+134,pool,children & adults,148,0.036742800397219465,1,7
+135,pool,beach sunbeds,114,0.02830188679245283,1,8
+136,pool,loud music,112,0.027805362462760674,1,9
+137,bar,no bar / no atmosphere,470,0.24127310061601642,2,"0, 7"
+138,bar,bar closes early,340,0.17453798767967146,1,1
+139,bar,drink prices,337,0.17299794661190965,2,"4, 5"
+140,bar,no bar or evening food,287,0.1473305954825462,1,2
+141,bar,slow / poor bar service,255,0.1309034907597536,1,3
+142,bar,pool bar,112,0.057494866529774126,1,6
+143,bar,music & atmosphere,65,0.033367556468172486,1,8
+144,bar,rooftop bar closed,58,0.029774127310061602,1,9
+145,restaurant,no proper restaurant,633,0.20095238095238094,2,"3, 6"
+146,restaurant,food not good,583,0.18507936507936507,1,0
+147,restaurant,restaurant closed,452,0.1434920634920635,1,1
+148,restaurant,limited dinner menu,434,0.13777777777777778,1,2
+149,restaurant,expensive food,315,0.1,1,4
+150,restaurant,slow / poor service,312,0.09904761904761905,1,5
+151,restaurant,few (vegetarian) options,201,0.06380952380952382,1,7
+152,restaurant,cold food,104,0.03301587301587302,1,8
+153,restaurant,drinks,89,0.028253968253968254,1,9
+154,lift,slow / broken lift,1695,0.4105110196173407,2,"0, 1"
+155,lift,no lift,1245,0.3015257931702591,5,"4, 5, 6, 7, 9"
+156,lift,"steep stairs, no lift",504,0.12206345362073141,1,2
+157,lift,carrying luggage upstairs,454,0.10995398401550012,1,3
+158,lift,lift noise,210,0.05085977234197142,1,8
+159,wifi,slow wifi,1347,0.4140793114048571,2,"0, 3"
+160,wifi,weak wifi in the room,830,0.2551490931447894,2,"1, 7"
+161,wifi,wifi not working,619,0.19028588994774054,3,"2, 4, 8"
+162,wifi,wifi & TV / streaming,182,0.055948355364279126,1,5
+163,wifi,wifi only in lobby / paid,143,0.0439594220719336,1,6
+164,wifi,wifi among other complaints,94,0.028896403320012296,1,9
+165,beach,beach far / poor,992,0.9142857142857143,1,0
+166,beach,beach noise at night,93,0.08571428571428572,1,1

@@ -1,65 +1,65 @@
 ,segment,subtopic,lift,count,segment_n,q,significant,notable
-38,Spain,apartment / spacious apartment / apartment clean,2.727,417,4124,0.0,True,True
-22,Greece,apartment / spacious apartment / apartment clean,2.343,269,3096,0.0,True,True
-30,Italy,apartment / spacious apartment / apartment clean,1.609,457,7661,0.0,True,True
-52,United Kingdom,breakfast / staff / friendly,1.377,1706,20949,0.0,True,True
-6,Australia,apartment / spacious apartment / apartment clean,1.326,276,5612,0.0,True,True
-40,Thailand,room / spacious / rooms,1.309,917,2874,0.0,True,True
-57,United States of America,clean / room clean / room,1.247,3138,11741,0.0,True,True
-61,United States of America,bed / bed comfortable / beds,1.241,804,11741,0.0,True,True
-14,France,apartment / spacious apartment / apartment clean,0.778,95,3292,0.0162,True,True
-45,Thailand,bed / bed comfortable / beds,0.769,122,2874,0.0039,True,True
-19,Greece,comfortable / clean comfortable / clean,0.74,267,3096,0.0,True,True
-63,United States of America,cozy / air / warm,0.737,285,11741,0.0,True,True
-54,United Kingdom,apartment / spacious apartment / apartment clean,0.736,572,20949,0.0,True,True
-23,Greece,cozy / air / warm,0.726,74,3096,0.0066,True,True
-43,Thailand,comfortable / clean comfortable / clean,0.726,243,2874,0.0,True,True
-29,Italy,bed / bed comfortable / beds,0.724,306,7661,0.0,True,True
-20,Greece,breakfast / staff / friendly,0.716,131,3096,0.0001,True,True
-36,Spain,breakfast / staff / friendly,0.71,173,4124,0.0,True,True
-37,Spain,bed / bed comfortable / beds,0.69,157,4124,0.0,True,True
-21,Greece,bed / bed comfortable / beds,0.679,116,3096,0.0,True,True
-4,Australia,breakfast / staff / friendly,0.63,209,5612,0.0,True,True
-62,United States of America,apartment / spacious apartment / apartment clean,0.218,95,11741,0.0,True,True
-46,Thailand,apartment / spacious apartment / apartment clean,0.188,20,2874,0.0,True,True
-55,United Kingdom,cozy / air / warm,1.191,822,20949,0.0,True,False
-3,Australia,comfortable / clean comfortable / clean,1.188,777,5612,0.0,True,False
-58,United States of America,room / spacious / room spacious,1.159,2515,11741,0.0,True,False
-51,United Kingdom,comfortable / clean comfortable / clean,1.124,2744,20949,0.0,True,False
-53,United Kingdom,bed / bed comfortable / beds,1.103,1275,20949,0.0,True,False
-15,France,cozy / air / warm,1.097,119,3292,0.3553,False,False
-8,France,room / spacious / rooms,1.095,878,3292,0.0028,True,False
-41,Thailand,clean / room clean / room,1.091,672,2874,0.0153,True,False
-31,Italy,cozy / air / warm,1.07,270,7661,0.2896,False,False
-7,Australia,cozy / air / warm,1.044,193,5612,0.5765,False,False
-48,United Kingdom,room / spacious / rooms,1.039,5301,20949,0.0002,True,False
-5,Australia,bed / bed comfortable / beds,1.037,321,5612,0.5466,False,False
-17,Greece,clean / room clean / room,1.033,686,3096,0.3843,False,False
-25,Italy,clean / room clean / room,1.032,1695,7661,0.1607,False,False
-0,Australia,room / spacious / rooms,1.024,1400,5612,0.3553,False,False
-32,Spain,room / spacious / rooms,1.005,1010,4124,0.86,False,False
-26,Italy,room / spacious / room spacious,1.001,1417,7661,0.9729,False,False
-50,United Kingdom,room / spacious / room spacious,0.996,3856,20949,0.7494,False,False
-59,United States of America,comfortable / clean comfortable / clean,0.986,1349,11741,0.5833,False,False
-16,Greece,room / spacious / rooms,0.978,738,3096,0.5466,False,False
-44,Thailand,breakfast / staff / friendly,0.965,164,2874,0.662,False,False
-11,France,comfortable / clean comfortable / clean,0.964,370,3292,0.5196,False,False
-13,France,bed / bed comfortable / beds,0.958,174,3292,0.584,False,False
-24,Italy,room / spacious / rooms,0.955,1783,7661,0.0259,True,False
-2,Australia,room / spacious / room spacious,0.954,989,5612,0.1156,False,False
-10,France,room / spacious / room spacious,0.95,578,3292,0.2129,False,False
-12,France,breakfast / staff / friendly,0.945,184,3292,0.4961,False,False
-9,France,clean / room clean / room,0.942,665,3292,0.1082,False,False
-42,Thailand,room / spacious / room spacious,0.934,496,2874,0.1156,False,False
-33,Spain,clean / room clean / room,0.922,815,4124,0.0109,True,False
-1,Australia,clean / room clean / room,0.918,1104,5612,0.0013,True,False
-35,Spain,comfortable / clean comfortable / clean,0.911,438,4124,0.0479,True,False
-49,United Kingdom,clean / room clean / room,0.879,3950,20949,0.0,True,False
-47,Thailand,cozy / air / warm,0.877,83,2874,0.2758,False,False
-18,Greece,room / spacious / room spacious,0.872,499,3096,0.001,True,False
-56,United States of America,room / spacious / rooms,0.851,2434,11741,0.0,True,False
-28,Italy,breakfast / staff / friendly,0.835,378,7661,0.0002,True,False
-27,Italy,comfortable / clean comfortable / clean,0.815,728,7661,0.0,True,False
-34,Spain,room / spacious / room spacious,0.812,619,4124,0.0,True,False
-60,United States of America,breakfast / staff / friendly,0.812,564,11741,0.0,True,False
-39,Spain,cozy / air / warm,0.802,109,4124,0.0237,True,False
+37,Spain,spacious apartment,2.727,417,4124,0.0,True,True
+23,Greece,balcony / terrace,2.465,241,3096,0.0,True,True
+21,Greece,spacious apartment,2.343,269,3096,0.0,True,True
+39,Spain,balcony / terrace,2.081,271,4124,0.0,True,True
+31,Italy,balcony / terrace,1.955,473,7661,0.0,True,True
+29,Italy,spacious apartment,1.609,457,7661,0.0,True,True
+51,United Kingdom,room + breakfast + staff (list),1.377,1706,20949,0.0,True,True
+5,Australia,spacious apartment,1.326,276,5612,0.0,True,True
+15,France,balcony / terrace,1.299,135,3292,0.0025,True,True
+57,United States of America,clean room,1.247,3138,11741,0.0,True,True
+60,United States of America,comfortable bed,1.241,804,11741,0.0,True,True
+7,Australia,balcony / terrace,0.784,139,5612,0.0035,True,True
+13,France,spacious apartment,0.778,95,3292,0.0148,True,True
+44,Thailand,comfortable bed,0.769,122,2874,0.0035,True,True
+18,Greece,clean & comfortable,0.74,267,3096,0.0,True,True
+62,United States of America,"cosy room, pleasant temperature",0.737,285,11741,0.0,True,True
+53,United Kingdom,spacious apartment,0.736,572,20949,0.0,True,True
+22,Greece,"cosy room, pleasant temperature",0.726,74,3096,0.0059,True,True
+42,Thailand,clean & comfortable,0.726,243,2874,0.0,True,True
+28,Italy,comfortable bed,0.724,306,7661,0.0,True,True
+19,Greece,room + breakfast + staff (list),0.716,131,3096,0.0001,True,True
+35,Spain,room + breakfast + staff (list),0.71,173,4124,0.0,True,True
+36,Spain,comfortable bed,0.69,157,4124,0.0,True,True
+20,Greece,comfortable bed,0.679,116,3096,0.0,True,True
+3,Australia,room + breakfast + staff (list),0.63,209,5612,0.0,True,True
+55,United Kingdom,balcony / terrace,0.496,328,20949,0.0,True,True
+63,United States of America,balcony / terrace,0.491,182,11741,0.0,True,True
+61,United States of America,spacious apartment,0.218,95,11741,0.0,True,True
+45,Thailand,spacious apartment,0.188,20,2874,0.0,True,True
+54,United Kingdom,"cosy room, pleasant temperature",1.191,822,20949,0.0,True,False
+2,Australia,clean & comfortable,1.188,777,5612,0.0,True,False
+47,Thailand,balcony / terrace,1.157,105,2874,0.1466,False,False
+40,Thailand,spacious room,1.147,1413,2874,0.0,True,False
+50,United Kingdom,clean & comfortable,1.124,2744,20949,0.0,True,False
+52,United Kingdom,comfortable bed,1.103,1275,20949,0.0,True,False
+14,France,"cosy room, pleasant temperature",1.097,119,3292,0.336,False,False
+41,Thailand,clean room,1.091,672,2874,0.0139,True,False
+30,Italy,"cosy room, pleasant temperature",1.07,270,7661,0.2682,False,False
+6,Australia,"cosy room, pleasant temperature",1.044,193,5612,0.5573,False,False
+4,Australia,comfortable bed,1.037,321,5612,0.5281,False,False
+17,Greece,clean room,1.033,686,3096,0.3638,False,False
+8,France,spacious room,1.032,1456,3292,0.1275,False,False
+25,Italy,clean room,1.032,1695,7661,0.1466,False,False
+48,United Kingdom,spacious room,1.02,9157,20949,0.0029,True,False
+0,Australia,spacious room,0.993,2389,5612,0.6574,False,False
+58,United States of America,clean & comfortable,0.986,1349,11741,0.5641,False,False
+56,United States of America,spacious room,0.984,4949,11741,0.1156,False,False
+24,Italy,spacious room,0.975,3200,7661,0.0558,False,False
+43,Thailand,room + breakfast + staff (list),0.965,164,2874,0.641,False,False
+10,France,clean & comfortable,0.964,370,3292,0.4927,False,False
+12,France,comfortable bed,0.958,174,3292,0.5651,False,False
+11,France,room + breakfast + staff (list),0.945,184,3292,0.47,False,False
+9,France,clean room,0.942,665,3292,0.0991,False,False
+16,Greece,spacious room,0.932,1237,3096,0.0015,True,False
+32,Spain,spacious room,0.922,1629,4124,0.0,True,False
+33,Spain,clean room,0.922,815,4124,0.0099,True,False
+1,Australia,clean room,0.918,1104,5612,0.0013,True,False
+34,Spain,clean & comfortable,0.911,438,4124,0.0448,True,False
+49,United Kingdom,clean room,0.879,3950,20949,0.0,True,False
+46,Thailand,"cosy room, pleasant temperature",0.877,83,2874,0.2549,False,False
+27,Italy,room + breakfast + staff (list),0.835,378,7661,0.0002,True,False
+26,Italy,clean & comfortable,0.815,728,7661,0.0,True,False
+59,United States of America,room + breakfast + staff (list),0.812,564,11741,0.0,True,False
+38,Spain,"cosy room, pleasant temperature",0.802,109,4124,0.0216,True,False

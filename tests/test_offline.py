@@ -346,9 +346,47 @@ def test_giant_cluster_guard():
     assert big.metrics["n_topics"] <= 1 < guarded.metrics["n_topics"]
     assert guarded.metrics["giant_cluster_retries"] >= 1
 
+def test_topic_names_and_collapse():
+    """HU: Nevek, ujjlenyomat, összevonás. / EN: Names, fingerprint, collapsing."""
+    import pandas as pd
+    from src import topic_modeling as tm
+    from src import topic_names as tn
+
+    # HU: Minden név nem üres, rövid; egy aspektuson belül a témaszámok folytonosak.
+    # EN: Every name is non-empty and short; topic ids are contiguous within an aspect.
+    for entries in tn.TOPIC_NAMES.values():
+        assert all(0 < len(name) <= 40 for name, _ in entries.values())
+        by_aspect = {}
+        for aspect, topic in entries:
+            by_aspect.setdefault(aspect, []).append(topic)
+        assert all(sorted(t) == list(range(len(t))) for t in by_aspect.values())
+
+    rows = [(a, t, lab) for (a, t), (_, lab) in tn.NEGATIVE_TOPIC_NAMES.items()]
+    table = pd.DataFrame(rows, columns=["aspect", "topic", "label"]).assign(size=10, share_within_aspect=0.1)
+    names = tn.get_topic_names("negative", table)
+    assignments = pd.DataFrame({"row": [0, 1], "aspect": ["lift", "lift"], "topic": [4, 5],
+                                "topic_label": ["x", "y"], "in_fit_sample": [True, True]})
+    named, assigned = tm.rename_topics(table, assignments, names)
+    assert (named["auto_label"] == table["label"]).all()
+    assert assigned["topic_label"].nunique() == 1                      # HU/EN: 4 and 5 are both "no lift"
+    collapsed = tm.collapse_named_topics(named)
+    no_lift = collapsed[(collapsed["aspect"] == "lift") & (collapsed["label"] == "no lift")].iloc[0]
+    assert no_lift["n_clusters"] == 5 and no_lift["size"] == 50
+    assert len(collapsed) == len(named.groupby(["aspect", "label"]))
+
+    broken = table.copy()
+    broken.loc[0, "label"] = "something else"
+    try:
+        tn.get_topic_names("negative", broken)
+        raise AssertionError("fingerprint mismatch not detected")
+    except ValueError:
+        pass
+
+
 if __name__ == "__main__":
     tests = [v for k, v in dict(globals()).items() if k.startswith("test_") and callable(v)]
     for test in tests:
         test()
         print(f"OK  {test.__name__}")
     print(f"\n{len(tests)} tests passed.")
+
