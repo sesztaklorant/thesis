@@ -1,0 +1,6 @@
+step,n,share,share_of_reviews_with_text
+reviews scored 9–10 (labelled set),131105,1.0,
+... with a complaint field of ≥3 words,63245,0.4824,1.0
+... of which the whole field is a 'nothing'-type formula,5001,0.0791,0.0791
+... with ≥1 real complaint clause (rule only),58281,0.4445,0.9215
+... with ≥1 real clause also read as negative by (B) = confirmed,49099,0.3745,0.7763

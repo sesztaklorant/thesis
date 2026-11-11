@@ -1,0 +1,11 @@
+sentiment,aspect,checked,precision,n_subtopics,weakest_subtopic,weakest_precision,subtopics_below_0.70
+negative,cleanliness,200,0.9,10.0,dirty pool / beach,0.75,0.0
+negative,location,200,0.815,10.0,area & neighbourhood,0.6,2.0
+negative,room,200,0.815,10.0,room price & charges,0.5,1.0
+negative,staff,200,0.83,9.0,atmosphere & other guests,0.6,1.0
+negative,(all four),800,0.84,,,,
+positive,cleanliness,200,0.975,10.0,clean + friendly staff (list),0.9,0.0
+positive,location,200,0.9,9.0,near station / walkable,0.8,0.0
+positive,room,200,0.915,9.0,comfortable bed,0.7,0.0
+positive,staff,200,0.92,9.0,reception staff,0.7,0.0
+positive,(all four),800,0.928,,,,

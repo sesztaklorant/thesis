@@ -1,0 +1,264 @@
+aspect,segment_type,segment,subtopic,lift,count,segment_n,q
+bathroom,accommodation_country,Indonesia,smell & extractor fan,1.644,73,558,0.0001
+bathroom,accommodation_country,Indonesia,no hot water,1.531,74,558,0.0004
+bathroom,accommodation_country,Spain,towels & hooks,1.479,88,823,0.0004
+bathroom,accommodation_country,Australia,no soap / shampoo,1.471,76,1166,0.0013
+bathroom,accommodation_country,United States of America,sink & drain,1.427,176,2917,0.0
+bathroom,accommodation_country,Greece,shower problems,1.347,265,687,0.0
+bathroom,accommodation_country,United States of America,towels & hooks,1.257,265,2917,0.0001
+bathroom,accommodation_country,France,small / dirty bathroom,1.209,246,730,0.0013
+bathroom,accommodation_country,United States of America,bathroom door & privacy,1.204,149,2917,0.0242
+bathroom,accommodation_country,Indonesia,shower problems,0.72,115,558,0.0001
+bathroom,accommodation_country,France,no hot water,0.664,42,730,0.0136
+bathroom,accommodation_country,Greece,towels & hooks,0.644,32,687,0.0228
+bathroom,accommodation_country,Italy,bathroom door & privacy,0.624,36,1360,0.0071
+bathroom,accommodation_country,Australia,no hot water,0.584,59,1166,0.0001
+bathroom,accommodation_country,Greece,sink & drain,0.516,15,687,0.0198
+bathroom,accommodation_country,Italy,sink & drain,0.417,24,1360,0.0
+bathroom,accommodation_star_rating,2,no soap / shampoo,0.682,56,1709,0.0222
+bathroom,accommodation_star_rating,3.5,no hot water,0.364,6,187,0.0386
+bathroom,accommodation_type,ApartHotel,no soap / shampoo,1.672,85,1078,0.0
+bathroom,accommodation_type,Apartment,no soap / shampoo,1.535,133,1837,0.0
+bathroom,accommodation_type,Hostel,small / dirty bathroom,1.518,472,1107,0.0
+bathroom,accommodation_type,Resort,no hot water,1.439,94,762,0.0017
+bathroom,accommodation_type,Apartment,towels & hooks,1.323,176,1837,0.0007
+bathroom,accommodation_type,Apartment,no hot water,1.238,195,1837,0.0067
+bathroom,accommodation_type,Guest house,no hot water,1.232,151,1430,0.0215
+bathroom,accommodation_type,Guest house,towels & hooks,0.763,79,1430,0.0352
+bathroom,accommodation_type,Hostel,towels & hooks,0.673,54,1107,0.0093
+bathroom,accommodation_type,Hostel,no soap / shampoo,0.632,33,1107,0.0215
+bathroom,accommodation_type,Hostel,sink & drain,0.586,26,1107,0.0176
+bathroom,guest_type,Solo traveller,bathroom door & privacy,0.735,131,4274,0.0005
+noise,accommodation_country,United States of America,air-conditioning noise,1.853,204,1985,0.0
+noise,accommodation_country,United Kingdom,creaky beds & floors,1.664,190,2559,0.0
+noise,accommodation_country,France,thin walls / no soundproofing,1.653,57,427,0.0002
+noise,accommodation_country,Italy,thin walls / no soundproofing,1.641,165,1245,0.0
+noise,accommodation_country,France,noise via windows & doors,1.452,46,427,0.019
+noise,accommodation_country,United Kingdom,noise via windows & doors,1.338,254,2559,0.0
+noise,accommodation_country,Australia,air-conditioning noise,1.326,60,816,0.0437
+noise,accommodation_country,Thailand,night noise & music,1.326,170,505,0.0001
+noise,accommodation_country,Australia,traffic & trains,1.231,119,816,0.0297
+noise,accommodation_country,Spain,traffic & trains,0.79,86,919,0.0349
+noise,accommodation_country,Thailand,hearing the neighbours,0.777,106,505,0.0063
+noise,accommodation_country,United Kingdom,air-conditioning noise,0.705,100,2559,0.0001
+noise,accommodation_country,Italy,creaky beds & floors,0.666,37,1245,0.0184
+noise,accommodation_country,Italy,air-conditioning noise,0.637,44,1245,0.0033
+noise,accommodation_country,France,night noise & music,0.628,68,427,0.0
+noise,accommodation_country,United Kingdom,thin walls / no soundproofing,0.605,125,2559,0.0
+noise,accommodation_country,Thailand,noise via windows & doors,0.56,21,505,0.0134
+noise,accommodation_country,Greece,air-conditioning noise,0.453,10,398,0.019
+noise,accommodation_country,Spain,air-conditioning noise,0.432,22,919,0.0001
+noise,accommodation_country,Thailand,creaky beds & floors,0.311,7,505,0.0024
+noise,accommodation_star_rating,3.5,traffic & trains,2.662,50,161,0.0
+noise,accommodation_star_rating,4,air-conditioning noise,1.348,263,3691,0.0
+noise,accommodation_star_rating,n/a,air-conditioning noise,0.619,180,5503,0.0
+noise,accommodation_star_rating,5,traffic & trains,0.596,43,618,0.0025
+noise,accommodation_star_rating,5,noise via windows & doors,0.548,24,618,0.0098
+noise,accommodation_star_rating,3.5,night noise & music,0.541,23,161,0.0049
+noise,accommodation_type,Motel,traffic & trains,2.012,140,589,0.0
+noise,accommodation_type,Hostel,creaky beds & floors,1.968,62,812,0.0
+noise,accommodation_type,Motel,air-conditioning noise,1.553,48,589,0.005
+noise,accommodation_type,Resort,noisy (unspecified),1.496,57,525,0.005
+noise,accommodation_type,Resort,night noise & music,1.459,201,525,0.0
+noise,accommodation_type,Apartment,traffic & trains,1.397,243,1472,0.0
+noise,accommodation_type,Bed and Breakfast,traffic & trains,1.266,99,662,0.0315
+noise,accommodation_type,Hostel,traffic & trains,0.751,72,812,0.0237
+noise,accommodation_type,Apartment,air-conditioning noise,0.712,55,1472,0.0205
+noise,accommodation_type,Apartment,thin walls / no soundproofing,0.681,84,1472,0.0007
+noise,accommodation_type,Motel,night noise & music,0.666,103,589,0.0
+noise,accommodation_type,Hostel,air-conditioning noise,0.587,25,812,0.0154
+noise,accommodation_type,Guest house,air-conditioning noise,0.532,32,1146,0.0007
+noise,accommodation_type,Bed and Breakfast,air-conditioning noise,0.518,18,662,0.0106
+noise,accommodation_type,Resort,traffic & trains,0.451,28,525,0.0
+noise,accommodation_type,Resort,noise via windows & doors,0.451,17,525,0.0019
+reception,accommodation_country,Japan,luggage storage,2.754,35,252,0.0
+reception,accommodation_country,Italy,luggage storage,1.889,46,483,0.0
+reception,accommodation_country,Japan,check-in time & delays,1.632,74,252,0.0
+reception,accommodation_country,Australia,"key, card & code problems",1.497,49,436,0.0142
+reception,accommodation_country,United Kingdom,"key, card & code problems",1.292,149,1536,0.0013
+reception,accommodation_country,Italy,booking & room mix-ups,0.771,86,483,0.0224
+reception,accommodation_country,United States of America,"key, card & code problems",0.722,83,1532,0.0023
+reception,accommodation_country,United States of America,luggage storage,0.621,48,1532,0.0007
+reception,accommodation_country,Thailand,"key, card & code problems",0.411,9,292,0.0201
+reception,accommodation_country,Japan,"key, card & code problems",0.317,6,252,0.0124
+reception,accommodation_star_rating,n/a,"key, card & code problems",1.91,311,2308,0.0
+reception,accommodation_star_rating,n/a,pre-arrival communication,1.416,195,2308,0.0
+reception,accommodation_star_rating,n/a,luggage storage,1.24,136,2308,0.0094
+reception,accommodation_star_rating,n/a,unwelcoming check-in staff,0.779,95,2308,0.0109
+reception,accommodation_star_rating,3,"key, card & code problems",0.753,119,2239,0.0007
+reception,accommodation_star_rating,4,"key, card & code problems",0.695,154,3142,0.0
+reception,accommodation_star_rating,3,pre-arrival communication,0.689,92,2239,0.0001
+reception,accommodation_star_rating,n/a,requests not handled,0.665,88,2308,0.0
+reception,accommodation_star_rating,2,"key, card & code problems",0.61,21,488,0.0365
+reception,accommodation_star_rating,5,"key, card & code problems",0.509,29,808,0.0002
+reception,accommodation_type,Apartment,"key, card & code problems",2.648,136,731,0.0
+reception,accommodation_type,ApartHotel,"key, card & code problems",2.051,65,451,0.0
+reception,accommodation_type,Apartment,pre-arrival communication,1.998,86,731,0.0
+reception,accommodation_type,Guest house,luggage storage,1.942,38,408,0.0001
+reception,accommodation_type,Hostel,luggage storage,1.716,27,328,0.0101
+reception,accommodation_type,Guest house,"key, card & code problems",1.709,49,408,0.0003
+reception,accommodation_type,Resort,check-in time & delays,1.526,177,647,0.0
+reception,accommodation_type,Hostel,"key, card & code problems",1.519,35,328,0.0247
+reception,accommodation_type,Apartment,check-in time & delays,1.32,173,731,0.0001
+reception,accommodation_type,Hostel,check-in time & delays,1.309,77,328,0.0232
+reception,accommodation_type,Guest house,unhelpful reception / front desk,0.796,82,408,0.0359
+reception,accommodation_type,Apartment,booking & room mix-ups,0.771,132,731,0.0014
+reception,accommodation_type,Hotel,"key, card & code problems",0.68,275,5755,0.0
+reception,accommodation_type,Apartment,requests not handled,0.631,27,731,0.026
+reception,accommodation_type,Apartment,unhelpful reception / front desk,0.607,112,731,0.0
+reception,accommodation_type,Resort,"key, card & code problems",0.55,25,647,0.0038
+reception,accommodation_type,Apartment,unwelcoming check-in staff,0.44,17,731,0.0008
+reception,accommodation_type,Resort,luggage storage,0.419,13,647,0.0021
+reception,accommodation_type,Hostel,requests not handled,0.365,7,328,0.011
+reception,guest_type,Solo traveller,requests not handled,0.682,75,1901,0.0035
+room,accommodation_country,Japan,no space for luggage,3.158,144,998,0.0
+room,accommodation_country,Thailand,smell & cleanliness,1.688,134,620,0.0
+room,accommodation_country,United States of America,smell & cleanliness,1.603,803,3912,0.0
+room,accommodation_country,Japan,"small, dated room",1.561,477,998,0.0
+room,accommodation_country,Australia,poor lighting / curtains,1.511,238,1593,0.0
+room,accommodation_country,Australia,door & lock problems,1.363,130,1593,0.0004
+room,accommodation_country,France,"small, dated room",1.327,491,1209,0.0
+room,accommodation_country,Italy,no fridge / coffee in room,1.302,103,1658,0.0083
+room,accommodation_country,United States of America,door & lock problems,1.302,305,3912,0.0
+room,accommodation_country,France,no fridge / coffee in room,1.3,75,1209,0.0298
+room,accommodation_country,United Kingdom,small bathroom,1.284,371,6231,0.0
+room,accommodation_country,United Kingdom,temperature & ventilation,1.268,1442,6231,0.0
+room,accommodation_country,Italy,temperature & ventilation,1.232,373,1658,0.0
+room,accommodation_country,France,poor lighting / curtains,0.786,94,1209,0.0213
+room,accommodation_country,United States of America,temperature & ventilation,0.717,512,3912,0.0
+room,accommodation_country,Australia,no space for luggage,0.714,52,1593,0.0183
+room,accommodation_country,United Kingdom,smell & cleanliness,0.708,565,6231,0.0
+room,accommodation_country,United States of America,small bathroom,0.689,125,3912,0.0
+room,accommodation_country,Italy,smell & cleanliness,0.678,144,1658,0.0
+room,accommodation_country,Australia,small bathroom,0.677,50,1593,0.0067
+room,accommodation_country,France,smell & cleanliness,0.666,103,1209,0.0
+room,accommodation_country,Japan,temperature & ventilation,0.565,103,998,0.0
+room,accommodation_country,Japan,small bathroom,0.562,26,998,0.0041
+room,accommodation_country,Japan,no fridge / coffee in room,0.546,26,998,0.0024
+room,accommodation_country,Japan,door & lock problems,0.536,32,998,0.0004
+room,accommodation_country,Japan,poor lighting / curtains,0.496,49,998,0.0
+room,accommodation_country,United States of America,no space for luggage,0.481,86,3912,0.0
+room,accommodation_country,France,door & lock problems,0.47,34,1209,0.0
+room,accommodation_star_rating,5,room price & charges,1.906,114,1379,0.0
+room,accommodation_star_rating,4.5,poor lighting / curtains,1.832,41,225,0.0001
+room,accommodation_star_rating,5,smell & cleanliness,1.352,246,1379,0.0
+room,accommodation_star_rating,n/a,door & lock problems,1.324,608,7922,0.0
+room,accommodation_star_rating,2,smell & cleanliness,1.317,370,2128,0.0
+room,accommodation_star_rating,4,room price & charges,1.264,485,8842,0.0
+room,accommodation_star_rating,n/a,poor lighting / curtains,1.214,957,7922,0.0
+room,accommodation_star_rating,2,poor lighting / curtains,0.789,167,2128,0.0026
+room,accommodation_star_rating,2,room price & charges,0.758,70,2128,0.0344
+room,accommodation_star_rating,n/a,room price & charges,0.748,257,7922,0.0
+room,accommodation_star_rating,2,no fridge / coffee in room,0.645,68,2128,0.0004
+room,accommodation_type,Apartment,door & lock problems,1.86,210,1968,0.0
+room,accommodation_type,Apartment,poor lighting / curtains,1.766,338,1968,0.0
+room,accommodation_type,Motel,door & lock problems,1.64,89,946,0.0
+room,accommodation_type,Bed and Breakfast,small bathroom,1.576,71,967,0.0002
+room,accommodation_type,Resort,smell & cleanliness,1.56,242,1166,0.0
+room,accommodation_type,Resort,room price & charges,1.555,80,1166,0.0001
+room,accommodation_type,ApartHotel,door & lock problems,1.435,102,1239,0.0004
+room,accommodation_type,ApartHotel,poor lighting / curtains,1.419,171,1239,0.0
+room,accommodation_type,Bed and Breakfast,no fridge / coffee in room,1.384,67,967,0.0121
+room,accommodation_type,Motel,smell & cleanliness,1.319,166,946,0.0003
+room,accommodation_type,Motel,poor lighting / curtains,1.272,117,946,0.0121
+room,accommodation_type,Guest house,door & lock problems,1.269,117,1607,0.0134
+room,accommodation_type,Apartment,temperature & ventilation,1.205,441,1968,0.0
+room,accommodation_type,Guest house,smell & cleanliness,0.795,170,1607,0.0025
+room,accommodation_type,Motel,temperature & ventilation,0.75,132,946,0.0006
+room,accommodation_type,Guest house,room price & charges,0.733,52,1607,0.0337
+room,accommodation_type,Apartment,small bathroom,0.709,65,1968,0.0076
+room,accommodation_type,Resort,temperature & ventilation,0.669,145,1166,0.0
+room,accommodation_type,Resort,no fridge / coffee in room,0.668,39,1166,0.0162
+room,accommodation_type,ApartHotel,room price & charges,0.658,36,1239,0.0164
+room,accommodation_type,Apartment,"small, dated room",0.629,384,1968,0.0
+room,accommodation_type,Bed and Breakfast,smell & cleanliness,0.629,81,967,0.0
+room,accommodation_type,Hostel,room price & charges,0.572,28,1109,0.0046
+room,accommodation_type,Apartment,room price & charges,0.437,38,1968,0.0
+staff,accommodation_country,Italy,no response to requests,1.566,66,608,0.0006
+staff,accommodation_country,United Kingdom,restaurant & bar service,1.512,501,2337,0.0
+staff,accommodation_country,United States of America,housekeeping,1.382,363,2196,0.0
+staff,accommodation_country,France,restaurant & bar service,1.331,67,355,0.0372
+staff,accommodation_country,United States of America,booking & payment disputes,1.248,197,2196,0.0008
+staff,accommodation_country,United States of America,no response to requests,0.782,119,2196,0.005
+staff,accommodation_country,Italy,"unfriendly, unhelpful staff",0.756,80,608,0.017
+staff,accommodation_country,Australia,restaurant & bar service,0.742,55,523,0.048
+staff,accommodation_country,United Kingdom,housekeeping,0.726,203,2337,0.0
+staff,accommodation_country,Italy,housekeeping,0.688,50,608,0.015
+staff,accommodation_country,United States of America,restaurant & bar service,0.601,187,2196,0.0
+staff,accommodation_country,Japan,check-in & room access,0.585,24,296,0.0158
+staff,accommodation_country,Japan,restaurant & bar service,0.334,14,296,0.0
+staff,accommodation_star_rating,n/a,no response to requests,1.683,358,2949,0.0
+staff,accommodation_star_rating,5,atmosphere & other guests,1.283,145,1255,0.0044
+staff,accommodation_star_rating,4,restaurant & bar service,1.275,829,4761,0.0
+staff,accommodation_star_rating,5,restaurant & bar service,1.266,217,1255,0.0006
+staff,accommodation_star_rating,2,unhelpful reception / front desk,1.256,152,717,0.0059
+staff,accommodation_star_rating,5,check-in & room access,0.777,126,1255,0.0058
+staff,accommodation_star_rating,2,no response to requests,0.657,34,717,0.0245
+staff,accommodation_star_rating,n/a,restaurant & bar service,0.586,236,2949,0.0
+staff,accommodation_star_rating,2,restaurant & bar service,0.521,51,717,0.0
+staff,accommodation_type,Apartment,no response to requests,2.712,144,740,0.0
+staff,accommodation_type,Guest house,no response to requests,1.888,68,502,0.0
+staff,accommodation_type,Hostel,atmosphere & other guests,1.718,72,458,0.0
+staff,accommodation_type,Apartment,booking & payment disputes,1.674,93,740,0.0
+staff,accommodation_type,ApartHotel,no response to requests,1.606,59,512,0.0005
+staff,accommodation_type,ApartHotel,housekeeping,1.342,81,512,0.0137
+staff,accommodation_type,ApartHotel,unhelpful reception / front desk,1.294,113,512,0.0084
+staff,accommodation_type,Resort,unhelpful reception / front desk,0.794,142,1048,0.0068
+staff,accommodation_type,Hostel,unhelpful reception / front desk,0.755,59,458,0.047
+staff,accommodation_type,Resort,no response to requests,0.745,56,1048,0.0476
+staff,accommodation_type,Apartment,"unfriendly, unhelpful staff",0.697,90,740,0.0005
+staff,accommodation_type,Bed and Breakfast,unhelpful reception / front desk,0.67,35,306,0.026
+staff,accommodation_type,ApartHotel,restaurant & bar service,0.538,37,512,0.0002
+staff,accommodation_type,Hostel,restaurant & bar service,0.52,32,458,0.0002
+staff,accommodation_type,Guest house,restaurant & bar service,0.341,23,502,0.0
+staff,accommodation_type,Motel,restaurant & bar service,0.331,12,270,0.0001
+staff,accommodation_type,Apartment,restaurant & bar service,0.181,18,740,0.0
+staff,guest_type,Solo traveller,booking & payment disputes,1.235,234,2518,0.0015
+staff,guest_type,Solo traveller,restaurant & bar service,0.724,248,2518,0.0
+value_for_money,accommodation_country,Thailand,taxi / shuttle cost,3.766,27,232,0.0
+value_for_money,accommodation_country,Italy,taxi / shuttle cost,2.63,36,443,0.0
+value_for_money,accommodation_country,United Kingdom,drink prices,1.535,121,1904,0.0
+value_for_money,accommodation_country,Thailand,extra charges & deposit,1.498,47,232,0.0099
+value_for_money,accommodation_country,United States of America,extra charges & deposit,1.303,218,1237,0.0
+value_for_money,accommodation_country,France,food & breakfast overpriced,1.301,71,321,0.0445
+value_for_money,accommodation_country,United Kingdom,parking fee,1.271,221,1904,0.0
+value_for_money,accommodation_country,United Kingdom,extra charges & deposit,0.784,202,1904,0.0
+value_for_money,accommodation_country,Spain,food & breakfast overpriced,0.674,44,384,0.0112
+value_for_money,accommodation_country,Italy,parking fee,0.618,25,443,0.0305
+value_for_money,accommodation_country,Thailand,high price (general),0.606,33,232,0.0036
+value_for_money,accommodation_country,United States of America,drink prices,0.547,28,1237,0.001
+value_for_money,accommodation_country,Ireland,extra charges & deposit,0.481,14,215,0.0099
+value_for_money,accommodation_country,United States of America,taxi / shuttle cost,0.471,18,1237,0.001
+value_for_money,accommodation_country,Thailand,parking fee,0.094,2,232,0.0001
+value_for_money,accommodation_star_rating,5,not worth its stars,4.231,85,825,0.0
+value_for_money,accommodation_star_rating,4,drink prices,1.481,196,3514,0.0
+value_for_money,accommodation_star_rating,2,room overpriced,1.326,126,372,0.0005
+value_for_money,accommodation_star_rating,2,extra charges & deposit,1.323,70,372,0.0167
+value_for_money,accommodation_star_rating,n/a,extra charges & deposit,1.315,314,1678,0.0
+value_for_money,accommodation_star_rating,3,parking fee,1.274,243,2398,0.0
+value_for_money,accommodation_star_rating,n/a,taxi / shuttle cost,1.266,81,1678,0.0264
+value_for_money,accommodation_star_rating,5,high price (general),0.769,142,825,0.0005
+value_for_money,accommodation_star_rating,n/a,parking fee,0.727,97,1678,0.0007
+value_for_money,accommodation_star_rating,3,taxi / shuttle cost,0.7,64,2398,0.0014
+value_for_money,accommodation_star_rating,n/a,drink prices,0.68,43,1678,0.0072
+value_for_money,accommodation_star_rating,2,food & breakfast overpriced,0.662,43,372,0.0045
+value_for_money,accommodation_star_rating,5,parking fee,0.549,36,825,0.0002
+value_for_money,accommodation_star_rating,3,drink prices,0.476,43,2398,0.0
+value_for_money,accommodation_star_rating,3,not worth its stars,0.377,22,2398,0.0
+value_for_money,accommodation_star_rating,2,parking fee,0.203,6,372,0.0
+value_for_money,accommodation_star_rating,n/a,not worth its stars,0.049,2,1678,0.0
+value_for_money,accommodation_type,Resort,not worth its stars,2.325,35,595,0.0
+value_for_money,accommodation_type,Apartment,extra charges & deposit,1.772,82,324,0.0
+value_for_money,accommodation_type,Resort,drink prices,1.763,39,595,0.0012
+value_for_money,accommodation_type,Apartment,parking fee,1.623,43,324,0.0041
+value_for_money,accommodation_type,ApartHotel,extra charges & deposit,1.583,64,283,0.0005
+value_for_money,accommodation_type,Hostel,room overpriced,1.401,84,234,0.0019
+value_for_money,accommodation_type,Motel,room overpriced,1.372,51,145,0.0423
+value_for_money,accommodation_type,Apartment,food & breakfast overpriced,0.299,17,324,0.0
+value_for_money,accommodation_type,Guest house,drink prices,0.26,3,310,0.0449
+value_for_money,accommodation_type,Hostel,parking fee,0.157,3,234,0.0009
+value_for_money,accommodation_type,Apartment,not worth its stars,0.0,0,324,0.0181
+value_for_money,guest_type,Group,drink prices,1.465,50,918,0.0157
+value_for_money,guest_type,Family with children,parking fee,1.25,257,2601,0.0001
+value_for_money,guest_type,Solo traveller,drink prices,0.664,40,1620,0.0157
+value_for_money,guest_type,Solo traveller,parking fee,0.562,72,1620,0.0

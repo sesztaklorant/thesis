@@ -1,0 +1,7 @@
+complaint field,n,share_of_real
+complaint-field clauses,273642,
+'nothing'-type formulas (removed),9436,
+real complaint clauses,264206,
+real clauses read as negative,199673,0.7557
+real clauses read as neutral,21000,0.0795
+real clauses read as positive,43533,0.1648

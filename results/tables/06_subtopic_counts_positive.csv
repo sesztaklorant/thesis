@@ -1,0 +1,187 @@
+aspect,topic_label,n,aspect_total,share,share_fit_sample,manual_precision
+location,great location,74166,191437,0.3874,0.4336,0.9
+location,near station / walkable,25550,191437,0.1335,0.1376,0.8
+location,restaurants & shops nearby,19953,191437,0.1042,0.113,0.85
+location,central location,16611,191437,0.0868,0.0776,1.0
+location,(unassigned),15838,191437,0.0827,,
+location,near the beach,15206,191437,0.0794,0.0914,1.0
+location,near the airport,8191,191437,0.0428,0.0462,0.85
+location,quiet location,5877,191437,0.0307,0.0264,0.85
+location,location + staff (list),5307,191437,0.0277,0.023,0.95
+location,location + breakfast (list),4738,191437,0.0247,0.0204,0.9
+staff,"friendly, helpful staff",51297,145059,0.3536,0.3414,1.0
+staff,(unassigned),19661,145059,0.1355,,
+staff,staff + cleanliness (list),17282,145059,0.1191,0.1414,0.9
+staff,helpful host,11052,145059,0.0762,0.085,1.0
+staff,breakfast & restaurant staff,10392,145059,0.0716,0.0924,1.0
+staff,welcoming staff,10351,145059,0.0714,0.0934,0.8
+staff,reception staff,9096,145059,0.0627,0.0678,0.7
+staff,extra help & luggage,7935,145059,0.0547,0.0826,0.85
+staff,service,4115,145059,0.0284,0.0262,1.0
+staff,owner,3878,145059,0.0267,0.0264,0.95
+room,spacious room,45260,107550,0.4208,0.4696,0.85
+room,clean room,22950,107550,0.2134,0.213,1.0
+room,clean & comfortable,11449,107550,0.1065,0.098,1.0
+room,room + breakfast + staff (list),5928,107550,0.0551,0.046,0.95
+room,comfortable bed,5103,107550,0.0474,0.0292,0.7
+room,"cosy room, pleasant temperature",3817,107550,0.0355,0.0396,0.9
+room,spacious apartment,3796,107550,0.0353,0.037,1.0
+room,balcony / terrace,3556,107550,0.0331,0.024,0.9
+room,(unassigned),3013,107550,0.028,,
+room,kitchenette,2678,107550,0.0249,0.0252,1.0
+comfort,comfortable bed,21270,83497,0.2547,0.2264,
+comfort,comfortable rooms,15431,83497,0.1848,0.3076,
+comfort,spacious room,13977,83497,0.1674,0.165,
+comfort,"clean, spacious room",12267,83497,0.1469,0.0754,
+comfort,clean & comfortable,9991,83497,0.1197,0.0876,
+comfort,bed + shower (list),4073,83497,0.0488,0.0762,
+comfort,spacious apartment,2826,83497,0.0338,0.0298,
+comfort,comfort + breakfast (list),2400,83497,0.0287,0.0264,
+comfort,(unassigned),1262,83497,0.0151,,
+cleanliness,very clean (general),23674,76850,0.3081,0.3462,1.0
+cleanliness,clean room,22364,76850,0.291,0.3098,1.0
+cleanliness,clean & comfortable,5498,76850,0.0715,0.0592,1.0
+cleanliness,clean hotel,5207,76850,0.0678,0.0564,1.0
+cleanliness,clean + friendly staff (list),5054,76850,0.0658,0.0602,0.9
+cleanliness,clean + comfortable bed,3798,76850,0.0494,0.0408,0.95
+cleanliness,clean bathroom,2755,76850,0.0358,0.03,1.0
+cleanliness,daily housekeeping & fresh towels,2699,76850,0.0351,0.0388,0.9
+cleanliness,clean + breakfast (list),2504,76850,0.0326,0.0316,1.0
+cleanliness,clean apartment,2405,76850,0.0313,0.0246,1.0
+cleanliness,(unassigned),892,76850,0.0116,,
+breakfast,great breakfast,33650,69538,0.4839,0.4832,
+breakfast,location + room + breakfast (list),11560,69538,0.1662,0.1862,
+breakfast,food & dinner,10168,69538,0.1462,0.1344,
+breakfast,staff + breakfast (list),4622,69538,0.0665,0.067,
+breakfast,coffee & pastries,3051,69538,0.0439,0.0612,
+breakfast,buffet variety,2243,69538,0.0323,0.0266,
+breakfast,homemade bread & croissants,2191,69538,0.0315,0.0242,
+breakfast,(unassigned),1123,69538,0.0161,,
+breakfast,host + breakfast (list),930,69538,0.0134,0.0124,
+facilities,good facilities (general),14457,55328,0.2613,0.2778,
+facilities,(unassigned),6000,55328,0.1084,,
+facilities,well-equipped kitchen,5953,55328,0.1076,0.1092,
+facilities,coffee machine & fridge,5906,55328,0.1067,0.1256,
+facilities,"spa, pool & hot tub",5203,55328,0.094,0.0916,
+facilities,"towels, laundry & toiletries",4644,55328,0.0839,0.0982,
+facilities,air conditioning,4155,55328,0.0751,0.0898,
+facilities,"garden, lounge & terrace",3397,55328,0.0614,0.0638,
+facilities,everything needed,2886,55328,0.0522,0.0434,
+facilities,TV & streaming,1611,55328,0.0291,0.0258,
+facilities,bikes & scooters,1116,55328,0.0202,0.0222,
+bed,comfortable bed,15738,32155,0.4894,0.492,
+bed,room + bed (list),6371,32155,0.1981,0.191,
+bed,"clean, comfy bed linen",2903,32155,0.0903,0.1002,
+bed,location + bed (list),2169,32155,0.0675,0.0646,
+bed,shower + bed (list),1491,32155,0.0464,0.052,
+bed,pillows,1469,32155,0.0457,0.046,
+bed,breakfast + bed (list),980,32155,0.0305,0.0302,
+bed,staff + bed (list),807,32155,0.0251,0.0228,
+bed,(unassigned),227,32155,0.0071,,
+view,view from the room,5028,24065,0.2089,0.2422,
+view,amazing view,3885,24065,0.1614,0.1544,
+view,balcony,3689,24065,0.1533,0.1468,
+view,sea view,2942,24065,0.1223,0.1298,
+view,city / mountain view,2889,24065,0.12,0.1038,
+view,terrace / rooftop,1877,24065,0.078,0.0758,
+view,lake & sunset,1220,24065,0.0507,0.0454,
+view,breakfast with a view,1154,24065,0.048,0.0522,
+view,pool view,1078,24065,0.0448,0.0434,
+view,(unassigned),303,24065,0.0126,,
+value_for_money,value for money,7702,21111,0.3648,0.3798,
+value_for_money,good room price,3905,21111,0.185,0.1962,
+value_for_money,location + value (list),2781,21111,0.1317,0.136,
+value_for_money,breakfast included,2262,21111,0.1071,0.1158,
+value_for_money,free parking,991,21111,0.0469,0.0494,
+value_for_money,clean + value (list),985,21111,0.0467,0.0404,
+value_for_money,airport shuttle,710,21111,0.0336,0.0292,
+value_for_money,(unassigned),684,21111,0.0324,,
+value_for_money,staff + value (list),585,21111,0.0277,0.0264,
+value_for_money,free coffee,506,21111,0.024,0.0204,
+bathroom,spacious bathroom,6729,19711,0.3414,0.3478,
+bathroom,great shower,4942,19711,0.2507,0.2622,
+bathroom,clean bathroom,1977,19711,0.1003,0.0676,
+bathroom,towels & toiletries,1790,19711,0.0908,0.1092,
+bathroom,bed + shower (list),1720,19711,0.0873,0.087,
+bathroom,bathtub,1282,19711,0.065,0.0624,
+bathroom,good water pressure,671,19711,0.034,0.0372,
+bathroom,hot water,487,19711,0.0247,0.0222,
+bathroom,(unassigned),113,19711,0.0057,,
+reception,friendly reception staff,6277,18815,0.3336,0.3478,
+reception,easy check-in,3597,18815,0.1912,0.1878,
+reception,early check-in,2653,18815,0.141,0.1702,
+reception,luggage storage,2171,18815,0.1154,0.1386,
+reception,friendly check-in staff,1398,18815,0.0743,0.0624,
+reception,warm welcome,1374,18815,0.073,0.0574,
+reception,(unassigned),819,18815,0.0435,,
+reception,self check-in & key instructions,526,18815,0.028,0.0274,
+noise,quiet room,5442,16913,0.3218,0.3484,
+noise,quiet location,4528,16913,0.2677,0.2624,
+noise,clean & quiet,2640,16913,0.1561,0.1652,
+noise,no street noise,1046,16913,0.0618,0.057,
+noise,quiet at night,759,16913,0.0449,0.0354,
+noise,quiet & comfortable,656,16913,0.0388,0.0314,
+noise,staff + quiet (list),592,16913,0.035,0.0334,
+noise,"pleasant sounds (river, waves)",530,16913,0.0313,0.0272,
+noise,good soundproofing,518,16913,0.0306,0.0302,
+noise,(unassigned),202,16913,0.0119,,
+restaurant,restaurants & dining,4467,15930,0.2804,0.2948,
+restaurant,great food,4134,15930,0.2595,0.2488,
+restaurant,restaurant food,1969,15930,0.1236,0.1286,
+restaurant,dinner,1670,15930,0.1048,0.1062,
+restaurant,restaurant staff,925,15930,0.0581,0.0558,
+restaurant,on-site restaurant,881,15930,0.0553,0.0562,
+restaurant,beach + restaurants (list),727,15930,0.0456,0.0464,
+restaurant,breakfast restaurant,586,15930,0.0368,0.0332,
+restaurant,rooftop restaurant,507,15930,0.0318,0.0284,
+restaurant,(unassigned),64,15930,0.004,,
+pool,nice pool,4620,15243,0.3031,0.3186,
+pool,great pool for children,3030,15243,0.1988,0.2082,
+pool,room + pool (list),1850,15243,0.1214,0.1116,
+pool,rooftop pool with a view,1388,15243,0.0911,0.0972,
+pool,pool bar & restaurant,930,15243,0.061,0.0548,
+pool,beach + pool (list),758,15243,0.0497,0.0404,
+pool,clean pool,758,15243,0.0497,0.0462,
+pool,breakfast + pool (list),701,15243,0.046,0.0476,
+pool,heated pool,610,15243,0.04,0.037,
+pool,staff + pool (list),555,15243,0.0364,0.0364,
+pool,(unassigned),43,15243,0.0028,,
+beach,close to the beach,3682,14298,0.2575,0.2618,
+beach,beach location,2936,14298,0.2053,0.2292,
+beach,beach & restaurants nearby,2384,14298,0.1667,0.151,
+beach,sea view,1494,14298,0.1045,0.102,
+beach,pool + staff + beach (list),1359,14298,0.095,0.1096,
+beach,short walk to the beach,1173,14298,0.082,0.0818,
+beach,breakfast with a sea view,670,14298,0.0469,0.0348,
+beach,clean beach,551,14298,0.0385,0.0292,
+beach,(unassigned),49,14298,0.0034,,
+parking,parking available,3124,10299,0.3033,0.3124,
+parking,convenient parking,1880,10299,0.1825,0.2034,
+parking,free parking,1260,10299,0.1223,0.1122,
+parking,on-site parking,1150,10299,0.1117,0.1078,
+parking,room + parking (list),768,10299,0.0746,0.0736,
+parking,secure parking,699,10299,0.0679,0.0696,
+parking,easy parking,593,10299,0.0576,0.0446,
+parking,breakfast + parking (list),458,10299,0.0445,0.048,
+parking,staff + parking (list),329,10299,0.0319,0.0278,
+parking,(unassigned),38,10299,0.0037,,
+bar,restaurant & bar,1070,5800,0.1845,0.1858,
+bar,bar food & live music,912,5800,0.1572,0.1596,
+bar,nice bar area,772,5800,0.1331,0.1316,
+bar,drinks & cocktails,710,5800,0.1224,0.1234,
+bar,bars nearby,608,5800,0.1048,0.1038,
+bar,pool bar,479,5800,0.0826,0.0826,
+bar,bar staff,470,5800,0.081,0.0808,
+bar,rooftop bar,310,5800,0.0534,0.0548,
+bar,breakfast + bar (list),290,5800,0.05,0.0496,
+bar,pub,159,5800,0.0274,0.025,
+bar,(unassigned),20,5800,0.0034,,
+wifi,good wifi,1128,2840,0.3972,0.3972,
+wifi,room + wifi (list),684,2840,0.2408,0.2408,
+wifi,fast internet,538,2840,0.1894,0.1894,
+wifi,free wifi,164,2840,0.0577,0.0577,
+wifi,wifi + TV (list),150,2840,0.0528,0.0528,
+wifi,wifi + air conditioning (list),82,2840,0.0289,0.0289,
+wifi,breakfast + wifi (list),80,2840,0.0282,0.0282,
+wifi,(unassigned),14,2840,0.0049,,
+lift,has a lift,892,892,1.0,1.0,

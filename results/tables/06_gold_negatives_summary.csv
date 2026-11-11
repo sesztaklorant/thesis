@@ -1,0 +1,4 @@
+"gold negative, predicted as",n,mixed,argmax_negative,mean_polarity,abs_polarity_below_010,mean_gold_score,has_counted_complaint
+negative,18,11,18,-0.603,0,2.611,17
+neutral,17,17,8,-0.02,8,3.059,16
+positive,5,2,0,0.664,0,3.8,5
