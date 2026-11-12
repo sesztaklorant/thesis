@@ -1,20 +1,13 @@
 """
-data_loading.py — Adatbetöltés és egységes séma / Data loading and a uniform schema.
+Loading of the two data sources into a common schema.
 
-HU: Két adatforrás:
-    1. Booking.com val.csv — az ELEMZETT adat. Nincs benne szentiment-címke,
-       csak 1–10-es vendégpontszám.
-    2. HRAST — kézzel annotált, mondatszintű hotel-adat. KIZÁRÓLAG a (B)
-       címkéző megközelítés tanítóadata.
-EN: Two data sources:
-    1. Booking.com val.csv — the ANALYSED data. It has no sentiment label,
-       only a 1–10 guest score.
-    2. HRAST — human-annotated, sentence-level hotel data. ONLY the training
-       data of labelling approach (B).
+- Booking.com val.csv (data/raw/booking/): the analysed reviews, with a 1–10 guest
+  score but no sentiment label.
+- HRAST (data/raw/hrast/): hand-annotated hotel review sentences, used only to train
+  labelling approach (B).
 
-HU: A Booking-betöltő egységes táblát ad vissza:
-EN: The Booking loader returns a uniform table:
-    review_id | text | score | score_scale_max | dataset | review_positive | review_negative | metadata...
+The Booking loader returns
+review_id | text | score | score_scale_max | dataset | review_positive | review_negative | metadata...
 """
 
 from __future__ import annotations
@@ -32,30 +25,27 @@ log = logging.getLogger(__name__)
 
 CANONICAL_COLUMNS = ["review_id", "text", "score", "score_scale_max", "dataset"]
 
-# HU: A cache-verzió a fájlnév része. Ha a betöltő logikája változik, ezt kell
-#     növelni, és a régi cache automatikusan érvényét veszti.
-# EN: The cache version is part of the file name. Increase it when the loader
-#     logic changes, and the old cache is automatically ignored.
-#   1 — HU: első változat / EN: initial version
-#   2 — HU: HTML-entitások dekódolása, cím-írásjelek / EN: HTML entities decoded, title punctuation
-#   3 — HU: review_title oszlop is mentve / EN: review_title column stored too
+# The cache version is part of the file name, so a change in the loader logic
+# invalidates the old cache.
+# 1 - initial version
+# 2 - HTML entities decoded, title punctuation
+# 3 - review_title column stored too
 _CACHE_VERSION = 3
 
 
 # ==========================================================================
-# 0) PARQUET / CSV SEGÉDFÜGGVÉNYEK / PARQUET / CSV HELPERS
+# 0) PARQUET / CSV HELPERS
 # ==========================================================================
 def write_frame(df: pd.DataFrame, path: Path) -> Path:
     """
-    HU: Parquet-mentés; ha a pyarrow hiányzik, CSV-re esik vissza (a pipeline nem áll le).
-    EN: Save as parquet; falls back to CSV if pyarrow is missing (the pipeline does not stop).
+    Save as parquet, or as CSV if pyarrow is not installed.
     """
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     try:
         df.to_parquet(path.with_suffix(".parquet"), index=False)
         return path.with_suffix(".parquet")
-    except Exception as e:                                        # noqa: BLE001
+    except Exception as e:  # noqa: BLE001
         csv = path.with_suffix(".csv")
         df.to_csv(csv, index=False, encoding="utf-8")
         log.warning("Parquet not available (%s), saved as CSV: %s", e.__class__.__name__, csv.name)
@@ -63,7 +53,7 @@ def write_frame(df: pd.DataFrame, path: Path) -> Path:
 
 
 def read_frame(path: Path) -> pd.DataFrame:
-    """HU: Beolvasás parquet- vagy CSV-formában. / EN: Read in parquet or CSV form."""
+    """Read in parquet or CSV form."""
     path = Path(path)
     for candidate in (path.with_suffix(".parquet"), path.with_suffix(".csv")):
         if candidate.exists():
@@ -80,18 +70,17 @@ def frame_exists(path: Path) -> bool:
 
 def _cache_path(name: str) -> Path:
     PATHS.ensure()
-    return PATHS.raw / f"{name}__v{_CACHE_VERSION}.parquet"
+    return PATHS.interim / f"{name}__v{_CACHE_VERSION}.parquet"
 
 
 def clear_cache(name: str | None = None) -> list[Path]:
     """
-    HU: A betöltő által készített cache-fájlok törlése (az eredeti CSV-ket nem érinti).
-    EN: Delete the cache files created by the loader (the original CSVs are untouched).
+    Delete the cache files written by the loader. The original CSVs are not touched.
     """
     PATHS.ensure()
     pattern = f"{name}*__v*.parquet" if name else "*__v*.parquet"
     removed = []
-    for p in PATHS.raw.glob(pattern):
+    for p in PATHS.interim.glob(pattern):
         p.unlink()
         removed.append(p)
         log.info("Deleted: %s", p.name)
@@ -99,10 +88,9 @@ def clear_cache(name: str | None = None) -> list[Path]:
 
 
 # ==========================================================================
-# 1) BOOKING.COM — HELYI CSV / LOCAL CSV
+# 1) BOOKING.COM CSV
 # ==========================================================================
-# HU: A Booking CSV-k oszlopnevei exportonként eltérhetnek, ezért álnevekkel dolgozunk.
-# EN: Column names differ between Booking exports, so we work with aliases.
+# Column names differ between Booking exports, hence the aliases.
 _BOOKING_ALIASES: dict[str, list[str]] = {
     "review_title":              ["review_title", "title"],
     "review_positive":           ["review_positive", "positive_review", "positive", "pros"],
@@ -130,8 +118,7 @@ METADATA_COLUMNS = [
     "location_is_city_center", "review_helpful_votes",
 ]
 
-# HU: Helykitöltő szövegek ("Nothing", "n/a"), amelyek valójában üres mezőt jelentenek.
-# EN: Placeholder texts ("Nothing", "n/a") that actually mean an empty field.
+# Placeholder texts ("Nothing", "n/a") that actually mean an empty field.
 _PLACEHOLDERS = {"nothing", "n/a", "na", "none", "-", "nan", "no negative",
                  "no positive", "nothing to report", "nothing really"}
 
@@ -142,10 +129,8 @@ def _normalise_name(name: str) -> str:
 
 def resolve_columns(columns, aliases: dict[str, list[str]]) -> dict[str, str]:
     """
-    HU: Megkeresi, melyik valós oszlop felel meg az egyes kanonikus mezőknek
-        (kis-/nagybetűre és szóköz/aláhúzás különbségre érzéketlen).
-    EN: Find which real column corresponds to each canonical field
-        (insensitive to case and to the space/underscore difference).
+    Map each canonical field to the matching column of the file
+    (case-insensitive, spaces and underscores treated alike).
 
     Returns: {canonical_name: actual_column_name}
     """
@@ -161,8 +146,7 @@ def resolve_columns(columns, aliases: dict[str, list[str]]) -> dict[str, str]:
 
 def clean_placeholder(value) -> str:
     """
-    HU: Helykitöltő -> üres szöveg, HTML-entitások dekódolása (wouldn&#39;t -> wouldn't).
-    EN: Placeholder -> empty string, decode HTML entities (wouldn&#39;t -> wouldn't).
+    Placeholder -> empty string; HTML entities decoded (wouldn&#39;t -> wouldn't).
     """
     if pd.isna(value):
         return ""
@@ -172,10 +156,8 @@ def clean_placeholder(value) -> str:
 
 def assemble_review_text(title: pd.Series, positive: pd.Series, negative: pd.Series) -> pd.Series:
     """
-    HU: "cím. pozitív rész negatív rész" összeállítása; pont csak akkor kerül a cím
-        után, ha az nem végződik már írásjelre.
-    EN: Build "title. positive part negative part"; a full stop is added after the
-        title only if it does not already end in punctuation.
+    Build "title. praise complaint". A full stop is added after the title only if
+    it does not end in punctuation.
     """
     separator = title.map(lambda t: "" if (not t or t[-1] in ".!?…") else ".")
     text = title + separator + " " + positive + " " + negative
@@ -192,13 +174,12 @@ def load_booking(
     verbose: bool = True,
 ) -> pd.DataFrame:
     """
-    HU: A Booking.com CSV betöltése a data/raw/ mappából (alapból val.csv).
-    EN: Load the Booking.com CSV from the data/raw/ folder (val.csv by default).
+    Load the Booking.com CSV from data/raw/booking/ (val.csv by default).
 
     Parameters
     ----------
-    filename : HU: fájlnév a data/raw/ mappában / EN: file name in data/raw/
-    n_rows   : HU: hány sort olvasson (None = mind) / EN: how many rows to read (None = all)
+    filename : file name in data/raw/booking/
+    n_rows   : number of rows to read (None = all)
     """
     filename = filename or CFG.local_csv_name
     cache = _cache_path(f"booking_local_{Path(filename).stem}")
@@ -207,14 +188,16 @@ def load_booking(
         try:
             log.info("Loading from cache: %s", cache.name)
             return pd.read_parquet(cache)
-        except Exception:                                         # noqa: BLE001
+        except Exception:  # noqa: BLE001
             log.warning("The cache cannot be read, re-reading the CSV.")
 
     PATHS.ensure()
-    csv_path = PATHS.raw / filename
+    csv_path = PATHS.raw_booking / filename
+    if not csv_path.exists() and (PATHS.raw / filename).exists():
+        csv_path = PATHS.raw / filename  # earlier folder layout
     if not csv_path.exists():
         raise FileNotFoundError(
-            f"Not found: {csv_path}\nPut the CSV into data/raw/ or pass the exact "
+            f"Not found: {csv_path}\nPut the CSV into data/raw/booking/ or pass the exact "
             f"file name: load_booking(filename='my_file.csv')"
         )
 
@@ -260,20 +243,16 @@ def load_booking(
         try:
             out.to_parquet(cache, index=False)
             log.info("Saved to cache: %s (%d rows)", cache.name, len(out))
-        except Exception as e:                                    # noqa: BLE001
+        except Exception as e:  # noqa: BLE001
             log.warning("Caching failed (%s) — pip install pyarrow", e.__class__.__name__)
     return out
 
 
 # ==========================================================================
-# 2) HRAST — CSAK A (B) MEGKÖZELÍTÉSHEZ / ONLY FOR APPROACH (B)
+# 2) HRAST (TRAINING DATA OF APPROACH B)
 # ==========================================================================
-# HU: A HRAST pontos oszlopneveit letöltés után ELLENŐRIZNI kell. A betöltő
-#     álnevekkel keres, és ha nem talál, kiírja a valós oszlopokat — ilyenkor
-#     a prepare_hrast_sentences() paramétereivel kézzel megadhatók.
-# EN: The exact HRAST column names have to be CHECKED after download. The
-#     loader searches with aliases and, if it fails, prints the real columns —
-#     they can then be given by hand via prepare_hrast_sentences().
+# Column names are matched with aliases. If no match is found, the actual columns are
+# printed and can be passed to prepare_hrast_sentences().
 _HRAST_ALIASES: dict[str, list[str]] = {
     "text":      ["sentence", "text", "review_sentence", "sentences", "content", "review"],
     "sentiment": ["sentiment", "polarity", "label", "sentiment_label",
@@ -282,8 +261,7 @@ _HRAST_ALIASES: dict[str, list[str]] = {
     "group":     ["review_id", "reviewid", "doc_id", "document_id", "hotel_review_id", "id_review"],
 }
 
-# HU: Címkeértékek normalizálása a kanonikus negative/neutral/positive formára.
-# EN: Normalising label values to the canonical negative/neutral/positive form.
+# Label values mapped to negative / neutral / positive.
 _SENTIMENT_VALUE_MAP: dict[str, str] = {
     "positive": "positive", "pos": "positive", "p": "positive", "+": "positive",
     "negative": "negative", "neg": "negative", "n": "negative", "-": "negative",
@@ -295,14 +273,10 @@ _SENTIMENT_VALUE_MAP: dict[str, str] = {
 
 def find_hrast_file() -> Path | None:
     """
-    HU: Keresés: data/raw/hrast.csv, data/raw/HRAST.csv vagy data/raw/hrast/*.csv.
-    EN: Search: data/raw/hrast.csv, data/raw/HRAST.csv or data/raw/hrast/*.csv.
+    Locate the HRAST csv: data/raw/hrast/*.csv, or data/raw/hrast.csv / HRAST.csv.
     """
     PATHS.ensure()
-    for name in ("hrast.csv", "HRAST.csv"):
-        if (PATHS.raw / name).exists():
-            return PATHS.raw / name
-    folder = PATHS.raw / "hrast"
+    folder = PATHS.raw_hrast
     if folder.is_dir():
         csvs = sorted(folder.glob("*.csv"))
         if csvs:
@@ -310,13 +284,15 @@ def find_hrast_file() -> Path | None:
                 log.warning("Several CSVs in data/raw/hrast/, using the first: %s",
                             [c.name for c in csvs])
             return csvs[0]
+    for name in ("hrast.csv", "HRAST.csv"):  # earlier folder layout
+        if (PATHS.raw / name).exists():
+            return PATHS.raw / name
     return None
 
 
 def load_hrast_raw(path: Path | str | None = None, try_kagglehub: bool = True) -> pd.DataFrame:
     """
-    HU: A nyers HRAST-tábla betöltése, átalakítás nélkül. Kiírja az oszlopneveket.
-    EN: Load the raw HRAST table without transformation. Prints the column names.
+    Load the raw HRAST table without changes and log its column names.
     """
     path = Path(path) if path else find_hrast_file()
     if path is None and try_kagglehub:
@@ -325,7 +301,7 @@ def load_hrast_raw(path: Path | str | None = None, try_kagglehub: bool = True) -
             folder = Path(kagglehub.dataset_download(DATASETS["hrast"]["id"]))
             csvs = sorted(folder.rglob("*.csv"))
             path = csvs[0] if csvs else None
-        except Exception as e:                                    # noqa: BLE001
+        except Exception as e:  # noqa: BLE001
             log.warning("kagglehub download failed (%s).", e)
     if path is None:
         raise FileNotFoundError(
@@ -339,8 +315,7 @@ def load_hrast_raw(path: Path | str | None = None, try_kagglehub: bool = True) -
 
 def normalise_sentiment_values(values: pd.Series, label_map: dict | None = None) -> pd.Series:
     """
-    HU: Tetszőleges címkeértékek -> negative / neutral / positive / conflict (vagy NaN).
-    EN: Arbitrary label values -> negative / neutral / positive / conflict (or NaN).
+    Label values of any form -> negative / neutral / positive / conflict (or NaN).
     """
     mapping = {**_SENTIMENT_VALUE_MAP, **{str(k).lower(): v for k, v in (label_map or {}).items()}}
     normalised = values.astype(str).str.strip().str.lower().map(mapping)
@@ -353,16 +328,11 @@ def normalise_sentiment_values(values: pd.Series, label_map: dict | None = None)
 
 def _sentence_label_from_aspects(labels: pd.Series, conflict_policy: str) -> str | float:
     """
-    HU: Egy mondat több aspektus-címkéjéből egy mondatszintű címke:
-          csak pozitív (és semleges)  -> positive
-          csak negatív (és semleges)  -> negative
-          csak semleges               -> neutral
-          pozitív ÉS negatív          -> conflict_policy szerint (drop / neutral)
-    EN: One sentence-level label from the aspect labels of a sentence:
-          only positive (and neutral) -> positive
-          only negative (and neutral) -> negative
-          only neutral                -> neutral
-          positive AND negative       -> by conflict_policy (drop / neutral)
+    Sentence label derived from the aspect labels of the sentence:
+      only positive (and neutral) -> positive
+      only negative (and neutral) -> negative
+      only neutral                -> neutral
+      positive and negative       -> by conflict_policy (drop / neutral)
     """
     polar = set(labels) & {"positive", "negative"}
     if "conflict" in set(labels) or len(polar) == 2:
@@ -374,16 +344,11 @@ def _sentence_label_from_aspects(labels: pd.Series, conflict_policy: str) -> str
 
 def labels_from_onehot(raw: pd.DataFrame, columns: dict[str, str]) -> pd.Series:
     """
-    HU: Három 0/1 oszlop -> egy címke soronként:
-          pontosan egy 1-es          -> az az osztály
-          semleges + egy polaritás   -> a polaritás (mint az aspektusoknál)
-          pozitív ÉS negatív is 1    -> "conflict" (a conflict_policy dönt róla)
-          egyik sem                  -> NaN (kimarad)
-    EN: Three 0/1 columns -> one label per row:
-          exactly one 1              -> that class
-          neutral + one polarity     -> the polarity (as for the aspects)
-          positive AND negative are 1 -> "conflict" (handled by conflict_policy)
-          none                       -> NaN (dropped)
+    Three 0/1 columns -> one label per row:
+      exactly one 1              -> that class
+      neutral + one polarity     -> the polarity (as for the aspects)
+      positive and negative are 1 -> "conflict" (handled by conflict_policy)
+      none                       -> NaN (dropped)
     """
     flags = pd.DataFrame({label: pd.to_numeric(raw[col], errors="coerce").fillna(0) > 0
                           for label, col in columns.items()})
@@ -408,25 +373,20 @@ def prepare_hrast_sentences(
     conflict_policy: str = CFG.hrast_conflict_policy,
 ) -> pd.DataFrame:
     """
-    HU: A HRAST átalakítása mondatszintű, 3 osztályos tanítóadattá.
-    EN: Turn HRAST into sentence-level, 3-class training data.
+    Convert HRAST to sentence-level, 3-class training data.
 
     Returns
     -------
-    sentence | label | group_id   (HU: group_id = vélemény-azonosító, ha van —
-                                   a felosztásnál egy vélemény mondatai együtt maradnak)
-                                  (EN: group_id = review id if available — sentences
-                                   of one review stay together in the split)
+    sentence | label | group_id   (group_id = review id if available, so the
+                                   sentences of a review stay in the same split)
     """
     found = resolve_columns(raw.columns, _HRAST_ALIASES)
     text_col = text_col or found.get("text")
     sentiment_col = sentiment_col or found.get("sentiment")
     group_col = group_col or found.get("group")
 
-    # HU: A Kaggle-féle HRAST "széles" formátumú: a szentiment három 0/1 oszlopban van
-    #     (positive / negative / neutral), soronként egy mondat. Ezt is felismerjük.
-    # EN: The Kaggle HRAST is in "wide" format: sentiment is in three 0/1 columns
-    #     (positive / negative / neutral), one sentence per row. This is recognised too.
+    # The Kaggle version of HRAST is in wide format: three 0/1 sentiment columns
+    # (positive / negative / neutral) and one sentence per row.
     onehot = resolve_columns(raw.columns, {label: [label] for label in CFG.labels})
     use_onehot = sentiment_col is None and len(onehot) == len(CFG.labels)
 
@@ -447,12 +407,9 @@ def prepare_hrast_sentences(
     }).dropna(subset=["label_raw"])
     work = work[work["sentence"].str.len() > 0]
 
-    # HU: Egy mondat több sorban is szerepelhet (soronként egy aspektus) -> összevonás.
-    # EN: A sentence may appear in several rows (one aspect per row) -> merge.
-    # HU: Ha van vélemény-azonosító, (vélemény, mondat) párra vonunk össze, így két
-    #     különböző vélemény azonos mondata ("Great location.") nem olvad egybe.
-    # EN: With a review id we merge on (review, sentence), so the same sentence in
-    #     two different reviews ("Great location.") is not merged.
+    # A sentence can appear in several rows (one aspect per row), so rows are merged.
+    # With a review id the key is (review, sentence), which keeps identical sentences
+    # of different reviews ("Great location.") apart.
     keys = ["group_id", "sentence"] if group_col else ["sentence"]
     grouped = (work.groupby(keys, sort=False, dropna=False)
                    .agg(labels=("label_raw", list))
@@ -470,13 +427,13 @@ def prepare_hrast_sentences(
 
 
 # ==========================================================================
-# 3) FELOSZTÁSOK ÉS CÍMKÉK MENTÉSE / SAVING SPLITS AND LABELS
+# 3) SAVING SPLITS AND LABELS
 # ==========================================================================
 SPLIT_NAMES = ("train", "val", "test")
 
 
 def save_splits(splits: dict[str, pd.DataFrame], prefix: str = "booking") -> dict[str, Path]:
-    """HU: train/val/test mentése a data/processed/ mappába. / EN: Save train/val/test to data/processed/."""
+    """Save train/val/test to data/processed/."""
     PATHS.ensure()
     written = {}
     for name, part in splits.items():

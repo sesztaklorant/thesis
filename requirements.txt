@@ -1,5 +1,4 @@
-# HU: Alapcsomagok (01, 03, 04 notebook — CPU-n is fut)
-# EN: Core packages (notebooks 01, 03, 04 — run on a CPU)
+# Core packages (notebooks 01, 03 and 04, run on a CPU)
 pandas>=2.2
 numpy>=1.26
 scipy>=1.11
@@ -8,19 +7,18 @@ matplotlib>=3.8
 nltk>=3.8
 pyarrow>=15
 joblib>=1.3
-openpyxl>=3.1      # gold sample as Excel
+openpyxl>=3.1      # Excel files of the manual checks
 jupyter
 
-# HU: BERT-címkézés (02 notebook — GPU ajánlott; Colabon a torch előre telepítve van)
-# EN: BERT labelling (notebook 02 — GPU recommended; torch is preinstalled on Colab)
+# BERT labelling (notebook 02, GPU recommended; torch is preinstalled on Colab)
 torch>=2.2
 transformers>=4.44
 accelerate>=0.30
 
-# HU: 2. intelligenciaréteg (05 notebook) / EN: layer 2 (notebook 05)
+# Layer 2 (notebook 05)
 sentence-transformers>=3.0
 umap-learn>=0.5
 
-# HU: Opcionális / EN: Optional
-kagglehub      # HRAST automatic download
-pytest         # tests/
+# Optional
+kagglehub          # HRAST download
+pytest             # tests/

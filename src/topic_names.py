@@ -1,18 +1,10 @@
-"""
-HU: A 2/b altémák kézzel adott angol nevei (CFG.topic_version = "full2").
-    Kulcs: (aspektus, témaszám) → (név, automatikus c-TF-IDF címke). Az automatikus címke
-    „ujjlenyomat”: ha egy újrafuttatás más fürtöket ad (más témaszám = más tartalom), a
-    get_topic_names() hibát dob, így a nevek nem kerülhetnek rossz témára.
-    Szabályok: (1) a közel-duplikátum fürtök UGYANAZT a nevet kapják (az ábrák és a térképek
-    a név szerint összevonnak); (2) a több dolgot felsoroló dicséret-fürtök „(list)” utótagot
-    kapnak; (3) a kézi ellenőrzésen gyengébb (pontosság < 0,7) témák óvatos, tágabb nevet kapnak.
-EN: Manually assigned English names of the 2/b subtopics (CFG.topic_version = "full2").
-    Key: (aspect, topic id) → (name, automatic c-TF-IDF label). The automatic label is a
-    "fingerprint": if a rerun yields different clusters (same id = different content),
-    get_topic_names() raises, so names can never land on the wrong topic.
-    Rules: (1) near-duplicate clusters get the SAME name (figures and maps merge by name);
-    (2) praise clusters listing several things get a "(list)" suffix; (3) topics that were
-    weaker in the manual check (precision < 0.7) get cautious, broader names.
+"""Manually assigned English names of the 2/b subtopics (CFG.topic_version = "full2").
+
+Key: (aspect, topic id) -> (name, automatic c-TF-IDF label). The automatic label works as
+a fingerprint: if a new run produces different clusters under the same id,
+get_topic_names() raises an error, so a name cannot be attached to the wrong topic.
+Near-duplicate clusters share a name, praise clusters that list several things get a
+"(list)" suffix, and topics with a precision below 0.7 in the manual check got broader names.
 """
 from __future__ import annotations
 
@@ -21,7 +13,7 @@ import pandas as pd
 TOPIC_VERSION = "full2"
 
 
-# HU/EN: panaszok / complaints
+# panaszok / complaints
 NEGATIVE_TOPIC_NAMES: dict[tuple[str, int], tuple[str, str]] = {
     # --- room ---
     ('room', 0): ('small, dated room', 'small / room / rooms'),
@@ -234,7 +226,7 @@ NEGATIVE_TOPIC_NAMES: dict[tuple[str, int], tuple[str, str]] = {
 }
 
 
-# HU/EN: dicséretek / praise
+# praise
 POSITIVE_TOPIC_NAMES: dict[tuple[str, int], tuple[str, str]] = {
     # --- room ---
     ('room', 0): ('spacious room', 'room / spacious / rooms'),
@@ -455,10 +447,8 @@ TOPIC_NAMES = {"negative": NEGATIVE_TOPIC_NAMES, "positive": POSITIVE_TOPIC_NAME
 
 def get_topic_names(sentiment: str, topic_table: pd.DataFrame | None = None) -> dict[tuple[str, int], str]:
     """
-    HU: {(aspektus, téma): név} a rename_topics() számára. Ha topic_table is adott, ellenőrzi az
-        ujjlenyomatot (automatikus címke); eltérés esetén hibát dob, mert akkor a fürtök megváltoztak.
-    EN: {(aspect, topic): name} for rename_topics(). If topic_table is given, checks the fingerprint
-        (automatic label); raises on mismatch, because then the clusters have changed.
+    {(aspect, topic): name} for rename_topics(). If topic_table is given, checks the fingerprint
+    (automatic label); raises on mismatch, because then the clusters have changed.
     """
     entries = TOPIC_NAMES[sentiment]
     if topic_table is not None:

@@ -1,26 +1,9 @@
-"""
-aspect_model.py — 2/a réteg: tanult, többcímkés aspektus-osztályozó (HRAST).
-                  Layer 2/a: learned multi-label aspect classifier (HRAST).
+"""Layer 2/a: multi-label aspect classifier trained on HRAST.
 
-HU: Az első réteg megmondja, MILYEN egy mondat (negatív / semleges / pozitív). Ez a réteg
-    azt mondja meg, MIRŐL szól: szoba, személyzet, fürdőszoba, zaj, wifi... Egy mondat
-    egyszerre több aspektushoz is tartozhat ("a szoba tiszta, de zajos"), ezért ez
-    TÖBBCÍMKÉS (multi-label) feladat: aspektusonként egy-egy igen/nem döntés, szigmoiddal.
-
-    Miért kell, ha már van kulcsszólista (aspects.py)?
-      • a kulcsszólista csak a felsorolt szavakat ismeri ("we couldn't sleep" -> zaj? nem);
-      • a tanult modell a kontextusból általánosít, és EMBERI címkén mérhető (HRAST-teszt);
-      • a kulcsszólista megmarad ALAPVONALNAK: a kettő összevetése számszerű eredmény.
-
-EN: The first layer says WHAT a sentence is like (negative / neutral / positive). This layer
-    says WHAT IT IS ABOUT: room, staff, bathroom, noise, wifi... A sentence can belong to
-    several aspects at once ("the room is clean but noisy"), so this is a MULTI-LABEL task:
-    one yes/no decision per aspect, with a sigmoid.
-
-    Why is it needed when there is already a keyword list (aspects.py)?
-      • the keyword list only knows the listed words ("we couldn't sleep" -> noise? no);
-      • the learned model generalises from context and is measurable on HUMAN labels;
-      • the keyword list stays as the BASELINE: comparing the two is a quantitative result.
+The first layer gives the sentiment of a sentence, this layer gives its topic
+(room, staff, bathroom, noise, ...). A sentence can belong to several aspects
+("the room is clean but noisy"), so every aspect has its own sigmoid output.
+The keyword list in aspects.py is kept as a baseline for comparison.
 """
 
 from __future__ import annotations
@@ -40,26 +23,21 @@ from .config import CFG, HRAST_ASPECT_MAP, PATHS
 log = logging.getLogger(__name__)
 
 DEFAULT_MODEL_DIR = PATHS.models / "aspect_model_hrast"
-PROB_PREFIX = "aprob_"     # HU: aspektus-valószínűség / EN: aspect probability
-FLAG_PREFIX = "asp_"       # HU: aspektus 0/1 a küszöb után / EN: aspect 0/1 after the threshold
+PROB_PREFIX = "aprob_"  # aspect probability
+FLAG_PREFIX = "asp_"  # aspect 0/1 after the threshold
 
 
 # ==========================================================================
-# 1) ADAT-ELŐKÉSZÍTÉS / DATA PREPARATION
+# 1) DATA PREPARATION
 # ==========================================================================
 def prepare_hrast_aspects(raw: pd.DataFrame, aspect_map: dict[str, str] | None = None,
                           text_col: str | None = None,
                           min_examples: int = CFG.aspect_min_examples) -> tuple[pd.DataFrame, list[str]]:
     """
-    HU: HRAST -> mondatonként egy sor, aspektusonként egy 0/1 oszlop (egységes angol névvel).
-        • az ismétlődő mondatoknál az aspektusok UNIÓJA marad (ha bárhol 1, akkor 1);
-        • a min_examples-nél ritkább aspektus kimarad (nem tanulható megbízhatóan);
-        • az aspektus nélküli mondatok MARADNAK: a modellnek a "nincs aspektus" esetet is
-          meg kell tanulnia.
-    EN: HRAST -> one row per sentence, one 0/1 column per aspect (uniform English name).
-        • for repeated sentences the UNION of aspects is kept (1 if 1 anywhere);
-        • aspects rarer than min_examples are dropped (cannot be learned reliably);
-        • sentences without any aspect STAY: the model must learn the "no aspect" case too.
+    HRAST -> one row per sentence, one 0/1 column per aspect (uniform English name).
+    - for repeated sentences the union of aspects is kept (1 if 1 anywhere);
+    - aspects rarer than min_examples are dropped (cannot be learned reliably);
+    - sentences without any aspect are kept, so the "no aspect" case is learned too.
 
     Returns: (table: sentence + aspect columns, list of aspect names)
     """
@@ -98,8 +76,7 @@ def prepare_hrast_aspects(raw: pd.DataFrame, aspect_map: dict[str, str] | None =
 def split_aspect_data(data: pd.DataFrame, val_size: float = CFG.aspect_val_size,
                       test_size: float = CFG.aspect_test_size, seed: int = CFG.random_seed):
     """
-    HU: Véletlen felosztás train/val/test részre (a HRAST-ban nincs vélemény-azonosító).
-    EN: Random split into train/val/test (HRAST has no review id).
+    Random split into train/val/test (HRAST has no review id).
     """
     rng = np.random.default_rng(seed)
     order = rng.permutation(len(data))
@@ -112,10 +89,8 @@ def split_aspect_data(data: pd.DataFrame, val_size: float = CFG.aspect_val_size,
 
 def positive_weights(y: np.ndarray, cap: float = CFG.aspect_max_pos_weight) -> np.ndarray:
     """
-    HU: Aspektusonkénti súly a pozitív (=előfordul) példákra: negatív/pozitív arány, felülről
-        korlátozva. A ritka aspektusok (pl. lift) így nem "tűnnek el" a tanításban.
-    EN: Per-aspect weight for positive (=present) examples: negative/positive ratio, capped
-        from above. Rare aspects (e.g. lift) thus do not "disappear" during training.
+    Per-aspect weight for positive (=present) examples: negative/positive ratio, capped
+    from above, so rare aspects (e.g. lift) keep enough weight in training.
     """
     pos = y.sum(axis=0)
     neg = len(y) - pos
@@ -123,17 +98,14 @@ def positive_weights(y: np.ndarray, cap: float = CFG.aspect_max_pos_weight) -> n
 
 
 # ==========================================================================
-# 2) KÜSZÖBÖK ÉS METRIKÁK / THRESHOLDS AND METRICS
+# 2) THRESHOLDS AND METRICS
 # ==========================================================================
 def tune_thresholds(y_true: np.ndarray, probs: np.ndarray,
                     grid: np.ndarray | None = None) -> np.ndarray:
     """
-    HU: Aspektusonként az a küszöb, amely a VALIDÁCIÓS halmazon a legnagyobb F1-et adja.
-        A ritka aspektusoknál a 0,5 gyakran túl magas — ezért nem egy közös küszöb van.
-        (A teszthalmazt itt NEM használjuk, különben a mért eredmény optimista lenne.)
-    EN: Per aspect, the threshold giving the highest F1 on the VALIDATION set. For rare
-        aspects 0.5 is often too high — hence no single shared threshold.
-        (The test set is NOT used here, otherwise the measured result would be optimistic.)
+    Per aspect, the threshold giving the highest F1 on the validation set. For rare
+    aspects 0.5 is often too high, so there is no shared threshold.
+    (The test set is not used here, otherwise the measured result would be optimistic.)
     """
     from sklearn.metrics import f1_score
 
@@ -149,12 +121,9 @@ def tune_thresholds(y_true: np.ndarray, probs: np.ndarray,
 
 def multilabel_report(y_true: np.ndarray, y_pred: np.ndarray, names: list[str]) -> pd.DataFrame:
     """
-    HU: Aspektusonkénti precision / recall / F1 / support, plusz mikro- és makro-átlag.
-          mikro — minden döntés egyformán számít (a gyakori aspektusok dominálnak);
-          makro — minden aspektus egyformán számít (a ritkák is látszanak).
-    EN: Per-aspect precision / recall / F1 / support, plus micro and macro averages.
-          micro — every decision counts equally (frequent aspects dominate);
-          macro — every aspect counts equally (rare ones are visible too).
+    Per-aspect precision / recall / F1 / support, plus micro and macro averages.
+      micro - every decision counts equally (frequent aspects dominate);
+      macro - every aspect counts equally (rare ones are visible too).
     """
     from sklearn.metrics import precision_recall_fscore_support
 
@@ -169,10 +138,8 @@ def multilabel_report(y_true: np.ndarray, y_pred: np.ndarray, names: list[str]) 
 
 def keyword_predictions(sentences: pd.Series, names: list[str]) -> pd.DataFrame:
     """
-    HU: A kulcsszavas alapvonal (aspects.py) jóslatai ugyanazokra az aspektusnevekre.
-        Ahol nincs kulcsszólista (pl. comfort, view), az oszlop NaN.
-    EN: Predictions of the keyword baseline (aspects.py) for the same aspect names.
-        Where there is no keyword list (e.g. comfort, view), the column is NaN.
+    Predictions of the keyword baseline (aspects.py) for the same aspect names.
+    Where there is no keyword list (e.g. comfort, view), the column is NaN.
     """
     from .aspects import ASPECT_KEYWORDS, detect_aspects
 
@@ -186,10 +153,8 @@ def keyword_predictions(sentences: pd.Series, names: list[str]) -> pd.DataFrame:
 def compare_with_keywords(y_true: np.ndarray, model_pred: np.ndarray, keyword_pred: pd.DataFrame,
                           names: list[str]) -> pd.DataFrame:
     """
-    HU: Tanult modell vs. kulcsszólista aspektusonként, a HRAST TESZThalmazán (emberi címke).
-        Csak azokon az aspektusokon, amelyekre van kulcsszólista.
-    EN: Learned model vs keyword list per aspect, on the HRAST TEST set (human labels).
-        Only on the aspects that have a keyword list.
+    Learned model vs keyword list per aspect, on the HRAST test set (human labels).
+    Only on the aspects that have a keyword list.
     """
     from sklearn.metrics import f1_score, precision_score, recall_score
 
@@ -214,8 +179,7 @@ def compare_with_keywords(y_true: np.ndarray, model_pred: np.ndarray, keyword_pr
 
 def plot_keyword_vs_model(comparison: pd.DataFrame, save_as: str | None = None):
     """
-    HU: Páros pontdiagram: kulcsszólista vs. tanult modell F1-e aspektusonként.
-    EN: Dumbbell plot: F1 of the keyword list vs the learned model per aspect.
+    Dumbbell plot: F1 of the keyword list vs the learned model per aspect.
     """
     import matplotlib.pyplot as plt
     from .config import APPROACH_COLORS, INK
@@ -242,21 +206,16 @@ def plot_keyword_vs_model(comparison: pd.DataFrame, save_as: str | None = None):
 
 
 # ==========================================================================
-# 3) TANÍTÁS / TRAINING
+# 3) TRAINING
 # ==========================================================================
 def train_aspect_model(data: pd.DataFrame, names: list[str], output_dir: str | Path | None = None,
                        base_model: str = CFG.aspect_base_model, num_epochs: int = CFG.num_epochs) -> dict:
     """
-    HU: Többcímkés BERT finomhangolása a HRAST-on.
-          • veszteség: BCEWithLogits, aspektusonkénti pos_weight-tel (ritka aspektusok);
-          • a legjobb epoch a validációs mikro-F1 alapján;
-          • küszöbök a validációs halmazon hangolva (thresholds.json);
-          • végső mérés a TESZThalmazon + összevetés a kulcsszólistával.
-    EN: Fine-tune a multi-label BERT on HRAST.
-          • loss: BCEWithLogits with a per-aspect pos_weight (rare aspects);
-          • best epoch by validation micro-F1;
-          • thresholds tuned on the validation set (thresholds.json);
-          • final measurement on the TEST set + comparison with the keyword list.
+    Fine-tune a multi-label BERT on HRAST.
+      - loss: BCEWithLogits with a per-aspect pos_weight (rare aspects);
+      - best epoch by validation micro-F1;
+      - thresholds tuned on the validation set (thresholds.json);
+      - final measurement on the test set + comparison with the keyword list.
 
     Returns: {"model_dir", "train_minutes", "thresholds", "test_report", "keyword_comparison"}
     """
@@ -293,7 +252,7 @@ def train_aspect_model(data: pd.DataFrame, names: list[str], output_dir: str | P
                 "f1_macro": f1_score(labels, pred, average="macro", zero_division=0)}
 
     class MultiLabelTrainer(Trainer):
-        """HU: BCE-veszteség aspektusonkénti súllyal. / EN: BCE loss with per-aspect weight."""
+        """BCE loss with per-aspect weight."""
 
         def compute_loss(self, model, inputs, return_outputs=False, **kwargs):
             labels = inputs.pop("labels").float()
@@ -316,7 +275,7 @@ def train_aspect_model(data: pd.DataFrame, names: list[str], output_dir: str | P
     params = inspect.signature(Trainer.__init__).parameters
     trainer_kwargs["processing_class" if "processing_class" in params else "tokenizer"] = tokenizer
     trainer = MultiLabelTrainer(**trainer_kwargs)
-    trainer.model_accepts_loss_kwargs = False     # HU/EN: see bert_training.fine_tune_classifier
+    trainer.model_accepts_loss_kwargs = False  # see bert_training.fine_tune_classifier
 
     started = time.time()
     trainer.train()
@@ -327,7 +286,6 @@ def train_aspect_model(data: pd.DataFrame, names: list[str], output_dir: str | P
     trainer.save_model(str(output_dir))
     tokenizer.save_pretrained(str(output_dir))
 
-    # HU: Küszöbök a validáción, mérés a teszten. / EN: Thresholds on validation, measurement on test.
     scorer = AspectScorer(output_dir, thresholds=np.full(len(names), 0.5))
     thresholds = tune_thresholds(val[names].to_numpy(), scorer.predict_proba(val["sentence"].tolist()))
     (output_dir / "thresholds.json").write_text(json.dumps(dict(zip(names, thresholds.tolist())), indent=2))
@@ -351,14 +309,12 @@ def train_aspect_model(data: pd.DataFrame, names: list[str], output_dir: str | P
 
 
 # ==========================================================================
-# 4) ALKALMAZÁS A BOOKING-MONDATOKRA / APPLYING TO THE BOOKING SENTENCES
+# 4) APPLYING TO THE BOOKING SENTENCES
 # ==========================================================================
 class AspectScorer:
     """
-    HU: A betanított aspektusmodell kötegelt alkalmazása (szigmoid valószínűségek).
-        Ugyanaz a gyorsítás, mint a TransformerScorer-nél: hossz szerinti rendezés, fp16.
-    EN: Batched application of the trained aspect model (sigmoid probabilities).
-        Same speed-ups as TransformerScorer: sorting by length, fp16.
+    Batched application of the trained aspect model (sigmoid probabilities).
+    Same speed-ups as TransformerScorer: sorting by length, fp16.
     """
 
     def __init__(self, model_dir: str | Path = DEFAULT_MODEL_DIR, thresholds: np.ndarray | None = None,
@@ -404,12 +360,9 @@ def predict_aspects(sentences: pd.DataFrame, model_dir: str | Path = DEFAULT_MOD
                     text_col: str = "sentence", cache_name: str | None = "aspects_sentence",
                     scorer=None) -> pd.DataFrame:
     """
-    HU: Aspektusok a Booking-mondatokra (darabolt, folytatható futás, mint a címkézésnél).
-        Új oszlopok: aprob_<aspektus> (valószínűség), asp_<aspektus> (0/1 a küszöb után),
-        aspect_list ("room;noise"), n_aspects.
-    EN: Aspects for the Booking sentences (chunked, resumable run, as in labelling).
-        New columns: aprob_<aspect> (probability), asp_<aspect> (0/1 after the threshold),
-        aspect_list ("room;noise"), n_aspects.
+    Aspects for the Booking sentences (chunked, resumable run, as in labelling).
+    New columns: aprob_<aspect> (probability), asp_<aspect> (0/1 after the threshold),
+    aspect_list ("room;noise"), n_aspects.
     """
     from .bert_labelling import run_chunked
 
@@ -429,18 +382,15 @@ def predict_aspects(sentences: pd.DataFrame, model_dir: str | Path = DEFAULT_MOD
 
 
 def aspect_names_in(frame: pd.DataFrame) -> list[str]:
-    """HU: A táblában lévő aspektusnevek (asp_* oszlopokból). / EN: Aspect names present (from asp_* columns)."""
+    """Aspect names present (from asp_* columns)."""
     return [c[len(FLAG_PREFIX):] for c in frame.columns if c.startswith(FLAG_PREFIX)]
 
 
 def keyword_agreement(sent_df: pd.DataFrame, text_col: str = "sentence") -> pd.DataFrame:
     """
-    HU: Booking-mondatokon: mennyire egyezik a tanult modell a kulcsszólistával
-        aspektusonként (egyezési arány, Cohen-kappa, gyakoriság mindkét módszerrel).
-        Itt nincs emberi címke — ez a két módszer KONZISZTENCIÁJÁT méri.
-    EN: On Booking sentences: how far the learned model agrees with the keyword list per
-        aspect (agreement rate, Cohen's kappa, frequency by both methods). There is no
-        human label here — this measures the CONSISTENCY of the two methods.
+    On Booking sentences: how far the learned model agrees with the keyword list per
+    aspect (agreement rate, Cohen's kappa, frequency by both methods). There is no
+    human label here; the result is the consistency of the two methods.
     """
     from sklearn.metrics import cohen_kappa_score
 

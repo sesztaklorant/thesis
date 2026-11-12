@@ -1,13 +1,7 @@
-"""
-evaluation.py — Metrikák, konfúziós mátrix, hibaelemzés, mentés.
-                Metrics, confusion matrix, error analysis, saving.
+"""Metrics, confusion matrices, error examples and saving of tables and figures.
 
-HU: Minden modellt (klasszikus és BERT) UGYANEZEKKEL a függvényekkel értékelünk.
-    A fő metrika a MAKRO-F1: minden osztály egyformán számít, így kiderül, hogy a
-    modell a kisebb osztályokat (pl. semleges) is megtanulta-e.
-EN: Every model (classical and BERT) is evaluated with THESE SAME functions.
-    The main metric is MACRO-F1: every class counts equally, so it shows whether
-    the model has also learned the smaller classes (e.g. neutral).
+All models are evaluated with these functions. The main metric is macro-F1, which
+weights every class equally.
 """
 
 from __future__ import annotations
@@ -26,10 +20,10 @@ log = logging.getLogger(__name__)
 
 
 # ==========================================================================
-# 1) METRIKÁK / METRICS
+# 1) METRICS
 # ==========================================================================
 def compute_metrics(y_true, y_pred) -> dict:
-    """HU: Accuracy, makro és súlyozott precision/recall/F1. / EN: Accuracy, macro and weighted precision/recall/F1."""
+    """Accuracy, macro and weighted precision/recall/F1."""
     y_true = np.asarray(y_true).astype(str)
     y_pred = np.asarray(y_pred).astype(str)
     p_mac, r_mac, f_mac, _ = precision_recall_fscore_support(y_true, y_pred, average="macro",
@@ -45,10 +39,8 @@ def compute_metrics(y_true, y_pred) -> dict:
 
 def baseline_metrics(y_true, labels: list[str] | None = None) -> pd.DataFrame:
     """
-    HU: Triviális alapvonalak (mindig a többségi osztály, rétegzett és egyenletes
-        véletlen) — minden modellnek ezeket kell megvernie.
-    EN: Trivial baselines (always the majority class, stratified and uniform
-        random) — every model has to beat these.
+    Trivial baselines (always the majority class, stratified and uniform
+    random) - every model has to beat these.
     """
     labels = labels or list(CFG.labels)
     y = np.asarray(y_true).astype(str)
@@ -66,7 +58,7 @@ def baseline_metrics(y_true, labels: list[str] | None = None) -> pd.DataFrame:
 
 
 def per_class_report(y_true, y_pred, labels: list[str] | None = None) -> pd.DataFrame:
-    """HU: Osztályonkénti precision/recall/F1. / EN: Per-class precision/recall/F1."""
+    """Per-class precision/recall/F1."""
     labels = labels or list(CFG.labels)
     rep = classification_report(np.asarray(y_true).astype(str), np.asarray(y_pred).astype(str),
                                 labels=labels, output_dict=True, zero_division=0)
@@ -74,23 +66,21 @@ def per_class_report(y_true, y_pred, labels: list[str] | None = None) -> pd.Data
 
 
 def compare_models(results: dict[str, dict]) -> pd.DataFrame:
-    """HU: Több modell metrikái egy táblában. / EN: Metrics of several models in one table."""
+    """Metrics of several models in one table."""
     return (pd.DataFrame(results).T
             [["accuracy", "precision_macro", "recall_macro", "f1_macro", "f1_weighted"]]
             .sort_values("f1_macro", ascending=False).round(4))
 
 
 # ==========================================================================
-# 2) KONFÚZIÓS MÁTRIX / CONFUSION MATRIX
+# 2) CONFUSION MATRIX
 # ==========================================================================
 def plot_confusion_matrix(y_true, y_pred, labels: list[str] | None = None,
                           title: str = "Confusion matrix", normalize: bool = True,
                           save_as: str | None = None, ax=None):
     """
-    HU: Soronként normalizált konfúziós mátrix (az adott VALÓDI osztály hány %-át
-        melyik osztálynak jósolta a modell).
-    EN: Row-normalised confusion matrix (what % of the given TRUE class the model
-        predicted as which class).
+    Row-normalised confusion matrix (what % of the given true class the model
+    predicted as which class).
     """
     import matplotlib.pyplot as plt
 
@@ -122,10 +112,10 @@ def plot_confusion_matrix(y_true, y_pred, labels: list[str] | None = None,
 
 
 # ==========================================================================
-# 3) MENTÉS / SAVING
+# 3) SAVING
 # ==========================================================================
 def save_figure(name: str, dpi: int = 300) -> Path:
-    """HU: Ábra mentése 300 DPI-vel a results/figures/ mappába. / EN: Save a figure at 300 DPI to results/figures/."""
+    """Save a figure at 300 DPI to results/figures/."""
     import matplotlib.pyplot as plt
     PATHS.ensure()
     path = PATHS.figures / (name if name.endswith((".png", ".pdf")) else f"{name}.png")
@@ -135,7 +125,7 @@ def save_figure(name: str, dpi: int = 300) -> Path:
 
 
 def save_table(df: pd.DataFrame, name: str) -> Path:
-    """HU: Tábla mentése CSV-be a results/tables/ mappába. / EN: Save a table as CSV to results/tables/."""
+    """Save a table as CSV to results/tables/."""
     PATHS.ensure()
     path = PATHS.tables / (name if name.endswith(".csv") else f"{name}.csv")
     df.to_csv(path, encoding="utf-8")
@@ -144,17 +134,14 @@ def save_table(df: pd.DataFrame, name: str) -> Path:
 
 
 # ==========================================================================
-# 4) HIBAELEMZÉS / ERROR ANALYSIS
+# 4) ERROR ANALYSIS
 # ==========================================================================
 def error_analysis(df: pd.DataFrame, y_pred, text_col: str = "text", label_col: str = "label_final",
                    n_examples: int = 10, seed: int = CFG.random_seed) -> pd.DataFrame:
     """
-    HU: Félreosztályozott vélemények hibatípusonként (legfeljebb n_examples példa).
-        Keverés + groupby().head() — NEM groupby().apply(), mert pandas 3.0-tól az
-        apply elhagyja a csoportosító oszlopot.
-    EN: Misclassified reviews per error type (at most n_examples each).
-        Shuffle + groupby().head() — NOT groupby().apply(), because from pandas 3.0
-        apply drops the grouping column.
+    Misclassified reviews per error type (at most n_examples each).
+    Shuffle + groupby().head() - not groupby().apply(), because from pandas 3.0
+    apply drops the grouping column.
     """
     out = df.copy()
     out["predicted"] = np.asarray(y_pred).astype(str)

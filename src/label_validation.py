@@ -1,32 +1,9 @@
-"""
-label_validation.py — A BERT-címkék ellenőrzése valódi címke HIÁNYÁBAN.
-                      Validating the BERT labels in the ABSENCE of a true label.
+"""Validation of the BERT labels without a ground-truth label.
 
-HU: A gépi címke csak akkor használható, ha meg tudjuk mutatni, hogy JÓ. Mivel
-    nincs kész "igazság", öt, egymást kiegészítő bizonyítékot gyűjtünk:
-
-      1. Egyezés a megközelítések között   — Cohen- és Fleiss-kappa
-      2. Kapcsolat a vendégpontszámmal     — Spearman-korreláció (konvergens validitás:
-                                              erős, de NEM tökéletes kapcsolat várható)
-      3. Booking-mezőpróba                 — a "pozitív" mező szövegét pozitívnak, a
-                                              "negatív" mezőét negatívnak kell mondania
-                                              (a vendég maga döntötte el, hova ír)
-      4. Kézi gold minta                   — kb. 400 vélemény VAKON annotálva; ez az
-                                              egyetlen közvetlen pontosságmérés
-      5. Pontszám-vágás referencia         — megmutatja, mennyire térne el a naiv vágás
-
-EN: A machine label is only usable if we can show that it is GOOD. Since there
-    is no ready "truth", we collect five complementary pieces of evidence:
-
-      1. Agreement between the approaches  — Cohen's and Fleiss' kappa
-      2. Relation to the guest score       — Spearman correlation (convergent validity:
-                                              strong but NOT perfect relation expected)
-      3. Booking field test                — text from the "positive" field should be
-                                              called positive, from the "negative" field
-                                              negative (the guest chose the field)
-      4. Manual gold sample                — ~400 reviews annotated BLIND; the only
-                                              direct accuracy measurement
-      5. Score-cut reference               — shows how far the naive cut would deviate
+Evidence collected: agreement between the approaches (Cohen's and Fleiss' kappa),
+relation to the guest score (Spearman correlation), the Booking field test (praise
+field text should be positive, complaint field text negative), the blind manual gold
+sample (about 400 reviews) and a comparison with the score cut.
 """
 
 from __future__ import annotations
@@ -43,7 +20,7 @@ from .config import APPROACH_COLORS, CFG, INK, PATHS, SENTIMENT_COLORS
 log = logging.getLogger(__name__)
 
 LABELS: list[str] = list(CFG.labels)
-ORDINAL = {label: i for i, label in enumerate(LABELS)}   # HU/EN: negative < neutral < positive
+ORDINAL = {label: i for i, label in enumerate(LABELS)}  # negative < neutral < positive
 
 
 def available_approaches(labels: pd.DataFrame,
@@ -53,8 +30,7 @@ def available_approaches(labels: pd.DataFrame,
 
 def comparison_mask(labels: pd.DataFrame) -> pd.Series:
     """
-    HU: Az összevetésben használható sorok: kizárjuk azokat, amelyeken a (C) tanult.
-    EN: Rows usable in the comparison: excludes the reviews (C) was trained on.
+    Rows usable in the comparison: excludes the reviews (C) was trained on.
     """
     if "C_in_training" in labels.columns:
         return ~labels["C_in_training"].fillna(False).astype(bool)
@@ -62,15 +38,13 @@ def comparison_mask(labels: pd.DataFrame) -> pd.Series:
 
 
 # ==========================================================================
-# 5) PONTSZÁM-VÁGÁS — CSAK REFERENCIA / SCORE CUT — REFERENCE ONLY
+# 5) SCORE CUT - REFERENCE ONLY
 # ==========================================================================
 def score_cut_labels(scores: pd.Series, neg_threshold: float = CFG.reference_neg_threshold,
                      pos_threshold: float = CFG.reference_pos_threshold) -> pd.Series:
     """
-    HU: A korábbi, NEM érvényes címkézés (score ≤ 7 negatív, ≥ 9 pozitív), kizárólag
-        összehasonlításra: hány véleménynél mond mást a szöveg, mint a pontszám-vágás?
-    EN: The earlier, NOT valid labelling (score ≤ 7 negative, ≥ 9 positive), only
-        for comparison: for how many reviews does the text say something else?
+    The earlier, not valid labelling (score ≤ 7 negative, ≥ 9 positive), only
+    for comparison: the share of reviews where the text says something else.
     """
     s = pd.to_numeric(scores, errors="coerce")
     out = pd.Series(np.where(s <= neg_threshold, "negative",
@@ -80,12 +54,11 @@ def score_cut_labels(scores: pd.Series, neg_threshold: float = CFG.reference_neg
 
 
 # ==========================================================================
-# 1) ELOSZLÁS ÉS EGYEZÉS / DISTRIBUTION AND AGREEMENT
+# 1) DISTRIBUTION AND AGREEMENT
 # ==========================================================================
 def label_distribution(labels: pd.DataFrame, columns: dict[str, str]) -> pd.DataFrame:
     """
-    HU: Osztályarányok címkeforrásonként. columns: {megjelenítendő név: oszlop}.
-    EN: Class shares per label source. columns: {display name: column}.
+    Class shares per label source. columns: {display name: column}.
     """
     rows = {name: labels[col].astype(str).value_counts(normalize=True).reindex(LABELS, fill_value=0)
             for name, col in columns.items() if col in labels.columns}
@@ -97,14 +70,10 @@ def label_distribution(labels: pd.DataFrame, columns: dict[str, str]) -> pd.Data
 
 def cohen_kappa(a: pd.Series, b: pd.Series, weights: str | None = None) -> float:
     """
-    HU: Cohen-kappa: véletlen egyezésre korrigált egyezés. weights="linear" esetén a
-        sorrendet is figyelembe veszi (negatív↔pozitív tévesztés nagyobb hiba, mint
-        negatív↔semleges). Értelmezés (Landis & Koch, 1977): 0,41–0,60 közepes,
-        0,61–0,80 jelentős, 0,81 felett szinte tökéletes.
-    EN: Cohen's kappa: agreement corrected for chance. With weights="linear" it
-        respects the order (negative↔positive is a bigger error than
-        negative↔neutral). Interpretation (Landis & Koch, 1977): 0.41–0.60
-        moderate, 0.61–0.80 substantial, above 0.81 almost perfect.
+    Cohen's kappa: agreement corrected for chance. With weights="linear" it
+    respects the order (negative↔positive is a bigger error than
+    negative↔neutral). Interpretation (Landis & Koch, 1977): 0.41–0.60
+    moderate, 0.61–0.80 substantial, above 0.81 almost perfect.
     """
     from sklearn.metrics import cohen_kappa_score
     both = pd.concat([a, b], axis=1).dropna()
@@ -116,8 +85,7 @@ def cohen_kappa(a: pd.Series, b: pd.Series, weights: str | None = None) -> float
 
 def pairwise_agreement(labels: pd.DataFrame, columns: dict[str, str]) -> pd.DataFrame:
     """
-    HU: Minden címkeforrás-pár: egyezési arány, Cohen-kappa, lineárisan súlyozott kappa.
-    EN: Every pair of label sources: agreement rate, Cohen's kappa, linearly weighted kappa.
+    Every pair of label sources: agreement rate, Cohen's kappa, linearly weighted kappa.
     """
     rows = []
     for (name_a, col_a), (name_b, col_b) in itertools.combinations(columns.items(), 2):
@@ -136,8 +104,7 @@ def pairwise_agreement(labels: pd.DataFrame, columns: dict[str, str]) -> pd.Data
 
 def fleiss_kappa(labels: pd.DataFrame, columns: list[str]) -> float:
     """
-    HU: Fleiss-kappa: kettőnél több "annotátor" (itt: megközelítés) együttes egyezése.
-    EN: Fleiss' kappa: joint agreement of more than two "raters" (here: approaches).
+    Fleiss' kappa: joint agreement of more than two "raters" (here: approaches).
     """
     data = labels[columns].dropna().astype(str)
     if data.empty or len(columns) < 2:
@@ -152,32 +119,25 @@ def fleiss_kappa(labels: pd.DataFrame, columns: list[str]) -> float:
 
 
 def approach_crosstab(labels: pd.DataFrame, col_a: str, col_b: str, normalize: bool = True) -> pd.DataFrame:
-    """HU: Két címkeforrás kereszttáblája. / EN: Crosstab of two label sources."""
+    """Crosstab of two label sources."""
     tab = pd.crosstab(labels[col_a].astype(str), labels[col_b].astype(str),
                       normalize="index" if normalize else False)
     return tab.reindex(index=LABELS, columns=LABELS, fill_value=0).round(4)
 
 
 # ==========================================================================
-# 2) KAPCSOLAT A VENDÉGPONTSZÁMMAL / RELATION TO THE GUEST SCORE
+# 2) RELATION TO THE GUEST SCORE
 # ==========================================================================
 def guest_score_validity(data: pd.DataFrame, approaches: list[str],
                          score_col: str = "score") -> pd.DataFrame:
     """
-    HU: Megközelítésenként:
-          spearman_rho      — a szövegalapú pontszám és a vendégpontszám rangkorrelációja
-          mean_guest_score_<címke> — átlagos vendégpontszám a címke szerint
-          neg_but_score_ge9 — "negatív" szöveg, de ≥ 9-es pontszám (szöveg ≠ szám)
-          pos_but_score_le6 — "pozitív" szöveg, de ≤ 6-os pontszám
-        Erős, de nem tökéletes korreláció a JÓ eredmény: ha tökéletes lenne, a
-        szövegalapú címke semmit sem adna a pontszámhoz képest.
-    EN: Per approach:
-          spearman_rho      — rank correlation of the text-based score and the guest score
-          mean_guest_score_<label> — mean guest score per label
-          neg_but_score_ge9 — "negative" text but a score ≥ 9 (text ≠ number)
-          pos_but_score_le6 — "positive" text but a score ≤ 6
-        A strong but imperfect correlation is the GOOD outcome: if it were
-        perfect, the text-based label would add nothing over the score.
+    Per approach:
+      spearman_rho      - rank correlation of the text-based score and the guest score
+      mean_guest_score_<label> - mean guest score per label
+      neg_but_score_ge9 - "negative" text but a score ≥ 9 (text ≠ number)
+      pos_but_score_le6 - "positive" text but a score ≤ 6
+    A strong but imperfect correlation is the good outcome: if it were
+    perfect, the text-based label would add nothing over the score.
     """
     from scipy.stats import spearmanr
 
@@ -203,12 +163,9 @@ def text_score_discrepancies(data: pd.DataFrame, score_col_text: str = "score10_
                              n_examples: int = 20, text_col: str = "text",
                              seed: int = CFG.random_seed) -> pd.DataFrame:
     """
-    HU: Példák, ahol a szöveg és a pontszám nagyon eltér (|eltérés| ≥ min_gap).
-        Kézzel elolvasva ezek mutatják meg, MIÉRT nem lehet a pontszámot vágni
-        (pl. 10 pont, de a szöveg panaszkodik) — kvalitatív anyag a dolgozatba.
-    EN: Examples where text and score differ strongly (|gap| ≥ min_gap). Read by
-        hand, these show WHY the score cannot be cut (e.g. 10 points but the text
-        complains) — qualitative material for the thesis.
+    Examples where text and score differ strongly (|gap| ≥ min_gap). Read by
+    hand, these show why the score cannot be cut (e.g. 10 points but the text
+    complains).
     """
     gap = data[score_col_text] - pd.to_numeric(data[score_col_guest], errors="coerce")
     picked = data.assign(gap=gap)[gap.abs() >= min_gap]
@@ -220,17 +177,14 @@ def text_score_discrepancies(data: pd.DataFrame, score_col_text: str = "score10_
 
 
 # ==========================================================================
-# 3) BOOKING-MEZŐPRÓBA / BOOKING FIELD TEST
+# 3) BOOKING FIELD TEST
 # ==========================================================================
 def build_field_test_set(data: pd.DataFrame, n_per_field: int = 2_000, min_words: int = 4,
                          seed: int = CFG.random_seed) -> pd.DataFrame:
     """
-    HU: Ismert polaritású szövegek a Booking-szerkezetből: a review_positive mező
-        szövege "positive", a review_negative mezőé "negative". (Semleges itt nincs —
-        ez a próba a két szélső osztályt ellenőrzi.)
-    EN: Texts with known polarity from the Booking structure: text of the
-        review_positive field is "positive", of review_negative "negative".
-        (No neutral here — this test checks the two extreme classes.)
+    Texts with known polarity from the Booking structure: text of the
+    review_positive field is "positive", of review_negative "negative".
+    (No neutral here - this test checks the two extreme classes.)
     """
     from .preprocessing import clean_text_minimal
 
@@ -249,10 +203,8 @@ def build_field_test_set(data: pd.DataFrame, n_per_field: int = 2_000, min_words
 
 def field_test_report(expected: pd.Series, predicted: pd.Series) -> pd.DataFrame:
     """
-    HU: Mezőnként: a várt osztályt hány százalékban találta el, hány százalékot
-        mondott semlegesnek, és hányat az ELLENKEZŐJÉNEK (ez a súlyos hiba).
-    EN: Per field: share of the expected class hit, share called neutral, and the
-        share called the OPPOSITE (the serious error).
+    Per field: share of the expected class hit, share called neutral, and the
+    share called the opposite (the serious error).
     """
     frame = pd.DataFrame({"expected": expected.to_numpy(), "predicted": predicted.astype(str).to_numpy()})
     rows = []
@@ -266,23 +218,17 @@ def field_test_report(expected: pd.Series, predicted: pd.Series) -> pd.DataFrame
 
 
 # ==========================================================================
-# 4) KÉZI GOLD MINTA / MANUAL GOLD SAMPLE
+# 4) MANUAL GOLD SAMPLE
 # ==========================================================================
 def export_gold_sample(data: pd.DataFrame, n: int = CFG.gold_sample_size, text_col: str = "text",
                        seed: int = CFG.random_seed, filename: str = "gold_sample_to_annotate.csv") -> Path:
     """
-    HU: Véletlen minta kézi annotálásra. VAK annotálás: a fájlban csak a szöveg
-        van — sem a vendégpontszám, sem a modellek címkéje nem látszik, különben
-        az annotátort befolyásolná. A kitöltendő oszlopok:
-          gold_label  — negative / neutral / positive
-          gold_score  — 1–10 egész (opcionális)
-        Egyszerű véletlen minta -> a mért pontosság torzítatlan becslés.
-    EN: Random sample for manual annotation. BLIND annotation: the file contains
-        only the text — neither the guest score nor the model labels are shown,
-        otherwise they would bias the annotator. Columns to fill in:
-          gold_label  — negative / neutral / positive
-          gold_score  — integer 1–10 (optional)
-        Simple random sample -> the measured accuracy is an unbiased estimate.
+    Random sample for manual annotation. The annotation is blind: the file contains
+    only the text, without the guest score or the model labels, which could bias the
+    annotator. Columns to fill in:
+      gold_label  - negative / neutral / positive
+      gold_score  - integer 1–10 (optional)
+    With a simple random sample the measured accuracy is an unbiased estimate.
     """
     PATHS.ensure()
     sample = data.sample(min(n, len(data)), random_state=seed)
@@ -292,7 +238,7 @@ def export_gold_sample(data: pd.DataFrame, n: int = CFG.gold_sample_size, text_c
     if path.exists():
         raise FileExistsError(f"{path} already exists — it may contain your annotations. "
                               "Rename or delete it first.")
-    out.to_csv(path, index=False, encoding="utf-8-sig")   # HU/EN: utf-8-sig -> Excel opens it correctly
+    out.to_csv(path, index=False, encoding="utf-8-sig")  # utf-8-sig -> Excel opens it correctly
     log.info("Gold sample exported: %s (%d reviews). Fill in gold_label (and gold_score).", path, len(out))
     return path
 
@@ -300,18 +246,12 @@ def export_gold_sample(data: pd.DataFrame, n: int = CFG.gold_sample_size, text_c
 def gold_csv_to_xlsx(csv_name: str = "gold_sample_to_annotate.csv",
                      xlsx_name: str = "gold_sample_to_annotate.xlsx") -> Path:
     """
-    HU: A gold minta CSV -> formázott Excel a kényelmes annotáláshoz:
-          • külön oszlopok (a magyar Excel a vesszős CSV-t egy oszlopba tenné);
-          • a szöveg tördelve, széles oszlopban; az első sor rögzítve;
-          • gold_label: legördülő lista (negative / neutral / positive);
-          • gold_score: csak 1–10 közötti egész fogadható el.
-        A load_gold() ezután az .xlsx-et olvassa (ha létezik).
-    EN: Gold sample CSV -> formatted Excel for convenient annotation:
-          • separate columns (Hungarian Excel would put a comma CSV into one column);
-          • text wrapped in a wide column; first row frozen;
-          • gold_label: drop-down list (negative / neutral / positive);
-          • gold_score: only integers 1–10 are accepted.
-        load_gold() then reads the .xlsx (if it exists).
+    Gold sample CSV -> formatted Excel for convenient annotation:
+      - separate columns (a comma-separated CSV opens in one column with some locale settings);
+      - text wrapped in a wide column; first row frozen;
+      - gold_label: drop-down list (negative / neutral / positive);
+      - gold_score: only integers 1–10 are accepted.
+    load_gold() then reads the .xlsx (if it exists).
     """
     from openpyxl import Workbook
     from openpyxl.styles import Alignment, Font
@@ -354,10 +294,8 @@ def gold_csv_to_xlsx(csv_name: str = "gold_sample_to_annotate.csv",
 
 def load_gold(filename: str | None = None) -> pd.DataFrame:
     """
-    HU: A kitöltött gold minta beolvasása és ellenőrzése. Alapból az .xlsx-et olvassa,
-        ha az létezik, különben a .csv-t.
-    EN: Read and check the annotated gold sample. By default it reads the .xlsx if it
-        exists, otherwise the .csv.
+    Read and check the annotated gold sample. By default it reads the .xlsx if it
+    exists, otherwise the .csv.
     """
     if filename is None:
         xlsx = PATHS.annotation / "gold_sample_to_annotate.xlsx"
@@ -378,14 +316,10 @@ def load_gold(filename: str | None = None) -> pd.DataFrame:
 def evaluate_on_gold(gold: pd.DataFrame, labels: pd.DataFrame, columns: dict[str, str],
                      score_columns: dict[str, str] | None = None) -> pd.DataFrame:
     """
-    HU: Minden címkeforrás összevetése a kézi címkével: accuracy, makro-F1, kappa,
-        és (ha van gold_score) a pontszám átlagos abszolút hibája (MAE).
-        Ide érdemes a pontszám-vágás referenciát is betenni: ez méri SZÁMSZERŰEN,
-        mennyivel jobb a szövegalapú címke a vágásnál.
-    EN: Compare every label source with the manual label: accuracy, macro-F1,
-        kappa and (if gold_score exists) the mean absolute error of the score.
-        Include the score-cut reference too: it measures QUANTITATIVELY how much
-        better the text-based label is than the cut.
+    Compare every label source with the manual label: accuracy, macro-F1,
+    kappa and (if gold_score exists) the mean absolute error of the score.
+    Include the score-cut reference too: it measures quantitatively how much
+    better the text-based label is than the cut.
     """
     from .evaluation import compute_metrics
 
@@ -411,14 +345,10 @@ def calibrate_neutral_band(gold: pd.DataFrame, labels: pd.DataFrame, prefix: str
                            bands: tuple[float, ...] = (0.0, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.5)
                            ) -> pd.DataFrame:
     """
-    HU: A semleges sáv kalibrálása a gold mintán: minden sávszélességre kiszámolja a
-        kézi címkével mért accuracy-t, makro-F1-et, kappát és a semleges osztály F1-ét.
-        Figyelem: ugyanazon a mintán választunk és mérünk -> az eredmény enyhén
-        optimista; egyetlen paraméternél ez elfogadható, de a dolgozatban jelezni kell.
-    EN: Calibrating the neutral band on the gold sample: for every band width it computes
-        accuracy, macro-F1, kappa and the F1 of the neutral class against the manual label.
-        Note: we choose and measure on the same sample -> slightly optimistic; acceptable
-        for a single parameter, but it has to be stated in the thesis.
+    Calibrating the neutral band on the gold sample: for every band width it computes
+    accuracy, macro-F1, kappa and the F1 of the neutral class against the manual label.
+    Selection and measurement use the same sample, so the result is slightly optimistic
+    (see feedback_checks.band_nested_cv for the nested estimate).
     """
     from sklearn.metrics import f1_score
 
@@ -442,11 +372,8 @@ def calibrate_neutral_band(gold: pd.DataFrame, labels: pd.DataFrame, prefix: str
 def bootstrap_ci(gold: pd.DataFrame, labels: pd.DataFrame, columns: dict[str, str],
                  n_boot: int = 2000, seed: int = CFG.random_seed) -> pd.DataFrame:
     """
-    HU: 95%-os bootstrap konfidencia-intervallum a makro-F1-re és az accuracy-re.
-        400 véleménynél a különbségek egy része a véletlen ingadozáson belül lehet —
-        ez mutatja meg, melyik eltérés valódi.
-    EN: 95% bootstrap confidence interval for macro-F1 and accuracy. With 400 reviews
-        some differences may be within random variation — this shows which are real.
+    95% bootstrap confidence interval for macro-F1 and accuracy. With 400 reviews
+    some differences may be within random variation - this shows which are real.
     """
     from .evaluation import compute_metrics
 
@@ -471,11 +398,11 @@ def bootstrap_ci(gold: pd.DataFrame, labels: pd.DataFrame, columns: dict[str, st
 
 
 # ==========================================================================
-# 6) ÁBRÁK / FIGURES
+# 6) FIGURES
 # ==========================================================================
 def plot_label_distribution(dist: pd.DataFrame, title: str = "Label distribution by source",
                             save_as: str | None = None):
-    """HU: 100%-ra halmozott vízszintes oszlopok forrásonként. / EN: 100% stacked horizontal bars per source."""
+    """100% stacked horizontal bars per source."""
     import matplotlib.pyplot as plt
     from .evaluation import save_figure
 
@@ -504,10 +431,8 @@ def plot_label_distribution(dist: pd.DataFrame, title: str = "Label distribution
 def plot_score_vs_guest(data: pd.DataFrame, approaches: list[str], score_col: str = "score",
                         save_as: str | None = None):
     """
-    HU: Átlagos szövegalapú pontszám a vendégpontszám függvényében, megközelítésenként.
-        Az átló (y = x) a tökéletes egyezés; az eltérés a "szöveg ≠ szám" jelenség.
-    EN: Mean text-based score as a function of the guest score, per approach.
-        The diagonal (y = x) is perfect agreement; the gap is the "text ≠ number" effect.
+    Mean text-based score as a function of the guest score, per approach.
+    The diagonal (y = x) is perfect agreement; the gap is the "text ≠ number" effect.
     """
     import matplotlib.pyplot as plt
     from .evaluation import save_figure
@@ -533,7 +458,7 @@ def plot_score_vs_guest(data: pd.DataFrame, approaches: list[str], score_col: st
 
 def plot_agreement_matrix(tab: pd.DataFrame, title: str, xlabel: str, ylabel: str,
                           save_as: str | None = None):
-    """HU: Soronként normalizált kereszttábla hőtérképként. / EN: Row-normalised crosstab as a heatmap."""
+    """Row-normalised crosstab as a heatmap."""
     import matplotlib.pyplot as plt
     from .evaluation import save_figure
 
@@ -559,12 +484,9 @@ def paired_gold_test(gold: pd.DataFrame, pred_a: pd.Series, pred_b: pd.Series,
                      names: tuple[str, str] = ("A", "B"), n_boot: int = 2000,
                      seed: int = CFG.random_seed) -> pd.DataFrame:
     """
-    HU: Két címkéző PÁROS összevetése ugyanazon a gold mintán: McNemar-próba (csak az egyik helyes
-        esetek aránya) és bootstrap 95%-os konfidenciaintervallum a különbségre (2. − 1.) pontosságban,
-        macro-F1-ben és kappában. Ha az intervallum tartalmazza a 0-t, a különbség nem szignifikáns.
-    EN: PAIRED comparison of two labellers on the same gold sample: McNemar test (cases where only one
-        is right) and a bootstrap 95% confidence interval for the difference (2nd − 1st) in accuracy,
-        macro-F1 and kappa. If the interval contains 0, the difference is not significant.
+    paired comparison of two labellers on the same gold sample: McNemar test (cases where only one
+    is right) and a bootstrap 95% confidence interval for the difference (2nd − 1st) in accuracy,
+    macro-F1 and kappa. If the interval contains 0, the difference is not significant.
     """
     from scipy.stats import binomtest
     from sklearn.metrics import accuracy_score, cohen_kappa_score, f1_score

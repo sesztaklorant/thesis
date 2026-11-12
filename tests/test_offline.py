@@ -1,16 +1,11 @@
-"""
-test_offline.py — Gyors tesztek GPU, internet és torch NÉLKÜL.
-                  Quick tests WITHOUT GPU, internet and torch.
+"""Offline tests without GPU, internet or PyTorch.
 
-HU: A BERT-modellt egy kulcsszavas "ál-modell" (FakeScorer) helyettesíti, így a
-    teljes logika (címkeképzés, 1–10 pontszám, aggregálás, pseudo-címkék, végső
-    címke, validáció) ellenőrizhető másodpercek alatt.
-EN: The BERT model is replaced by a keyword "fake model" (FakeScorer), so the
-    whole logic (labels, 1–10 score, aggregation, pseudo-labels, final label,
-    validation) can be checked in seconds.
+The BERT model is replaced by a keyword-based fake model (FakeScorer), so labels,
+scores, aggregation, pseudo-labels, the final label and the validation logic can be
+checked in seconds.
 
-    python -m pytest tests/          # HU/EN: if pytest is installed
-    python tests/test_offline.py     # HU/EN: without pytest
+    python -m pytest tests/
+    python tests/test_offline.py
 """
 
 from __future__ import annotations
@@ -23,17 +18,16 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from src import bert_labelling as bl          # noqa: E402
-from src import label_validation as lv        # noqa: E402
-from src import preprocessing as pp           # noqa: E402
+from src import bert_labelling as bl  # noqa: E402
+from src import label_validation as lv  # noqa: E402
+from src import preprocessing as pp  # noqa: E402
 from src.data_loading import prepare_hrast_sentences, assemble_review_text  # noqa: E402
 
 
 # --------------------------------------------------------------------------
-# HU: Segédek / EN: Helpers
 # --------------------------------------------------------------------------
 class FakeScorer:
-    """HU: Kulcsszavas ál-modell a TransformerScorer helyett. / EN: Keyword fake model instead of TransformerScorer."""
+    """Keyword fake model instead of TransformerScorer."""
 
     def __init__(self, kind: str = "3class"):
         self.kind = kind
@@ -74,12 +68,11 @@ def fake_reviews(n: int = 60) -> pd.DataFrame:
 
 
 # --------------------------------------------------------------------------
-# HU: Tesztek / EN: Tests
 # --------------------------------------------------------------------------
 def test_score_mappings():
     _, cont, integer = bl.stars_to_score(np.array([[1, 0, 0, 0, 0], [0, 0, 0, 0, 1],
                                                    [0, 0, 1, 0, 0], [0, 0, 0, .5, .5]], float))
-    assert list(integer) == [1, 10, 6, 9]          # 3★ -> 5.5 -> 6 (half up); 4.5★ -> 8.875 -> 9
+    assert list(integer) == [1, 10, 6, 9]  # 3★ -> 5.5 -> 6 (half up); 4.5★ -> 8.875 -> 9
     assert np.isclose(cont[2], 5.5)
     _, integer = bl.polarity_to_score(np.array([-1.0, 0.0, 1.0]))
     assert list(integer) == [1, 6, 10]
@@ -96,7 +89,7 @@ def test_parse_model_labels():
 
 def test_sentence_split_and_aggregation():
     assert pp.split_sentences("Great room. Dirty bathroom!") == ["Great room.", "Dirty bathroom!"]
-    assert pp.split_sentences("ok") == ["ok"]                 # HU/EN: never loses a review
+    assert pp.split_sentences("ok") == ["ok"]  # never loses a review
     probs = np.array([[0.9, 0.05, 0.05], [0.05, 0.05, 0.9], [0.1, 0.8, 0.1]])
     mean, index, extra = bl.aggregate_sentences(probs, pd.Series(["a", "a", "b"]))
     assert list(index) == ["a", "b"]
@@ -141,13 +134,12 @@ def test_hrast_preparation():
                         "Polarity": ["Positive", "Positive", "Negative", "Positive", "Neutral"],
                         "Aspect": ["room", "view", "wifi", "pool", "none"]})
     out = prepare_hrast_sentences(raw)
-    assert len(out) == 2                                     # HU/EN: the conflicting sentence is dropped
+    assert len(out) == 2  # the conflicting sentence is dropped
     assert set(out["label"]) == {"positive", "neutral"}
 
 
 def test_hrast_onehot_format():
-    # HU: A Kaggle-HRAST valódi szerkezete (széles, 0/1 szentiment-oszlopok).
-    # EN: The real structure of the Kaggle HRAST (wide, 0/1 sentiment columns).
+    # The real structure of the Kaggle HRAST (wide, 0/1 sentiment columns).
     raw = pd.DataFrame({"id": [1, 2, 3, 4, 5], "review": ["1 elevator not working.", "Great pool.",
                         "Nice room but noisy.", "We arrived at noon.", "Great pool."],
                         "Unnamed: 2": np.nan, "positive": [0, 1, 1, 0, 1], "negative": [1, 0, 1, 0, 0],
@@ -160,7 +152,7 @@ def test_hrast_onehot_format():
 def test_neutral_band():
     probs = np.array([[0.5, 0.0, 0.5], [0.1, 0.1, 0.8], [0.7, 0.2, 0.1], [0.3, 0.4, 0.3]])
     frame = bl.probs_to_frame(probs, ["a", "b", "c", "d"], "B")
-    assert list(frame["B_label"]) == ["negative", "positive", "negative", "neutral"]  # HU/EN: argmax (tie -> first)
+    assert list(frame["B_label"]) == ["negative", "positive", "negative", "neutral"]  # argmax (tie -> first)
     banded = bl.apply_neutral_band(frame, "B", band=0.3)
     assert list(banded["B_label"]) == ["neutral", "positive", "negative", "neutral"]
     assert banded["B_confidence"].between(0, 1).all()
@@ -187,7 +179,6 @@ def test_score_cut_reference():
 
 
 # --------------------------------------------------------------------------
-# HU: 2. intelligenciaréteg / EN: Layer 2 (thematic)
 # --------------------------------------------------------------------------
 SUBTOPIC_TEMPLATES = {
     "bathroom": [["no hot water in the shower", "the water was cold every morning", "hot water ran out quickly"],
@@ -200,7 +191,7 @@ SUBTOPIC_TEMPLATES = {
 
 
 def fake_thematic_sentences(n_per_template: int = 60, seed: int = 0):
-    """HU: Szintetikus mondatok + beágyazások ismert altémákkal. / EN: Synthetic sentences + embeddings with known subtopics."""
+    """Synthetic sentences + embeddings with known subtopics."""
     rng = np.random.default_rng(seed)
     rows, vectors = [], []
     centers = {}
@@ -224,9 +215,9 @@ def test_aspect_model_pure_functions():
                         "Clean": [1, 0, 0, 0, 0, 0], "Room": [0, 1, 0, 0, 0, 0], "Pool": [0, 0, 1, 0, 0, 0],
                         "Wi-Fi": [0, 0, 0, 1, 0, 0], "View (Balcony)": [0, 0, 0, 0, 1, 0], "Aspect": 1})
     data, names = am.prepare_hrast_aspects(raw, min_examples=1)
-    assert len(data) == 5                                         # HU/EN: duplicate merged
+    assert len(data) == 5  # duplicate merged
     row = data[data["sentence"] == "Room was dirty."].iloc[0]
-    assert row["cleanliness"] == 1 and row["room"] == 1           # HU/EN: union of aspects
+    assert row["cleanliness"] == 1 and row["room"] == 1  # union of aspects
     assert "Aspect" not in data.columns and set(names) == {"cleanliness", "room", "pool", "wifi", "view"}
 
     y = np.array([[1, 0], [1, 0], [0, 1], [0, 0]])
@@ -258,10 +249,10 @@ def test_topic_modeling_recovers_subtopics():
 
     table, assign, summary = tm.fit_subtopics_per_aspect(sent, emb, ["bathroom", "noise", "generic"],
                                                         min_sentences=50, min_cluster_size=20)
-    assert set(summary.index) == {"bathroom", "noise"}            # HU/EN: generic skipped
+    assert set(summary.index) == {"bathroom", "noise"}  # generic skipped
     _, assign_s, _ = tm.fit_subtopics_per_aspect(sent, emb, ["bathroom"], min_sentences=50,
                                                  min_cluster_size=20, sample_per_aspect=120)
-    assert len(assign_s) == int(bath.sum()) and assign_s["in_fit_sample"].sum() == 120   # HU/EN: all rows assigned
+    assert len(assign_s) == int(bath.sum()) and assign_s["in_fit_sample"].sum() == 120  # all rows assigned
     assert table.groupby("aspect")["topic"].nunique().to_dict() == {"bathroom": 3, "noise": 2}
     lift = tm.segment_table(assign, sent, "bathroom", "accommodation_type", min_count=10)
     assert lift.shape[0] == 2 and lift.shape[1] == 3
@@ -270,8 +261,8 @@ def test_topic_modeling_recovers_subtopics():
     assert {"segment", "subtopic", "lift", "count", "q", "significant"} <= set(long.columns)
     assert len(long) == lift.size
     top2 = tm.segment_table(assign, sent, "bathroom", "accommodation_type", min_count=10, top_topics=2)
-    assert top2.shape[1] == 2                                     # HU/EN: only the 2 largest subtopics
-    assert np.allclose(top2.to_numpy(), lift[top2.columns].to_numpy())   # HU/EN: lift values unchanged
+    assert top2.shape[1] == 2  # only the 2 largest subtopics
+    assert np.allclose(top2.to_numpy(), lift[top2.columns].to_numpy())  # lift values unchanged
 
     labels = np.array([0, 0, 1, -1, -1])
     e = np.array([[1, 0], [1, 0.1], [0, 1], [0.99, 0.05], [-1, 0]], dtype=float)
@@ -298,24 +289,24 @@ def test_topic_merging_and_significance():
     from src import topic_modeling as tm
 
     rng = np.random.default_rng(1)
-    base = np.eye(8)[:3]                                         # HU/EN: 3 real themes
-    dup = base[0] + 0.15 * np.eye(8)[5]                          # HU/EN: near-duplicate of theme 0
+    base = np.eye(8)[:3]  # 3 real themes
+    dup = base[0] + 0.15 * np.eye(8)[5]  # near-duplicate of theme 0
     centres = np.vstack([base, dup / np.linalg.norm(dup)])
     labels = np.repeat(np.arange(4), [50, 40, 30, 20])
     emb = centres[labels] + rng.normal(0, 0.02, (len(labels), 8))
     emb /= np.linalg.norm(emb, axis=1, keepdims=True)
 
     merged, merges = tm.merge_similar_topics(emb, labels, min_similarity=0.95)
-    assert len(np.unique(merged)) == 3 and len(merges) == 1      # HU/EN: only the duplicate merged
+    assert len(np.unique(merged)) == 3 and len(merges) == 1  # only the duplicate merged
     assert merges[0]["reason"] == "near-duplicate" and merges[0]["size_merged"] == 20
     capped, _ = tm.merge_similar_topics(emb, labels, max_topics=2)
     assert len(np.unique(capped)) == 2
     capped_share, _ = tm.merge_similar_topics(emb, labels, max_topics=1, max_topic_share=0.55)
-    assert np.bincount(capped_share).max() / len(labels) <= 0.55       # HU/EN: size cap respected
-    new = emb[[0, 60, 100]]                                             # HU/EN: one from each theme
+    assert np.bincount(capped_share).max() / len(labels) <= 0.55  # size cap respected
+    new = emb[[0, 60, 100]]  # one from each theme
     assert list(tm.assign_to_topics(new, emb, labels)) == [0, 1, 2]
-    assert list(tm.assign_to_topics(-new, emb, labels)) == [-1, -1, -1]  # HU/EN: dissimilar -> noise
-    same, none = tm.merge_similar_topics(emb, labels)              # HU/EN: no rule -> unchanged
+    assert list(tm.assign_to_topics(-new, emb, labels)) == [-1, -1, -1]  # dissimilar -> noise
+    same, none = tm.merge_similar_topics(emb, labels)  # no rule -> unchanged
     assert none == [] and len(np.unique(same)) == 4
 
     q = tm.benjamini_hochberg(np.array([0.01, 0.04, 0.03, 0.5]))
@@ -332,7 +323,7 @@ def test_praise_list_split():
                        "review_negative": ["The room was warm, the AC was broken."]})
     units = pp.build_field_units(df, list_fields=("review_positive",))
     assert units[units["field_polarity"] == "positive"]["sentence"].tolist() == ["Great location", "friendly staff"]
-    assert len(units[units["field_polarity"] == "negative"]) == 1     # HU/EN: complaints not split at commas
+    assert len(units[units["field_polarity"] == "negative"]) == 1  # complaints not split at commas
 
 
 def test_giant_cluster_guard():
@@ -341,19 +332,18 @@ def test_giant_cluster_guard():
     sent, emb = fake_thematic_sentences()
     bath = sent["asp_bathroom"] == 1
     texts, e = sent.loc[bath, "sentence"], emb[bath.to_numpy()]
-    big = tm.fit_topics(texts, e, min_cluster_size=len(texts) // 2)          # HU/EN: too large -> 1 cluster
+    big = tm.fit_topics(texts, e, min_cluster_size=len(texts) // 2)  # too large -> 1 cluster
     guarded = tm.fit_topics(texts, e, min_cluster_size=len(texts) // 2, max_initial_share=0.5)
     assert big.metrics["n_topics"] <= 1 < guarded.metrics["n_topics"]
     assert guarded.metrics["giant_cluster_retries"] >= 1
 
 def test_topic_names_and_collapse():
-    """HU: Nevek, ujjlenyomat, összevonás. / EN: Names, fingerprint, collapsing."""
+    """Names, fingerprint, collapsing."""
     import pandas as pd
     from src import topic_modeling as tm
     from src import topic_names as tn
 
-    # HU: Minden név nem üres, rövid; egy aspektuson belül a témaszámok folytonosak.
-    # EN: Every name is non-empty and short; topic ids are contiguous within an aspect.
+    # Every name is non-empty and short; topic ids are contiguous within an aspect.
     for entries in tn.TOPIC_NAMES.values():
         assert all(0 < len(name) <= 40 for name, _ in entries.values())
         by_aspect = {}
@@ -368,7 +358,7 @@ def test_topic_names_and_collapse():
                                 "topic_label": ["x", "y"], "in_fit_sample": [True, True]})
     named, assigned = tm.rename_topics(table, assignments, names)
     assert (named["auto_label"] == table["label"]).all()
-    assert assigned["topic_label"].nunique() == 1                      # HU/EN: 4 and 5 are both "no lift"
+    assert assigned["topic_label"].nunique() == 1  # 4 and 5 are both "no lift"
     collapsed = tm.collapse_named_topics(named)
     no_lift = collapsed[(collapsed["aspect"] == "lift") & (collapsed["label"] == "no lift")].iloc[0]
     assert no_lift["n_clusters"] == 5 and no_lift["size"] == 50

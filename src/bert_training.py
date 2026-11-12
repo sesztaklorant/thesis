@@ -1,20 +1,8 @@
-"""
-bert_training.py — BERT finomhangolása a (B) és (C) címkéző megközelítéshez.
-                   Fine-tuning BERT for labelling approaches (B) and (C).
+"""Fine-tuning BERT for labelling approaches (B) and (C).
 
-HU: Mindkét megközelítés UGYANAZT a tanítófüggvényt használja
-    (fine_tune_classifier), csak a tanítóadat más:
-      (B) HRAST — kézzel annotált mondatok (emberi címke, más forrás)
-      (C) Booking — az (A)/(B) legbiztosabb címkéi (gépi "ezüst" címke, saját domén)
-EN: Both approaches use THE SAME training function (fine_tune_classifier),
-    only the training data differs:
-      (B) HRAST — human-annotated sentences (human label, different source)
-      (C) Booking — the most confident labels of (A)/(B) (machine "silver" label, own domain)
-
-HU: Futtatás: Google Colab T4 GPU (ajánlott) vagy saját 4 GB-os GPU kis batch-csel
-    és gradiens-akkumulációval (a config.py-ban).
-EN: Run on: Google Colab T4 GPU (recommended) or the own 4 GB GPU with a small
-    batch and gradient accumulation (in config.py).
+Both approaches use fine_tune_classifier(); only the training data differs:
+(B) hand-annotated HRAST sentences, (C) the most confident machine labels of the
+Booking reviews. Batch size and gradient accumulation for small GPUs are set in config.py.
 """
 
 from __future__ import annotations
@@ -38,14 +26,12 @@ ID2LABEL: dict[int, str] = {i: label for label, i in LABEL2ID.items()}
 
 
 # ==========================================================================
-# 1) SEGÉDEK / HELPERS
+# 1) HELPERS
 # ==========================================================================
 def training_batch_settings() -> tuple[int, int]:
     """
-    HU: (batch, gradiens-akkumuláció) a GPU memóriája alapján. Kis GPU-n
-        4 × 8 = 32 effektív batch — matematikailag ugyanaz, csak több lépésben.
-    EN: (batch, gradient accumulation) based on GPU memory. On a small GPU
-        4 × 8 = 32 effective batch — mathematically the same, in more steps.
+    (batch, gradient accumulation) based on GPU memory. On a small GPU
+    4 × 8 = 32 effective batch - mathematically the same, in more steps.
     """
     import torch
     if torch.cuda.is_available():
@@ -57,10 +43,8 @@ def training_batch_settings() -> tuple[int, int]:
 
 def class_weight_vector(labels: pd.Series) -> np.ndarray:
     """
-    HU: Osztálysúlyok a veszteségfüggvényhez:  w_c = n / (k · n_c)  (sklearn "balanced").
-        A ritkább osztály hibája arányosan nagyobb büntetést kap.
-    EN: Class weights for the loss function:  w_c = n / (k · n_c)  (sklearn "balanced").
-        Errors on the rarer class get a proportionally larger penalty.
+    Class weights for the loss function:  w_c = n / (k · n_c)  (sklearn "balanced").
+    Errors on the rarer class get a proportionally larger penalty.
     """
     counts = labels.astype(str).value_counts().reindex(LABELS, fill_value=0)
     n, k = counts.sum(), int((counts > 0).sum())
@@ -69,8 +53,7 @@ def class_weight_vector(labels: pd.Series) -> np.ndarray:
 
 class _EncodedDataset:
     """
-    HU: Minimális torch-kompatibilis adathalmaz (nem kell hozzá a `datasets` csomag).
-    EN: Minimal torch-compatible dataset (no need for the `datasets` package).
+    Minimal torch-compatible dataset (no need for the `datasets` package).
     """
 
     def __init__(self, encodings: dict, labels: list[int] | None):
@@ -89,17 +72,14 @@ class _EncodedDataset:
 
 def _make_training_args(**kwargs):
     """
-    HU: Verziófüggetlen TrainingArguments: a régi transformers 'evaluation_strategy'-t,
-        az új 'eval_strategy'-t vár.
-    EN: Version-independent TrainingArguments: old transformers expect
-        'evaluation_strategy', new ones 'eval_strategy'.
+    Version-independent TrainingArguments: old transformers expect
+    'evaluation_strategy', new ones 'eval_strategy'.
     """
     from transformers import TrainingArguments
     params = inspect.signature(TrainingArguments.__init__).parameters
     if "eval_strategy" not in params and "eval_strategy" in kwargs:
         kwargs["evaluation_strategy"] = kwargs.pop("eval_strategy")
-    # HU: Az adott verzióban már nem létező paramétereket figyelmeztetéssel elhagyjuk.
-    # EN: Parameters that no longer exist in the installed version are dropped with a warning.
+    # Parameters that no longer exist in the installed version are dropped with a warning.
     unknown = [k for k in kwargs if k not in params]
     if unknown:
         log.warning("TrainingArguments: unsupported parameters dropped: %s", unknown)
@@ -107,7 +87,7 @@ def _make_training_args(**kwargs):
 
 
 def _metrics_fn(eval_pred) -> dict:
-    """HU: Ugyanazok a metrikák, mint mindenhol (evaluation.py). / EN: The same metrics as everywhere (evaluation.py)."""
+    """The same metrics as everywhere (evaluation.py)."""
     from .evaluation import compute_metrics
     logits, labels = eval_pred
     preds = np.argmax(logits, axis=-1)
@@ -116,7 +96,7 @@ def _metrics_fn(eval_pred) -> dict:
 
 
 # ==========================================================================
-# 2) KÖZÖS FINOMHANGOLÓ FÜGGVÉNY / SHARED FINE-TUNING FUNCTION
+# 2) SHARED FINE-TUNING FUNCTION
 # ==========================================================================
 def fine_tune_classifier(
     train_texts: pd.Series,
@@ -130,12 +110,9 @@ def fine_tune_classifier(
     use_class_weights: bool = True,
 ) -> dict:
     """
-    HU: 3 osztályos szekvencia-osztályozó finomhangolása, súlyozott veszteséggel.
-        A legjobb (validációs makro-F1 szerinti) modell kerül mentésre az
-        output_dir mappába, mellé a training_info.json.
-    EN: Fine-tune a 3-class sequence classifier with a weighted loss.
-        The best model (by validation macro-F1) is saved to output_dir, together
-        with training_info.json.
+    Fine-tune a 3-class sequence classifier with a weighted loss.
+    The best model (by validation macro-F1) is saved to output_dir, together
+    with training_info.json.
 
     Returns: {"model_dir", "train_minutes", "val_metrics", "log_history"}
     """
@@ -154,8 +131,7 @@ def fine_tune_classifier(
         base_model, num_labels=len(LABELS), id2label=ID2LABEL, label2id=LABEL2ID)
 
     def encode(texts: pd.Series, labels: pd.Series) -> _EncodedDataset:
-        # HU: Kitöltés NÉLKÜL tokenizálunk; a collator kötegenként tölt ki.
-        # EN: Tokenise WITHOUT padding; the collator pads per batch.
+        # Tokenise without padding; the collator pads per batch.
         enc = tokenizer(texts.astype(str).tolist(), truncation=True, max_length=max_length)
         return _EncodedDataset(dict(enc), labels.astype(str).map(LABEL2ID).astype(int).tolist())
 
@@ -166,7 +142,7 @@ def fine_tune_classifier(
     log.info("Class weights: %s", dict(zip(LABELS, weights.numpy().round(3))))
 
     class WeightedTrainer(Trainer):
-        """HU: Trainer súlyozott keresztentrópiával. / EN: Trainer with weighted cross-entropy."""
+        """Trainer with weighted cross-entropy."""
 
         def compute_loss(self, model, inputs, return_outputs=False, **kwargs):
             labels = inputs.pop("labels")
@@ -184,8 +160,7 @@ def fine_tune_classifier(
         per_device_eval_batch_size=batch * 4,
         learning_rate=CFG.learning_rate,
         weight_decay=CFG.weight_decay,
-        # HU: A transformers v5 már nem ismeri a warmup_ratio-t -> lépésszámra váltjuk.
-        # EN: transformers v5 no longer knows warmup_ratio -> converted to a number of steps.
+        # transformers v5 no longer knows warmup_ratio -> converted to a number of steps.
         warmup_steps=int(CFG.warmup_ratio * num_epochs * np.ceil(len(train_texts) / (batch * accum))),
         fp16=torch.cuda.is_available(),
         eval_strategy="epoch",
@@ -201,29 +176,22 @@ def fine_tune_classifier(
     trainer_kwargs = dict(model=model, args=args, train_dataset=ds_train, eval_dataset=ds_val,
                           data_collator=DataCollatorWithPadding(tokenizer=tokenizer),
                           compute_metrics=_metrics_fn)
-    # HU: Újabb transformers: 'processing_class', régebbi: 'tokenizer'.
-    # EN: Newer transformers: 'processing_class', older: 'tokenizer'.
+    # Newer transformers: 'processing_class', older: 'tokenizer'.
     trainer_params = inspect.signature(Trainer.__init__).parameters
     trainer_kwargs["processing_class" if "processing_class" in trainer_params else "tokenizer"] = tokenizer
     trainer = WeightedTrainer(**trainer_kwargs)
-    # HU: A saját veszteségfüggvény nem használja a num_items_in_batch-et, ezért a Trainer
-    #     maga ossza el a veszteséget a gradiens-akkumulációval (különben a naplózott
-    #     tanítási veszteség accum-szorosa lenne).
-    # EN: The custom loss does not use num_items_in_batch, so the Trainer itself must
-    #     divide the loss by the gradient accumulation (otherwise the logged training
-    #     loss would be accum times too large).
+    # The custom loss does not use num_items_in_batch, so the Trainer itself must
+    # divide the loss by the gradient accumulation (otherwise the logged training
+    # loss would be accum times too large).
     trainer.model_accepts_loss_kwargs = False
 
     started = time.time()
     trainer.train()
     train_minutes = (time.time() - started) / 60
 
-    # HU: A legjobb ellenőrzőpont újratöltése from_pretrained-del. A Trainer saját
-    #     visszatöltése a régi BERT-súlyneveknél (LayerNorm gamma/beta vs weight/bias)
-    #     kihagyhat paramétereket — a from_pretrained ezeket helyesen átnevezi.
-    # EN: Reload the best checkpoint with from_pretrained. The Trainer's own reload can
-    #     skip parameters with the legacy BERT weight names (LayerNorm gamma/beta vs
-    #     weight/bias) — from_pretrained renames them correctly.
+    # Reload the best checkpoint with from_pretrained. The Trainer's own reload can
+    # skip parameters with the legacy BERT weight names (LayerNorm gamma/beta vs
+    # weight/bias) - from_pretrained renames them correctly.
     best = trainer.state.best_model_checkpoint
     if best:
         log.info("Reloading best checkpoint: %s", Path(best).name)
@@ -245,15 +213,13 @@ def fine_tune_classifier(
 
 
 # ==========================================================================
-# 3) (B) HRAST / (C) ÖNKÉPZÉS / (C) SELF-TRAINING
+# 3) (B) HRAST / (C) SELF-TRAINING
 # ==========================================================================
 def split_hrast(sentences: pd.DataFrame, val_size: float = CFG.hrast_val_size,
                 test_size: float = CFG.hrast_test_size, seed: int = CFG.random_seed):
     """
-    HU: HRAST felosztása train/val/test részre. Ha van vélemény-azonosító (group_id),
-        egy vélemény összes mondata UGYANABBA a részbe kerül (nincs adatszivárgás).
-    EN: Split HRAST into train/val/test. If there is a review id (group_id), all
-        sentences of one review go into THE SAME part (no data leakage).
+    Split HRAST into train/val/test. If there is a review id (group_id), all
+    sentences of one review go into the same part (no data leakage).
     """
     from sklearn.model_selection import GroupShuffleSplit, train_test_split
 
@@ -278,10 +244,8 @@ def split_hrast(sentences: pd.DataFrame, val_size: float = CFG.hrast_val_size,
 def train_approach_b(hrast_sentences: pd.DataFrame, output_dir: str | Path | None = None,
                      base_model: str = CFG.hrast_base_model) -> dict:
     """
-    HU: (B) BERT finomhangolása a HRAST-on. A HRAST teszthalmazán mért eredmény
-        az EGYETLEN, emberi címkén mért teljesítmény a projektben (a gold mintán kívül).
-    EN: (B) Fine-tune BERT on HRAST. The result on the HRAST test set is the ONLY
-        performance measured on human labels in the project (besides the gold sample).
+    (B) Fine-tune BERT on HRAST. The result on the HRAST test set is the only
+    performance measured on human labels in the project (besides the gold sample).
 
     Returns: fine_tune_classifier() result + "test_metrics", "test_predictions"
     """
@@ -307,12 +271,9 @@ def train_approach_c(prepared: pd.DataFrame, pseudo: pd.DataFrame,
                      base_model: str = CFG.self_training_base_model,
                      val_share: float = 0.1) -> dict:
     """
-    HU: (C) BERT finomhangolása a Booking pseudo-címkéin (select_pseudo_labels kimenete).
-        FIGYELEM: a validációs makro-F1 itt a TANÁROKKAL való egyezést méri, nem a
-        valódi pontosságot — a valódi minőséget a gold mintán kell mérni.
-    EN: (C) Fine-tune BERT on the Booking pseudo-labels (output of select_pseudo_labels).
-        WARNING: the validation macro-F1 here measures agreement WITH THE TEACHERS,
-        not true accuracy — true quality has to be measured on the gold sample.
+    (C) Fine-tune BERT on the Booking pseudo-labels (output of select_pseudo_labels).
+    The validation macro-F1 here measures agreement with the teachers,
+    not true accuracy - true quality has to be measured on the gold sample.
     """
     from sklearn.model_selection import train_test_split
 
@@ -322,10 +283,8 @@ def train_approach_c(prepared: pd.DataFrame, pseudo: pd.DataFrame,
                     .reset_index())
     train, val = train_test_split(data, test_size=val_share, random_state=CFG.random_seed,
                                   stratify=data["pseudo_label"])
-    # HU: A tanításban részt vett vélemények listája. Ezeken a (C) a tanárokat
-    #     "visszamondja", ezért az összevetésből ki kell őket zárni.
-    # EN: List of the reviews used in training. On these (C) "repeats" the teachers,
-    #     so they must be excluded from the comparison.
+    # List of the reviews used in training. On these (C) "repeats" the teachers,
+    # so they must be excluded from the comparison.
     output_dir.mkdir(parents=True, exist_ok=True)
     train[["review_id"]].to_csv(output_dir / "train_review_ids.csv", index=False)
     return fine_tune_classifier(train[text_col], train["pseudo_label"],

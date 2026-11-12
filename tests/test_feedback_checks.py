@@ -1,9 +1,4 @@
-"""
-test_feedback_checks.py — Offline tesztek a feedback_checks modul tiszta függvényeihez.
-                           Offline tests for the pure functions of the feedback_checks module.
-
-HU: GPU, internet és PyTorch nélkül fut, mint a test_offline.py.
-EN: Runs without GPU, internet or PyTorch, like test_offline.py.
+"""Offline tests for the pure functions of feedback_checks (no GPU, internet or PyTorch).
 
     python tests/test_feedback_checks.py
 """
@@ -18,12 +13,12 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from src import bert_labelling as bl          # noqa: E402
-from src import feedback_checks as fc         # noqa: E402
+from src import bert_labelling as bl  # noqa: E402
+from src import feedback_checks as fc  # noqa: E402
 
 
 def test_band_labels_match_pipeline():
-    """HU: A nested CV ugyanazt a sávszabályt használja, mint a pipeline. / EN: Nested CV uses the pipeline's band rule."""
+    """Nested CV uses the pipeline's band rule."""
     rng = np.random.default_rng(0)
     probs = rng.dirichlet([1, 1, 1], size=500)
     frame = pd.DataFrame(probs, columns=[f"B_{s}" for s in bl.PROB_SUFFIXES])
@@ -49,9 +44,9 @@ def test_complaint_units_flags():
         "B_label": ["negative", "negative", "positive", "positive"],
     })
     out = fc._complaint_units(units)
-    assert len(out) == 3                                           # HU/EN: praise field dropped
+    assert len(out) == 3  # praise field dropped
     assert out["non_complaint"].tolist() == [True, False, False]
-    assert out["counted"].tolist() == [False, True, False]         # HU/EN: real AND read as negative
+    assert out["counted"].tolist() == [False, True, False]  # real and read as negative
 
 
 if __name__ == "__main__":

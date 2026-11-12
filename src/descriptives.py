@@ -1,16 +1,8 @@
-"""
-descriptives.py — Leíró statisztika és kereszttáblák. / Descriptive statistics and crosstabs.
+"""Descriptive statistics and cross-tabulations by segment.
 
-HU: A Booking metaadatai (ország, szállástípus, vendégtípus, csillag) mentén
-    vizsgáljuk a (BERT-ből származó) szentimentet. A központi mérőszám a LIFT:
-        lift = a csoport negatív aránya / a teljes adat negatív aránya
-        1,0 = átlagos; 1,4 = 40%-kal gyakoribb negatív; 0,7 = 30%-kal ritkább.
-    Ezek ASSZOCIÁCIÓK, nem ok-okozati kapcsolatok.
-EN: The (BERT-derived) sentiment is examined along the Booking metadata
-    (country, accommodation type, guest type, stars). The central measure is LIFT:
-        lift = negative share of the group / negative share of the whole data
-        1.0 = average; 1.4 = negative 40% more often; 0.7 = 30% less often.
-    These are ASSOCIATIONS, not causal relationships.
+The sentiment labels are broken down by the Booking metadata (country, property type,
+guest type, star rating). The main measure is lift: the negative share of a group
+divided by the negative share of all reviews (1.4 = 40% more negative reviews).
 """
 
 from __future__ import annotations
@@ -29,7 +21,7 @@ DEFAULT_LABEL_COL = "label_final"
 
 
 def _fmt_cat(value) -> str:
-    """HU: 3.0 -> "3" (a "3.0 csillag" zavaró). / EN: 3.0 -> "3" ("3.0 stars" is distracting)."""
+    """3.0 -> "3" ("3.0 stars" is distracting)."""
     if isinstance(value, float) and float(value).is_integer():
         return str(int(value))
     return str(value)
@@ -37,8 +29,7 @@ def _fmt_cat(value) -> str:
 
 def prepare_star_rating(df: pd.DataFrame, col: str = "accommodation_star_rating") -> pd.DataFrame:
     """
-    HU: A 0 csillag NEM "nulla csillag", hanem "nincs besorolás" -> külön "n/a" kategória.
-    EN: A star rating of 0 is NOT "zero stars" but "no rating" -> separate "n/a" category.
+    A star rating of 0 is not "zero stars" but "no rating" -> separate "n/a" category.
     """
     if col not in df.columns:
         return df
@@ -52,10 +43,10 @@ def prepare_star_rating(df: pd.DataFrame, col: str = "accommodation_star_rating"
 
 
 # ==========================================================================
-# 1) ÁTTEKINTÉS / OVERVIEW
+# 1) OVERVIEW
 # ==========================================================================
 def dataset_overview(df: pd.DataFrame, label_col: str | None = DEFAULT_LABEL_COL) -> pd.DataFrame:
-    """HU: Egytáblás összefoglaló az adathalmazról. / EN: One-table summary of the dataset."""
+    """One-table summary of the dataset."""
     rows: list[tuple[str, object]] = [("Number of reviews", f"{len(df):,}")]
     for col, name in [("accommodation_id", "Unique properties"),
                       ("accommodation_country", "Number of countries"),
@@ -77,31 +68,28 @@ def dataset_overview(df: pd.DataFrame, label_col: str | None = DEFAULT_LABEL_COL
 
 
 def missing_report(df: pd.DataFrame) -> pd.DataFrame:
-    """HU: Hiányzó értékek oszloponként. / EN: Missing values per column."""
+    """Missing values per column."""
     miss = df.isna().sum()
     miss = miss[miss > 0].sort_values(ascending=False)
     return pd.DataFrame({"missing": miss, "share": (miss / max(len(df), 1)).round(4)})
 
 
 def numeric_profile(df: pd.DataFrame, cols: list[str] | None = None) -> pd.DataFrame:
-    """HU: A numerikus oszlopok leíró statisztikái. / EN: Descriptive statistics of the numeric columns."""
+    """Descriptive statistics of the numeric columns."""
     cols = cols or [c for c in ["score", "score10_final", "n_words", "n_chars", "room_nights",
                                 "accommodation_score", "review_helpful_votes"] if c in df.columns]
     return df[cols].describe(percentiles=[.05, .25, .5, .75, .95]).T.round(2)
 
 
 # ==========================================================================
-# 2) KERESZTTÁBLA EGY DIMENZIÓ MENTÉN / CROSSTAB ALONG ONE DIMENSION
+# 2) CROSSTAB ALONG ONE DIMENSION
 # ==========================================================================
 def sentiment_by(df: pd.DataFrame, dim: str, min_count: int = 200, top_n: int | None = 15,
                  label_col: str = DEFAULT_LABEL_COL) -> pd.DataFrame:
     """
-    HU: Szentiment-eloszlás egy kategoriális dimenzió mentén, lift-értékekkel.
-        min_count: ennél kevesebb véleményű kategória kimarad (12 véleményből
-        számolt arány zaj, nem eredmény).
-    EN: Sentiment distribution along a categorical dimension, with lift values.
-        min_count: categories with fewer reviews are dropped (a share computed
-        from 12 reviews is noise, not a finding).
+    Sentiment distribution along a categorical dimension, with lift values.
+    min_count: categories with fewer reviews are dropped (a share computed
+    from 12 reviews is noise, not a finding).
     """
     if dim not in df.columns:
         raise KeyError(f"No such column: {dim}")
@@ -129,11 +117,11 @@ def sentiment_by(df: pd.DataFrame, dim: str, min_count: int = 200, top_n: int | 
 
 def plot_sentiment_by(table: pd.DataFrame, title: str, xlabel: str = "Sentiment distribution within the group",
                       save_as: str | None = None, show_n: bool = True):
-    """HU: 100%-ra halmozott vízszintes oszlopdiagram. / EN: 100% stacked horizontal bar chart."""
+    """100% stacked horizontal bar chart."""
     import matplotlib.pyplot as plt
 
     data = table[list(CFG.labels)].sort_values("negative", ascending=True)
-    ypos = [_fmt_cat(i) for i in data.index]     # HU/EN: categorical axis
+    ypos = [_fmt_cat(i) for i in data.index]  # categorical axis
     fig, ax = plt.subplots(figsize=(9, max(3.4, 0.42 * len(data) + 2.2)))
     left = np.zeros(len(data))
     for label in CFG.labels:
@@ -159,14 +147,13 @@ def plot_sentiment_by(table: pd.DataFrame, title: str, xlabel: str = "Sentiment 
 
 
 # ==========================================================================
-# 3) HŐTÉRKÉP KÉT DIMENZIÓRA / HEATMAP FOR TWO DIMENSIONS
+# 3) HEATMAP FOR TWO DIMENSIONS
 # ==========================================================================
 def negativity_heatmap(df: pd.DataFrame, rows: str, cols: str, min_count: int = 100,
                        top_rows: int = 10, top_cols: int = 8,
                        label_col: str = DEFAULT_LABEL_COL) -> tuple[pd.DataFrame, pd.DataFrame, float]:
     """
-    HU: Két dimenzió kereszttáblája: a negatív arány liftje cellánként.
-    EN: Crosstab of two dimensions: lift of the negative share per cell.
+    Crosstab of two dimensions: lift of the negative share per cell.
 
     Returns: (lift table, count table, average negative share)
     """
@@ -188,10 +175,8 @@ def plot_negativity_heatmap(lift: pd.DataFrame, counts: pd.DataFrame, base_neg: 
                             save_as: str | None = None, xlabel: str | None = None,
                             ylabel: str | None = None):
     """
-    HU: Divergens hőtérkép: kék = az átlagnál KEVESEBB negatív, piros = TÖBB.
-        Szürke cella: túl kevés vélemény, nem értelmezhető.
-    EN: Diverging heatmap: blue = FEWER negatives than average, red = MORE.
-        Grey cell: too few reviews, not interpretable.
+    Diverging heatmap: blue = fewer negatives than average, red = more.
+    Grey cell: too few reviews, not interpretable.
     """
     import matplotlib.pyplot as plt
     from matplotlib.colors import LinearSegmentedColormap, TwoSlopeNorm
@@ -230,7 +215,7 @@ def plot_negativity_heatmap(lift: pd.DataFrame, counts: pd.DataFrame, base_neg: 
 
 def plot_top_categories(df: pd.DataFrame, col: str, top_n: int = 12, title: str | None = None,
                         save_as: str | None = None):
-    """HU: Melyik kategóriában van a legtöbb vélemény? / EN: Which category has the most reviews?"""
+    """Category with the most reviews."""
     import matplotlib.pyplot as plt
 
     counts = df[col].value_counts().nlargest(top_n).sort_values()
@@ -252,8 +237,7 @@ def run_all_crosstabs(df: pd.DataFrame, dims: dict[str, str] | None = None, min_
                       top_n: int = 12, save: bool = True, label_col: str = DEFAULT_LABEL_COL,
                       prefix: str = "04") -> dict[str, pd.DataFrame]:
     """
-    HU: Kereszttábla + ábra minden elérhető dimenzióra, automatikus mentéssel.
-    EN: Crosstab + figure for every available dimension, saved automatically.
+    Crosstab + figure for every available dimension, saved automatically.
     """
     import matplotlib.pyplot as plt
 
@@ -266,7 +250,7 @@ def run_all_crosstabs(df: pd.DataFrame, dims: dict[str, str] | None = None, min_
     for col, name in dims.items():
         try:
             tab = sentiment_by(df, col, min_count=min_count, top_n=top_n, label_col=label_col)
-        except Exception as e:                                    # noqa: BLE001
+        except Exception as e:  # noqa: BLE001
             log.warning("Skipped %s: %s", col, e)
             continue
         if tab.empty:

@@ -1,42 +1,15 @@
-"""
-feedback_checks.py — A konzulensi visszajelzéshez kért ellenőrzések. / Checks requested in the supervisor's feedback.
+"""Additional checks of the existing outputs (no new model or run).
 
-HU: Nem új modell és nem új futtatás: a MEGLÉVŐ kimenetek (labels_B, field_units_B,
-    subtopic_assignments_*, aranyminta, kézi témaellenőrzés) mélyebb kiértékelése.
-      1) gold      — aranyminta: konfúziós mátrix, osztályonkénti mutatók, a semleges sáv hatása
-                     osztályonként, a tévesztett negatív vélemények jellemzői
-      2) band      — a semleges sáv beágyazott (nested) keresztvalidációja: a sávot a minta 4/5-én
-                     választjuk, a maradék 1/5-én mérjük (a sávválasztás és a mérés elválasztva)
-      3) high      — a 9–10 pontos vélemények panaszai a "nothing to complain about" típusú szövegek
-                     nélkül, a modell által is negatívnak olvasott tagmondattal, szegmensenként, példákkal
-      4) coverage  — a panaszmező tagmondatai: mennyit számol, és mennyit NEM a panaszelemzés
-      5) subtopics — altémák a TELJES adaton: darabszám és arány aspektusonként, példamondatokkal,
-                     a kézi ellenőrzés aspektusonként
-      6) maps      — panasztérképek a kulcsmegállapításokhoz (fürdőszoba, zaj, ár-érték, személyzet,
-                     recepció, szoba) — ugyanazzal a z-próbával és BH-korrekcióval, mint a 05-ös notebook
-      7) export    — OPCIONÁLIS kézi ellenőrző fájlok (9–10 pontos panaszok; fürdőszoba- és zaj-altémák);
-                     ha kitöltötted őket, ugyanez a parancs ki is értékeli
-EN: No new model and no new run: a deeper evaluation of the EXISTING outputs (labels_B,
-    field_units_B, subtopic_assignments_*, gold sample, manual topic check).
-      1) gold      — gold sample: confusion matrix, per-class metrics, effect of the neutral band
-                     per class, characteristics of the missed negative reviews
-      2) band      — nested cross-validation of the neutral band: the band is chosen on 4/5 of the
-                     sample and measured on the remaining 1/5 (selection and evaluation separated)
-      3) high      — complaints in 9–10 reviews without "nothing to complain about"-type texts, with a
-                     clause the model also reads as negative, by segment, with examples
-      4) coverage  — complaint-field clauses: how many the complaint analysis counts and how many NOT
-      5) subtopics — subtopics on the FULL data: count and share per aspect, example sentences,
-                     the manual check per aspect
-      6) maps      — complaint maps for the key findings (bathroom, noise, value for money, staff,
-                     reception, room) — with the same z-test and BH correction as notebook 05
-      7) export    — OPTIONAL manual check files (9–10 complaints; bathroom and noise subtopics);
-                     once filled in, the same command also evaluates them
+Steps (python -m src.feedback_checks [step ...]):
+    gold       confusion matrix and per-class metrics on the gold sample, missed negatives
+    band       nested cross-validation of the neutral band width
+    high       complaints in reviews scored 9–10, by segment, with examples
+    coverage   complaint-field clauses counted and not counted by the complaint analysis
+    subtopics  subtopic counts, shares and example sentences on the full data
+    maps       complaint maps for the key findings
+    export     optional manual check files (run only when requested)
 
-    python -m src.feedback_checks                 # minden ellenőrzés / every check (1–2 min, CPU)
-    python -m src.feedback_checks gold band       # csak a kiválasztottak / only the selected ones
-
-Kimenet / Output: results/tables/06_*.csv; az exportnál / for export: data/annotation/
-                 high_score_complaint_check.xlsx, topic_check_negative_full2_bathroom_noise.xlsx
+Output: results/tables/06_*.csv
 """
 
 from __future__ import annotations
@@ -53,21 +26,20 @@ log = logging.getLogger(__name__)
 
 LABELS: list[str] = list(CFG.labels)
 BAND_GRID: list[float] = [0.0, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.5]
-HIGH_SCORE_MIN: int = 9            # HU: "magas pontszám" = 9–10 / EN: "high score" = 9–10
-MIN_COMPLAINT_WORDS: int = 3       # HU: ugyanaz, mint a 01-es notebookban / EN: same as notebook 01
+HIGH_SCORE_MIN: int = 9  # "high score" = 9–10
+MIN_COMPLAINT_WORDS: int = 3  # same as notebook 01
 KEY_ASPECTS: tuple[str, ...] = ("bathroom", "noise", "room", "staff", "value_for_money",
                                 "reception", "location", "cleanliness")
-# HU: a dicséretoldalon a leggyakrabban dicsért aspektusok / EN: the most praised aspects on the praise side
 POSITIVE_KEY_ASPECTS: tuple[str, ...] = ("location", "staff", "room", "cleanliness", "breakfast")
 SEGMENTS: tuple[str, ...] = ("accommodation_type", "accommodation_country",
                              "accommodation_star_rating", "guest_type")
 
 
 # ==========================================================================
-# 0) BETÖLTÉS / LOADING
+# 0) LOADING
 # ==========================================================================
 def _gold_with_labels() -> pd.DataFrame:
-    """HU: Aranyminta + (B) címkék + polaritás. / EN: Gold sample + (B) labels + polarity."""
+    """Gold sample + (B) labels + polarity."""
     from .bert_labelling import PROB_SUFFIXES, load_labels, polarity_from_probs
     from .label_validation import load_gold
 
@@ -77,19 +49,16 @@ def _gold_with_labels() -> pd.DataFrame:
 
 
 def _band_labels(polarity, band: float) -> np.ndarray:
-    """HU: Ugyanaz a szabály, mint az apply_neutral_band-ben. / EN: Same rule as in apply_neutral_band."""
+    """Same rule as in apply_neutral_band."""
     polarity = np.asarray(polarity, dtype=float)
     return np.where(np.abs(polarity) < band, "neutral", np.where(polarity > 0, "positive", "negative"))
 
 
 def _complaint_units(units: pd.DataFrame | None = None) -> pd.DataFrame:
     """
-    HU: A panaszmező tagmondatai, "valódi panasz" jelzővel (nem "nothing"-típusú) és azzal, hogy a
-        panaszelemzés számolja-e (valódi ÉS a (B) negatívnak olvassa — ugyanaz a kettős szűrés,
-        mint a 05-ös notebookban).
-    EN: Complaint-field clauses with a "real complaint" flag (not a "nothing"-type formula) and
-        whether the complaint analysis counts it (real AND read as negative by (B) — the same
-        double filter as in notebook 05).
+    Complaint-field clauses with a "real complaint" flag (not a "nothing"-type formula) and
+    whether the complaint analysis counts it (real and read as negative by (B) - the same
+    double filter as in notebook 05).
     """
     from .data_loading import read_frame
     from .preprocessing import non_complaint_mask
@@ -103,7 +72,7 @@ def _complaint_units(units: pd.DataFrame | None = None) -> pd.DataFrame:
 
 
 def _review_meta() -> pd.DataFrame:
-    """HU: Nyers vélemények (cache) + csillag 'n/a' kategória. / EN: Raw reviews (cache) + star 'n/a' category."""
+    """Raw reviews (cache) + star 'n/a' category."""
     from .data_loading import load_booking
     from .descriptives import prepare_star_rating
 
@@ -115,13 +84,10 @@ def _review_meta() -> pd.DataFrame:
 # ==========================================================================
 def gold_tables(units: pd.DataFrame | None = None) -> dict[str, pd.DataFrame]:
     """
-    HU: Konfúziós mátrix (sor = kézi címke, oszlop = végső címke), osztályonkénti
-        precision/recall/F1, a sáv hatása osztályonként, és a kézzel negatívnak ítélt
-        vélemények jellemzői (vegyes-e, hol a polaritás, bekerül-e panaszuk a panaszelemzésbe).
-    EN: Confusion matrix (row = manual label, column = final label), per-class
-        precision/recall/F1, the effect of the band per class, and the characteristics of the
-        reviews annotated as negative (mixed or not, where the polarity lies, whether their
-        complaint enters the complaint analysis).
+    Confusion matrix (row = manual label, column = final label), per-class
+    precision/recall/F1, the effect of the band per class, and the characteristics of the
+    reviews annotated as negative (mixed or not, where the polarity lies, whether their
+    complaint enters the complaint analysis).
     """
     from .evaluation import per_class_report
 
@@ -142,8 +108,7 @@ def gold_tables(units: pd.DataFrame | None = None) -> dict[str, pd.DataFrame]:
                      "negatives_not_called_positive": not_pos / (data["gold_label"] == "negative").sum()})
     tradeoff = pd.DataFrame(rows).set_index("band").round(4)
 
-    # HU: A kézzel negatív vélemények: tagmondatszintű kép a field_units_B-ből.
-    # EN: Reviews annotated as negative: clause-level picture from field_units_B.
+    # Reviews annotated as negative: clause-level picture from field_units_B.
     complaints = _complaint_units(units)
     neg = data[data["gold_label"] == "negative"].copy()
     unit_view = (complaints[complaints["review_id"].isin(neg.index)]
@@ -173,21 +138,16 @@ def gold_tables(units: pd.DataFrame | None = None) -> dict[str, pd.DataFrame]:
 
 
 # ==========================================================================
-# 2) A SEMLEGES SÁV BEÁGYAZOTT KERESZTVALIDÁCIÓJA / NESTED CV OF THE NEUTRAL BAND
+# 2) NESTED CV OF THE NEUTRAL BAND
 # ==========================================================================
 def band_nested_cv(n_splits: int = 5, n_repeats: int = 20, grid: list[float] | None = None,
                    seed: int = CFG.random_seed) -> dict[str, pd.DataFrame]:
     """
-    HU: Ismételt rétegzett k-szoros felosztás: minden felosztásban a sávot a TANÍTÓ részeken
-        választjuk (max. makro-F1 a rácson), és a KIHAGYOTT részen alkalmazzuk. Ismétlésenként
-        mind a 399 vélemény pontosan egyszer kap "kihagyott" címkét; ezekből számoljuk a
-        mutatókat, majd átlagolunk az ismétlésekre. Így a mért teljesítményt nem befolyásolja,
-        hogy a sávot ugyanazon a mintán választottuk.
-    EN: Repeated stratified k-fold: in every split the band is chosen on the TRAINING folds
-        (max macro-F1 on the grid) and applied to the HELD-OUT fold. In each repeat every one of
-        the 399 reviews gets exactly one held-out label; the metrics are computed from these and
-        averaged over the repeats. The measured performance is thus not affected by the band
-        having been chosen on the same sample.
+    Repeated stratified k-fold: in every split the band is chosen on the training folds
+    (max macro-F1 on the grid) and applied to the held-out fold. In each repeat every one of
+    the 399 reviews gets exactly one held-out label; the metrics are computed from these and
+    averaged over the repeats, so the measured performance is not affected by the band
+    having been chosen on the same sample.
     """
     from sklearn.metrics import accuracy_score, cohen_kappa_score, f1_score
     from sklearn.model_selection import RepeatedStratifiedKFold
@@ -232,21 +192,16 @@ def band_nested_cv(n_splits: int = 5, n_repeats: int = 20, grid: list[float] | N
 
 
 # ==========================================================================
-# 3) A 9–10 PONTOS VÉLEMÉNYEK PANASZAI / COMPLAINTS IN 9–10 REVIEWS
+# 3) COMPLAINTS IN 9–10 REVIEWS
 # ==========================================================================
 def high_score_complaints(units: pd.DataFrame | None = None, meta: pd.DataFrame | None = None,
                           n_examples: int = 25, seed: int = CFG.random_seed) -> dict[str, pd.DataFrame]:
     """
-    HU: A 01-es notebook "48,1%"-os mutatójának ellenőrzése. A címkézett véleményekből a 9–10
-        pontosakat nézzük, amelyekben a panaszmező legalább háromszavas, és három lépcsőt
-        számolunk: (a) a teljes panaszmező "nothing"-típusú (non_complaint_mask), (b) van legalább
-        egy valódi panasz-tagmondat, (c) van legalább egy valódi panasz-tagmondat, amelyet a (B)
-        is negatívnak olvas — ez a panaszelemzés által ténylegesen számolt eset.
-    EN: Check of the "48.1%" figure of notebook 01. Among the labelled reviews we take those
-        scored 9–10 whose complaint field has at least three words, and compute three steps:
-        (a) the whole complaint field is a "nothing"-type formula (non_complaint_mask), (b) there
-        is at least one real complaint clause, (c) there is at least one real complaint clause
-        that (B) also reads as negative — the case the complaint analysis actually counts.
+    Breakdown of the 48.1% figure of notebook 01. Among the labelled reviews, those
+    scored 9–10 whose complaint field has at least three words, and compute three steps:
+    (a) the whole complaint field is a "nothing"-type formula (non_complaint_mask), (b) there
+    is at least one real complaint clause, (c) there is at least one real complaint clause
+    that (B) also reads as negative - the case the complaint analysis actually counts.
     """
     from .bert_labelling import load_labels
     from .preprocessing import non_complaint_mask
@@ -305,16 +260,13 @@ def high_score_complaints(units: pd.DataFrame | None = None, meta: pd.DataFrame 
 
 
 # ==========================================================================
-# 4) A PANASZMEZŐ LEFEDETTSÉGE / COVERAGE OF THE COMPLAINT FIELD
+# 4) COVERAGE OF THE COMPLAINT FIELD
 # ==========================================================================
 def complaint_coverage(units: pd.DataFrame | None = None, seed: int = CFG.random_seed) -> dict[str, pd.DataFrame]:
     """
-    HU: A panaszmező összes tagmondata: hány "nothing"-típusú, és a többiből mennyit olvas a (B)
-        negatívnak (ezeket számolja a panaszelemzés), semlegesnek, illetve pozitívnak. A nem
-        számolt valódi tagmondatokból példákat is mentünk — ezek mutatják, mi marad ki.
-    EN: All complaint-field clauses: how many are "nothing"-type formulas, and of the rest how
-        many (B) reads as negative (these are counted by the complaint analysis), neutral or
-        positive. Examples of the real clauses NOT counted are saved too — they show what is missed.
+    All complaint-field clauses: how many are "nothing"-type formulas, and of the rest how
+    many (B) reads as negative (these are counted by the complaint analysis), neutral or
+    positive. Examples of the real clauses not counted are saved too - they show what is missed.
     """
     clauses = _complaint_units(units)
     real = clauses[~clauses["non_complaint"]]
@@ -325,14 +277,13 @@ def complaint_coverage(units: pd.DataFrame | None = None, seed: int = CFG.random
               *[f"real clauses read as {c}" for c in LABELS]])
     table["share_of_real"] = (table["n"] / len(real)).where(table.index.str.startswith("real clauses"))
     table.index.name = "complaint field"
-    # HU: keverés + head(), nem apply (pandas 3.0) / EN: shuffle + head(), not apply (pandas 3.0)
     missed = (real[real["B_label"] != "negative"].sample(frac=1.0, random_state=seed)
               .groupby("B_label").head(15)[["B_label", "sentence"]].sort_values("B_label"))
     return {"06_complaint_coverage": table.round(4), "06_complaint_coverage_missed_examples": missed}
 
 
 # ==========================================================================
-# 5) ALTÉMÁK A TELJES ADATON / SUBTOPICS ON THE FULL DATA
+# 5) SUBTOPICS ON THE FULL DATA
 # ==========================================================================
 def _read_topic_check(sentiment: str) -> pd.DataFrame | None:
     path = PATHS.annotation / f"topic_check_{sentiment}_{CFG.topic_version}.xlsx"
@@ -345,10 +296,8 @@ def _read_topic_check(sentiment: str) -> pd.DataFrame | None:
 
 def topic_check_by_aspect() -> pd.DataFrame:
     """
-    HU: A kézi témaellenőrzés aspektusonként: ellenőrzött mondatok, pontosság, a leggyengébb és
-        a legerősebb altéma (a végső név szerint összevonva).
-    EN: The manual topic check per aspect: sentences checked, precision, the weakest and the
-        strongest subtopic (merged by final name).
+    The manual topic check per aspect: sentences checked, precision, the weakest and the
+    strongest subtopic (merged by final name).
     """
     rows = []
     for sentiment in ("negative", "positive"):
@@ -371,13 +320,10 @@ def topic_check_by_aspect() -> pd.DataFrame:
 
 def subtopic_counts(sentiment: str) -> pd.DataFrame:
     """
-    HU: Altémánként a TELJES adaton hozzárendelt tagmondatok száma és aránya az aspektuson belül
-        (a nevezőben a sehová nem sorolt "(unassigned)" egységek is benne vannak, így az arányok
-        összege 100%). Mellé: a mintán (5 000 mondat) mért arány és — ha volt — a kézi pontosság.
-    EN: Per subtopic, the number of clauses assigned on the FULL data and their share within the
-        aspect (the denominator includes the "(unassigned)" units, so the shares add up to 100%).
-        Next to it: the share measured on the fit sample (5,000 sentences) and — if checked —
-        the manual precision.
+    Per subtopic, the number of clauses assigned on the full data and their share within the
+    aspect (the denominator includes the "(unassigned)" units, so the shares add up to 100%).
+    Next to it: the share measured on the fit sample (5,000 sentences) and - if checked -
+    the manual precision.
     """
     from .data_loading import read_frame
 
@@ -405,11 +351,8 @@ def subtopic_counts(sentiment: str) -> pd.DataFrame:
 def subtopic_examples(sentiment: str, aspects=KEY_ASPECTS, n_per_subtopic: int = 5,
                       min_words: int = 4, max_words: int = 14, seed: int = CFG.random_seed) -> pd.DataFrame:
     """
-    HU: Rövid példamondatok altémánként. Ha az aspektust kézzel ellenőriztük, CSAK az illeszkedőnek
-        jelölt (fits = 1) mondatokból választunk ("verified"); különben a modell illesztési mintájából
-        ("model").
-    EN: Short example sentences per subtopic. If the aspect was checked by hand, ONLY sentences
-        marked as fitting (fits = 1) are used ("verified"); otherwise the model's fit sample ("model").
+    Short example sentences per subtopic. If the aspect was checked by hand, only sentences
+    marked as fitting (fits = 1) are used ("verified"); otherwise the model's fit sample ("model").
     """
     from .data_loading import read_frame
 
@@ -434,26 +377,22 @@ def subtopic_examples(sentiment: str, aspects=KEY_ASPECTS, n_per_subtopic: int =
 
 
 # ==========================================================================
-# 6) PANASZTÉRKÉPEK A KULCSMEGÁLLAPÍTÁSOKHOZ / COMPLAINT MAPS FOR THE KEY FINDINGS
+# 6) COMPLAINT MAPS FOR THE KEY FINDINGS
 # ==========================================================================
 def key_maps(sentiment: str = "negative", aspects=("bathroom", "noise", "value_for_money", "staff",
                                                      "reception", "room"),
              meta: pd.DataFrame | None = None) -> pd.DataFrame:
     """
-    HU: A topic_modeling.segment_table ugyanazokkal a beállításokkal (min. 50 egység, 8 szegmens,
-        z-próba + BH, |lift − 1| ≥ 0,2), mint a 05-ös notebook — itt a mentett hozzárendelésekből,
-        a szegmenst review_id alapján csatolva. Csak a "notable" cellák kerülnek a táblába.
-    EN: topic_modeling.segment_table with the same settings as notebook 05 (min. 50 units,
-        8 segments, z-test + BH, |lift − 1| ≥ 0.2) — here from the saved assignments, with the
-        segment attached via review_id. Only the "notable" cells are kept.
+    topic_modeling.segment_table with the same settings as notebook 05 (min. 50 units,
+    8 segments, z-test + BH, |lift − 1| ≥ 0.2) - here from the saved assignments, with the
+    segment attached via review_id. Only the "notable" cells are kept.
     """
     from . import topic_modeling as tm
     from .data_loading import read_frame
 
     meta = _review_meta() if meta is None else meta
     assignments = read_frame(PATHS.labels / f"subtopic_assignments_{sentiment}_{CFG.topic_version}")
-    # HU: segment_table a "row" pozícióval indexel -> soronként rekonstruáljuk a szegmenst.
-    # EN: segment_table indexes by the "row" position -> rebuild the segment per row.
+    # segment_table indexes by the "row" position -> rebuild the segment per row.
     row_ids = assignments.drop_duplicates("row").set_index("row")["review_id"]
     ids = np.full(int(assignments["row"].max()) + 1, None, dtype=object)
     ids[row_ids.index.to_numpy()] = row_ids.to_numpy()
@@ -474,7 +413,7 @@ def key_maps(sentiment: str = "negative", aspects=("bathroom", "noise", "value_f
 
 
 # ==========================================================================
-# 7) OPCIONÁLIS KÉZI ELLENŐRZÉS / OPTIONAL MANUAL CHECKS
+# 7) OPTIONAL MANUAL CHECKS
 # ==========================================================================
 HIGH_CHECK_FILE = "high_score_complaint_check.xlsx"
 EXTRA_TOPIC_CHECK_FILE = f"topic_check_negative_{CFG.topic_version}_bathroom_noise.xlsx"
@@ -483,18 +422,12 @@ EXTRA_TOPIC_CHECK_FILE = f"topic_check_negative_{CFG.topic_version}_bathroom_noi
 def export_manual_checks(n_high: int = 100, n_per_topic: int = 20, units: pd.DataFrame | None = None,
                          meta: pd.DataFrame | None = None, seed: int = CFG.random_seed) -> list:
     """
-    HU: Két OPCIONÁLIS kézi ellenőrző fájl (ha még nem léteznek):
-          • 100 véletlen 9–10 pontos vélemény panaszmezője (≥3 szó) — "genuine" oszlop: 1 = valódi
-            elégedetlenség, 0 = nem az (pl. "nothing to complain about"). VAK: sem a pontszám,
-            sem a modell döntése nem látszik.
-          • a fürdőszoba és a zaj negatív altémái, témánként 20 mondat — "fits" oszlop, mint a
-            05-ös notebook ellenőrzésénél.
-    EN: Two OPTIONAL manual check files (if they do not exist yet):
-          • the complaint field (≥3 words) of 100 random 9–10 reviews — "genuine" column: 1 = real
-            dissatisfaction, 0 = not (e.g. "nothing to complain about"). BLIND: neither the score nor
-            the model's decision is shown.
-          • the negative subtopics of bathroom and noise, 20 sentences per topic — "fits" column, as
-            in the check of notebook 05.
+    Two optional manual check files (if they do not exist yet):
+      - the complaint field (≥3 words) of 100 random 9–10 reviews - "genuine" column: 1 = real
+        dissatisfaction, 0 = not (e.g. "nothing to complain about"). Neither the score nor
+        the model's decision is shown.
+      - the negative subtopics of bathroom and noise, 20 sentences per topic - "fits" column, as
+        in the check of notebook 05.
     """
     from .bert_labelling import load_labels
     from .data_loading import read_frame
@@ -527,7 +460,7 @@ def export_manual_checks(n_high: int = 100, n_per_topic: int = 20, units: pd.Dat
 
 
 def evaluate_manual_checks() -> dict[str, pd.DataFrame]:
-    """HU: A kitöltött opcionális ellenőrzések kiértékelése. / EN: Evaluate the filled-in optional checks."""
+    """Evaluate the filled-in optional checks."""
     out = {}
     path = PATHS.annotation / HIGH_CHECK_FILE
     if path.exists():
@@ -553,7 +486,7 @@ def evaluate_manual_checks() -> dict[str, pd.DataFrame]:
 
 
 def _wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float]:
-    """HU: Wilson-féle 95%-os intervallum egy arányra. / EN: Wilson 95% interval for a proportion."""
+    """Wilson 95% interval for a proportion."""
     if n == 0:
         return float("nan"), float("nan")
     p = k / n
@@ -563,13 +496,14 @@ def _wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float]:
 
 
 # ==========================================================================
-# FUTTATÁS / RUN
+# RUN
 # ==========================================================================
 CHECKS = ("gold", "band", "high", "coverage", "subtopics", "maps", "export")
+DEFAULT_CHECKS = CHECKS[:-1]  # the manual check export runs only when requested
 
 
-def run(checks=CHECKS) -> dict[str, pd.DataFrame]:
-    """HU: A kiválasztott ellenőrzések futtatása és mentése. / EN: Run and save the selected checks."""
+def run(checks=DEFAULT_CHECKS) -> dict[str, pd.DataFrame]:
+    """Run and save the selected checks."""
     from .data_loading import read_frame
     from .evaluation import save_table
 
@@ -602,12 +536,12 @@ def run(checks=CHECKS) -> dict[str, pd.DataFrame]:
 
 
 def main(argv: list[str] | None = None) -> None:
-    parser = argparse.ArgumentParser(description="Checks requested in the supervisor's feedback")
+    parser = argparse.ArgumentParser(description="Additional checks of the existing outputs")
     parser.add_argument("checks", nargs="*", choices=CHECKS, default=None,
-                        help="which checks to run (default: all)")
+                        help="checks to run (default: all except export)")
     args = parser.parse_args(argv)
     PATHS.ensure()
-    run(args.checks or CHECKS)
+    run(args.checks or DEFAULT_CHECKS)
 
 
 if __name__ == "__main__":

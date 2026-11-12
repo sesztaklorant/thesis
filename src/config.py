@@ -1,14 +1,8 @@
 """
-config.py — A projekt KÖZPONTI beállításai / CENTRAL settings of the project.
+Central settings of the project.
 
-HU: Minden "mágikus szám" (seed, küszöbök, modellnevek, útvonalak) itt van, és
-    sehol máshol nincs beégetve. Így a dolgozatban minden eredményhez meg lehet
-    mondani, pontosan milyen beállítás hozta létre.
-EN: Every "magic number" (seed, thresholds, model names, paths) lives here and
-    nowhere else. This way every result in the thesis can be traced back to
-    the exact settings that produced it.
-
-    from src.config import CFG, PATHS
+Paths, model names, thresholds and other constants are defined only here, so every
+result can be traced back to the settings that produced it.
 """
 
 from __future__ import annotations
@@ -18,10 +12,9 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 
 # --------------------------------------------------------------------------
-# 1) ÚTVONALAK / PATHS
+# 1) PATHS
 # --------------------------------------------------------------------------
-# HU: Projekt gyökér = ennek a fájlnak a szülőmappájának a szülője.
-# EN: Project root = the parent of this file's parent folder.
+# Project root: two levels above this file.
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 
@@ -30,11 +23,13 @@ class Paths:
     root: Path = PROJECT_ROOT
 
     data: Path = PROJECT_ROOT / "data"
-    raw: Path = PROJECT_ROOT / "data" / "raw"              # HU: érintetlen letöltés / EN: untouched download
-    interim: Path = PROJECT_ROOT / "data" / "interim"      # HU: köztes, tisztított / EN: intermediate, cleaned
-    processed: Path = PROJECT_ROOT / "data" / "processed"  # HU: modellezésre kész / EN: ready for modelling
-    labels: Path = PROJECT_ROOT / "data" / "labels"        # HU: BERT-címkék / EN: BERT-generated labels
-    annotation: Path = PROJECT_ROOT / "data" / "annotation"  # HU: kézi gold minta / EN: manual gold sample
+    raw: Path = PROJECT_ROOT / "data" / "raw"  # downloaded datasets, not modified
+    raw_booking: Path = PROJECT_ROOT / "data" / "raw" / "booking"  # Booking.com val.csv
+    raw_hrast: Path = PROJECT_ROOT / "data" / "raw" / "hrast"  # HRAST csv
+    interim: Path = PROJECT_ROOT / "data" / "interim"  # cached intermediate files
+    processed: Path = PROJECT_ROOT / "data" / "processed"  # ready for modelling
+    labels: Path = PROJECT_ROOT / "data" / "labels"  # BERT-generated labels
+    annotation: Path = PROJECT_ROOT / "data" / "annotation"  # manual gold sample
 
     results: Path = PROJECT_ROOT / "results"
     figures: Path = PROJECT_ROOT / "results" / "figures"
@@ -42,8 +37,9 @@ class Paths:
     models: Path = PROJECT_ROOT / "results" / "models"
 
     def ensure(self) -> None:
-        """HU: Minden mappát létrehoz, ha még nincs. / EN: Create every folder if missing."""
-        for p in (self.data, self.raw, self.interim, self.processed, self.labels,
+        """Create every folder if missing."""
+        for p in (self.data, self.raw, self.raw_booking, self.raw_hrast, self.interim,
+                  self.processed, self.labels,
                   self.annotation, self.results, self.figures, self.tables, self.models):
             p.mkdir(parents=True, exist_ok=True)
 
@@ -52,224 +48,153 @@ PATHS = Paths()
 
 
 # --------------------------------------------------------------------------
-# 2) BEÁLLÍTÁSOK / SETTINGS
+# 2) SETTINGS
 # --------------------------------------------------------------------------
 @dataclass(frozen=True)
 class Config:
-    # --- Reprodukálhatóság / Reproducibility ---
+    # --- Reproducibility ---
     random_seed: int = 42
 
-    # --- Adatforrás / Data source ---
-    # HU: A Booking.com hivatalos felosztásának val.csv fájlja (~200k sor). Ez
-    #     NEKÜNK a teljes munkaadat — nem keverendő a saját validációs halmazzal.
-    # EN: val.csv of Booking.com's official split (~200k rows). For US it is the
-    #     whole working dataset — not to be confused with our own validation set.
+    # --- Data source ---
+    # val.csv of the official Booking.com split (~200k rows). It is the whole
+    # working dataset of the project, not the validation set of the models.
     local_csv_name: str = "val.csv"
     source_split_name: str = "booking_val_split"
 
-    # --- Osztályok / Classes ---
-    # HU: Kanonikus sorrend, MINDENHOL ezt használjuk (valószínűség-oszlopok,
-    #     konfúziós mátrixok tengelyei).
-    # EN: Canonical order, used EVERYWHERE (probability columns, confusion axes).
+    # --- Classes ---
+    # Class order used everywhere (probability columns, confusion matrix axes).
     labels: tuple[str, ...] = ("negative", "neutral", "positive")
 
-    # --- Szöveg-előkészítés / Text preparation ---
+    # --- Text preparation ---
     min_chars: int = 10
     max_chars: int = 5_000
     drop_duplicates: bool = True
     keep_english_only: bool = True
 
-    # --- Fejlesztési mintavétel / Development sampling ---
-    # HU: A BERT-címkézés 200k soron GPU-n is ~15–30 perc modellenként. Fejlesztés
-    #     közben kis mintán futtatunk; a végső futásnál None = teljes adat.
-    # EN: BERT labelling on 200k rows takes ~15–30 min per model even on a GPU.
-    #     During development we run on a small sample; None = full data.
-    labelling_sample_size: int | None = None   # HU/EN: full run (was 20_000 during development)
+    # --- Development sampling ---
+    # BERT labelling of 200k rows takes 15–30 min per model on a GPU, so development
+    # used a sample. None = full data.
+    labelling_sample_size: int | None = None  # 20_000 during development
 
     # ======================================================================
-    # BERT-ALAPÚ CÍMKÉZÉS / BERT-BASED LABELLING
+    # BERT-BASED LABELLING
     # ======================================================================
-    # HU: Közös inferencia-beállítások mindhárom megközelítéshez.
-    # EN: Shared inference settings for all three approaches.
-    #
-    # HU: max_length: a val.csv-n mérve 256 tokennél a vélemények ~1,4%-a
-    #     csonkolódik. A szöveg "cím. pozitív rész negatív rész" felépítésű,
-    #     így a csonkolás a NEGATÍV részt vágja le először — ezért nem 128.
-    # EN: max_length: measured on val.csv, 256 tokens truncate ~1.4% of the
-    #     reviews. The text is "title. positive part negative part", so
-    #     truncation cuts the NEGATIVE part first — hence not 128.
+    # Inference settings shared by the three approaches.
+    # 256 tokens truncate about 1.4% of the reviews. The text is "title. praise complaint",
+    # so a shorter limit would cut the complaint part first.
     max_length: int = 256
-    inference_batch_size: int = 64        # HU: 4 GB VRAM-on fp16-tal biztonságos / EN: safe on 4 GB VRAM with fp16
-    inference_chunk_size: int = 10_000    # HU: ennyi soronként mentünk (folytatható) / EN: checkpoint every N rows (resumable)
+    inference_batch_size: int = 64  # safe on 4 GB VRAM with fp16
+    inference_chunk_size: int = 10_000  # checkpoint every N rows (resumable)
 
-    # --- (A) Zero-shot: kész, már finomhangolt modellek / ready fine-tuned models ---
-    # HU: 3 osztályos modell (negatív / semleges / pozitív). RoBERTa-alapú (BERT-család),
-    #     tweeteken tanítva — a doménkülönbséget a dolgozatban jelezni kell.
-    # EN: 3-class model (negative / neutral / positive). RoBERTa-based (BERT family),
-    #     trained on tweets — the domain gap has to be stated in the thesis.
+    # --- (A) Zero-shot: ready fine-tuned models ---
+    # 3-class model (negative / neutral / positive), RoBERTa-based, trained on tweets.
     zero_shot_3class_model: str = "cardiffnlp/twitter-roberta-base-sentiment-latest"
-    # HU: 1–5 csillagos BERT-modell termékvéleményeken tanítva. Ebből képezzük az
-    #     1–10-es pontszámot (várható csillagszám lineáris átskálázásával).
-    # EN: 1–5 star BERT model trained on product reviews. The 1–10 score is
-    #     derived from it (linear rescaling of the expected number of stars).
+    # 1–5 star model trained on product reviews. The 1–10 score is a linear
+    # rescaling of the expected number of stars.
     zero_shot_stars_model: str = "nlptown/bert-base-multilingual-uncased-sentiment"
 
-    # --- (B) Transzfertanulás HRAST-on / Transfer learning on HRAST ---
-    # HU: Kézzel annotált, mondatszintű hotel-adat. Itt CSAK tanítóadatként
-    #     szerepel a címkéző modellhez — a Booking-elemzés továbbra is csak Booking.
-    # EN: Human-annotated, sentence-level hotel data. Used ONLY as training data
-    #     for the labeller — the analysis itself stays Booking-only.
+    # --- (B) Transfer learning on HRAST ---
+    # Human-annotated hotel sentences, used only to train labeller (B).
     hrast_base_model: str = "bert-base-uncased"
     hrast_val_size: float = 0.15
     hrast_test_size: float = 0.15
-    # HU: Ha egy mondatban pozitív ÉS negatív aspektus is van: "drop" = kihagyjuk,
-    #     "neutral" = semlegesnek vesszük.
-    # EN: If a sentence has both a positive AND a negative aspect: "drop" = skip,
-    #     "neutral" = treat as neutral.
+    # If a sentence has both a positive and a negative aspect: "drop" = skip,
+    # "neutral" = treat as neutral.
     hrast_conflict_policy: str = "drop"
-    # HU: B-t mondatszinten alkalmazzuk (mint ahogy tanult), majd véleményre aggregálunk.
-    # EN: B is applied at sentence level (as it was trained), then aggregated.
+    # (B) is applied to sentences, as it was trained, and aggregated per review.
     hrast_granularity: str = "sentence"
 
-    # --- (C) Önképzés / Self-training (pseudo-labelling) on Booking ---
+    # --- (C) Self-training (pseudo-labelling) on Booking ---
     self_training_base_model: str = "bert-base-uncased"
-    # HU: Csak a tanár(ok) által legalább ilyen biztonsággal címkézett vélemények
-    #     kerülnek a tanítóhalmazba.
-    # EN: Only reviews labelled by the teacher(s) with at least this confidence
-    #     enter the training set.
+    # Minimum teacher confidence for a review to enter the training set.
     pseudo_label_min_confidence: float = 0.80
-    # HU: True = csak ott, ahol A és B egyetért (ha B elérhető).
-    # EN: True = only where A and B agree (if B is available).
+    # True = only reviews where (A) and (B) agree.
     pseudo_label_require_agreement: bool = True
-    # HU: Osztályonként legfeljebb ennyi példa (kiegyensúlyozás + futási idő).
-    # EN: At most this many examples per class (balancing + running time).
+    # Per-class cap (class balance and running time).
     pseudo_label_max_per_class: int = 15_000
 
-    # --- Finomhangolás / Fine-tuning (B and C) ---
+    # --- Fine-tuning (B and C) ---
     learning_rate: float = 2e-5
     num_epochs: int = 3
     weight_decay: float = 0.01
     warmup_ratio: float = 0.1
-    batch_size: int = 32            # HU: Colab T4 (16 GB) / EN: Colab T4 (16 GB)
-    local_batch_size: int = 4       # HU: saját GPU (4 GB) / EN: own GPU (4 GB)
-    local_grad_accum: int = 8       # HU: 4 × 8 = 32 effektív batch / EN: 4 × 8 = 32 effective batch
-    small_gpu_vram_gb: float = 8.0  # HU: ez alatt a "local" beállítás él / EN: below this the "local" setting applies
+    batch_size: int = 32  # Colab T4 (16 GB)
+    local_batch_size: int = 4  # own GPU (4 GB)
+    local_grad_accum: int = 8  # 4 × 8 = 32 effective batch
+    small_gpu_vram_gb: float = 8.0  # below this the "local" setting applies
 
-    # --- Semleges sáv / Neutral band (review level) ---
-    # HU: Mondatszintű címkézésnél a vélemények közel fele VEGYES (dicséret + panasz).
-    #     A valószínűségek argmax-a ezeket szinte mindig pozitívnak mondja. A "sáv"
-    #     szabály: polaritás = P(poz) − P(neg); ha |polaritás| < sáv -> semleges.
-    #     Így a 3 osztály és az 1–10 pontszám KÖVETKEZETES (0,3-as sáv = 4,15–6,85 pont).
-    #     Az értéket a gold mintán kell kalibrálni (apply_neutral_band, neutral_band_table).
-    # EN: With sentence-level labelling almost half of the reviews are MIXED (praise +
-    #     complaint). The argmax of the probabilities calls them positive almost always.
-    #     The "band" rule: polarity = P(pos) − P(neg); if |polarity| < band -> neutral.
-    #     This makes the 3 classes and the 1–10 score CONSISTENT (band 0.3 = 4.15–6.85 points).
-    #     Calibrate the value on the gold sample (apply_neutral_band, neutral_band_table).
-    review_neutral_band: float = 0.25        # HU: a gold mintán kalibrálva / EN: calibrated on the gold sample
+    # --- Neutral band (review level) ---
+    # Almost half of the reviews are mixed (praise and complaint), and the argmax of the
+    # averaged sentence probabilities labels them positive. With the band rule a review is
+    # neutral if |P(pos) − P(neg)| < band, which keeps the label consistent with the 1–10 score.
+    review_neutral_band: float = 0.25  # calibrated on the gold sample
 
-    # --- Végső címke / Final label ---
-    # HU: Mely megközelítések adják a végső címkét. A gold minta (399 vélemény) alapján a
-    #     (B) a legjobb (makro-F1 0,631, kappa 0,507), ezért a végső címke = (B).
-    #     Az (A) és (C) oszlopai megmaradnak az összehasonlításhoz.
-    #     ("A", "B", "C") = többségi szavazás, döntetlennél a tie_breaker_approach dönt.
-    # EN: Which approaches form the final label. On the gold sample (399 reviews) (B) is
-    #     the best (macro-F1 0.631, kappa 0.507), so the final label = (B).
-    #     The (A) and (C) columns are kept for comparison.
-    #     ("A", "B", "C") = majority vote, ties decided by tie_breaker_approach.
+    # --- Final label ---
+    # Approaches that form the final label. (B) performed best on the gold sample, so the
+    # final label is (B); the (A) and (C) columns are kept for comparison.
+    # ("A", "B", "C") would mean a majority vote with tie_breaker_approach for ties.
     final_label_approaches: tuple[str, ...] = ("B",)
     tie_breaker_approach: str = "B"
 
     # ======================================================================
-    # 2. INTELLIGENCIARÉTEG: TEMATIKUS KATEGORIZÁLÁS / LAYER 2: THEMATIC CATEGORISATION
+    # LAYER 2: THEMATIC CATEGORISATION
     # ======================================================================
-    # --- 2/a: aspektus-osztályozó a HRAST-on / aspect classifier on HRAST ---
-    # HU: Többcímkés BERT: egy mondat egyszerre több aspektushoz is tartozhat.
-    # EN: Multi-label BERT: one sentence can belong to several aspects at once.
+    # --- 2/a: aspect classifier trained on HRAST ---
+    # Multi-label BERT: a sentence can belong to several aspects.
     aspect_base_model: str = "bert-base-uncased"
-    aspect_max_length: int = 128            # HU: mondatok, nem vélemények / EN: sentences, not reviews
+    aspect_max_length: int = 128  # sentences, not reviews
     aspect_val_size: float = 0.15
     aspect_test_size: float = 0.15
-    aspect_min_examples: int = 50           # HU: ennél ritkább aspektus kimarad / EN: rarer aspects are dropped
-    aspect_max_pos_weight: float = 10.0     # HU: a ritka aspektusok súlyának felső korlátja / EN: cap on rare-aspect weight
+    aspect_min_examples: int = 50  # rarer aspects are dropped
+    aspect_max_pos_weight: float = 10.0  # cap on rare-aspect weight
 
-    # --- 2/b: altémák (BERTopic-elv) / subtopics (BERTopic principle) ---
+    # --- 2/b: subtopics (BERTopic approach) ---
     embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
     embedding_batch_size: int = 256
     umap_n_neighbors: int = 15
     umap_n_components: int = 5
-    topic_min_cluster_size: int = 40        # HU: ennél kisebb fürt nem téma / EN: smaller clusters are not topics
+    topic_min_cluster_size: int = 40  # smaller clusters are not topics
     topic_min_samples: int = 10
-    # HU: Aspektusonként legfeljebb ennyi mondaton ILLESZTJÜK az altéma-modellt (a többi a legközelebbi
-    #     altémához kerül). A 20k-s futásban a beállításokat 1–4 ezer (negatív) és ≤15 ezer (pozitív)
-    #     mondaton validáltuk; a teljes adaton 15 ezernél a HDBSCAN több aspektusnál egyetlen óriásfürtöt
-    #     adott (pl. negatív staff 97%), ezért 5000 + óriásfürt-védelem (subtopic_max_initial_share).
-    # EN: The subtopic model is FITTED on at most this many sentences per aspect (the rest go to the
-    #     nearest subtopic). In the 20k run the settings were validated on 1–4k (negative) and ≤15k
-    #     (positive) sentences; on the full data at 15k HDBSCAN produced one giant cluster for several
-    #     aspects (e.g. negative staff 97%), hence 5000 + a giant-cluster guard (subtopic_max_initial_share).
+    # Maximum number of sentences per aspect used to fit the subtopic model; the remaining
+    # sentences are assigned to the nearest subtopic. With 15,000 sentences HDBSCAN returned
+    # one giant cluster for several aspects on the full data (negative staff: 97%).
     topic_sample_per_aspect: int = 5_000
-    topic_min_sentences: int = 300          # HU: ennél kevesebb mondatú aspektusra nincs altéma / EN: no subtopics below this
-    topic_outlier_threshold: float = 0.45   # HU: zajpont áthelyezése, ha a koszinusz-hasonlóság ≥ ez / EN: reassign noise if cosine ≥ this
+    topic_min_sentences: int = 300  # no subtopics below this
+    topic_outlier_threshold: float = 0.45  # reassign noise if cosine ≥ this
     topic_top_n_terms: int = 10
     topic_stability_seeds: tuple[int, ...] = (42, 7, 123)
-    # HU: ALTÉMÁK = finom fürtözés + TÉMA-ÖSSZEVONÁS.
-    #     v1: 1% fürtméret -> 19–21 apró, átfedő altéma aspektusonként.
-    #     v2: 3% -> a fürdőszoba 18-ról 2 altémára "ugrott" (a HDBSCAN egy óriásfürtöt választott),
-    #         egyetlen globális fürtméret tehát nem jó minden aspektusra.
-    #     v3: 2%-os finom fürtözés, majd a leghasonlóbb témák összevonása, amíg legfeljebb
-    #         subtopic_max_topics marad, ÉS nincs két téma subtopic_merge_similarity feletti
-    #         hasonlósággal (közel-duplikátumok, pl. "rooms are small" / "the room was quite small").
-    # EN: SUBTOPICS = fine clustering + TOPIC MERGING.
-    #     v1: 1% cluster size -> 19–21 small, overlapping subtopics per aspect.
-    #     v2: 3% -> bathroom "jumped" from 18 to 2 subtopics (HDBSCAN chose one giant cluster),
-    #         so a single global cluster size does not suit every aspect.
-    #     v3: fine clustering at 2%, then merging the most similar topics until at most
-    #         subtopic_max_topics remain AND no two topics are more similar than
-    #         subtopic_merge_similarity (near-duplicates, e.g. "rooms are small" / "the room was quite small").
+    # Subtopics come from fine clustering followed by merging of the most similar topics,
+    # until at most subtopic_max_topics remain and no two topics are more similar than
+    # subtopic_merge_similarity. The earlier versions are listed in docs/DEVELOPMENT_LOG.md.
     topic_overview_min_share: float = 0.01
     subtopic_min_cluster_share: float = 0.02
     subtopic_max_topics: int = 10
     subtopic_merge_similarity: float = 0.90
-    # HU: v4: összevont altéma legfeljebb az aspektus 35%-a (a v3-ban a "hógolyó-összevonás" 40–55%-os
-    #     gyűjtőtémákat hozott létre, pl. a zajnál forgalom + zene + szomszédok egyben).
-    # EN: v4: a merged subtopic is at most 35% of the aspect (in v3 "snowball merging" created 40–55%
-    #     catch-all topics, e.g. traffic + music + neighbours together for noise).
+    # Upper limit for a merged subtopic, which prevents catch-all topics.
     subtopic_max_topic_share: float = 0.35
-    # HU: ha a finom fürtözés után egy fürt a mondatok > 50%-a, a fürtméretet felezve újrafürtözünk
-    # EN: if after fine clustering one cluster holds > 50% of the sentences, re-cluster with half the size
+    # A cluster above this share triggers re-clustering with half the cluster size.
     subtopic_max_initial_share: float = 0.50
     subtopic_sweep_shares: tuple[float, ...] = (0.01, 0.02)
-    subtopic_sweep_max_topics: tuple = (None, 12, 10, 8, 6)   # HU/EN: None = no merging
-    heatmap_max_subtopics: int = 8          # HU: panasztérképen legfeljebb ennyi altéma / EN: max subtopics on a complaint map
-    heatmap_min_effect: float = 0.20        # HU: csillag csak, ha |lift − 1| ≥ ez IS / EN: star only if |lift − 1| ≥ this TOO
-    # HU: Az altéma-futás verziója: minden 2/b kimenet nevében szerepel, így egy új paraméterezés
-    #     NEM írja felül a korábbi táblákat, ábrákat és a kitöltött kézi ellenőrzést.
-    # EN: Version of the subtopic run: it is part of every 2/b output name, so a new parameter set
-    #     does NOT overwrite earlier tables, figures and the filled-in manual check.
+    subtopic_sweep_max_topics: tuple = (None, 12, 10, 8, 6)  # None = no merging
+    heatmap_max_subtopics: int = 8  # max subtopics on a complaint map
+    heatmap_min_effect: float = 0.20  # marked only if |lift − 1| also reaches this
+    # Version tag of the subtopic run. It is part of every 2/b output name, so a new
+    # setting does not overwrite earlier tables, figures or manual checks.
     topic_version: str = "full2"
-    # HU: v5: a dicséretmezőben a vesszős felsorolásokat is egységekre bontjuk ("Great location,
-    #     friendly staff, clean rooms" -> 3 egység). v4-ben a pozitív altémák nagy része vegyes volt
-    #     (pl. staff: "staff / friendly / location" 76%), mert a dicséretek tipikusan listák.
-    # EN: v5: comma enumerations are split into units in the praise field too ("Great location,
-    #     friendly staff, clean rooms" -> 3 units). In v4 most positive subtopics were mixed
-    #     (e.g. staff: "staff / friendly / location" 76%), because praise typically comes as lists.
+    # Comma-separated lists in the praise field are split into separate units
+    # ("Great location, friendly staff, clean rooms" -> 3 units).
     split_praise_lists: bool = True
 
-    # --- Kézi annotáció / Manual annotation (gold standard) ---
+    # --- Manual annotation (gold standard) ---
     gold_sample_size: int = 400
 
-    # --- Csak REFERENCIA: pontszám-vágás / REFERENCE ONLY: score cut ---
-    # HU: A konzulens jogosan jelezte, hogy a vendégpontszám vágása NEM érvényes
-    #     szentiment-címke. Csak összehasonlításra tartjuk meg: megmutatja,
-    #     mennyire térne el a naiv vágás a szövegalapú címkéktől.
-    # EN: As the supervisor rightly noted, cutting the guest score is NOT a valid
-    #     sentiment label. Kept for comparison only: it shows how far the naive
-    #     cut would deviate from the text-based labels.
+    # --- Reference only: score cut ---
+    # A cut of the guest score is not a valid sentiment label. It is kept to show
+    # how far such a cut deviates from the text-based labels.
     reference_neg_threshold: float = 7.0
     reference_pos_threshold: float = 9.0
 
-    # --- TF-IDF (klasszikus modellek / classical models) ---
+    # --- TF-IDF (classical models) ---
     train_size: float = 0.60
     val_size: float = 0.20
     test_size: float = 0.20
@@ -279,7 +204,7 @@ class Config:
     tfidf_max_df: float = 0.9
     tfidf_sublinear_tf: bool = True
 
-    # --- Aspektusok (kulcsszavas) / Aspects (keyword-based) ---
+    # --- Aspects (keyword-based) ---
     aspects: tuple[str, ...] = (
         "room", "staff", "cleanliness", "facilities", "location",
         "breakfast", "pool", "bathroom", "parking", "noise",
@@ -287,19 +212,15 @@ class Config:
     )
 
     def to_json(self, path: Path) -> None:
-        """HU: A beállítások mentése az eredmények mellé. / EN: Save the settings next to the results."""
+        """Save the settings next to the results."""
         data = {k: (list(v) if isinstance(v, tuple) else v) for k, v in asdict(self).items()}
         path.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
 CFG = Config()
 
-# HU: HRAST aspektusoszlopai -> egységes angol név. Az "Aspect" oszlop jelentése nem
-#     egyértelmű, ezért kimarad. A nevek a kulcsszavas aspektusokkal (aspects.py) egyeznek,
-#     ahol van megfelelő, így a kettő közvetlenül összevethető.
-# EN: HRAST aspect columns -> uniform English name. The meaning of the "Aspect" column is
-#     unclear, so it is left out. Names match the keyword aspects (aspects.py) where a
-#     counterpart exists, so the two are directly comparable.
+# HRAST aspect columns -> aspect names used in the project. The "Aspect" column is left out
+# because its meaning is unclear. Names follow the keyword aspects (aspects.py) where possible.
 HRAST_ASPECT_MAP: dict[str, str] = {
     "Clean": "cleanliness", "Comfort": "comfort", "Facilities/Amenities": "facilities",
     "Location": "location", "Restaurant (dinner)": "restaurant", "Staff": "staff",
@@ -309,12 +230,10 @@ HRAST_ASPECT_MAP: dict[str, str] = {
     "Value for money": "value_for_money", "Wi-Fi": "wifi", "Generic": "generic",
 }
 
-# HU: Ezekre NEM készítünk altémát (nem tematikus, általános mondatok).
-# EN: No subtopics for these (non-thematic, general sentences).
+# Aspects without subtopics (general, non-thematic sentences).
 NON_THEMATIC_ASPECTS: tuple[str, ...] = ("generic",)
 
-# HU: A három címkéző megközelítés rövid neve -> leírás (ábrák, táblák).
-# EN: Short name of the three labelling approaches -> description (figures, tables).
+# Labelling approaches: short name -> description used in figures and tables.
 APPROACHES: dict[str, str] = {
     "A": "Zero-shot (pre-trained sentiment models)",
     "B": "Transfer learning (BERT fine-tuned on HRAST)",
@@ -323,12 +242,9 @@ APPROACHES: dict[str, str] = {
 
 
 # --------------------------------------------------------------------------
-# 3) SZÍNPALETTA / COLOUR PALETTE
+# 3) COLOUR PALETTE
 # --------------------------------------------------------------------------
-# HU: Piros–szürke–kék (NEM piros–zöld): színtévesztők is meg tudják
-#     különböztetni, és nyomtatásban is olvasható.
-# EN: Red–grey–blue (NOT red–green): distinguishable for colour-blind readers
-#     and readable in print.
+# Red-grey-blue instead of red-green, readable for colour-blind readers and in print.
 SENTIMENT_COLORS: dict[str, str] = {
     "negative": "#e34948",
     "neutral":  "#898781",
@@ -362,13 +278,12 @@ INK = {
 
 
 def sentiment_palette(order: tuple[str, ...] | list[str] | None = None) -> list[str]:
-    """HU: A három szentiment-szín CFG.labels sorrendben. / EN: The three sentiment colours in CFG.labels order."""
+    """The three sentiment colours in CFG.labels order."""
     return [SENTIMENT_COLORS[label] for label in (order or CFG.labels)]
 
 
 def apply_plot_style() -> None:
-    """HU: Egységes matplotlib-stílus a dolgozat minden ábrájához.
-    EN: Uniform matplotlib style for every figure of the thesis."""
+    """Common matplotlib style for all figures."""
     import matplotlib as mpl
 
     mpl.rcParams.update({
@@ -397,10 +312,8 @@ def apply_plot_style() -> None:
 
 
 # --------------------------------------------------------------------------
-# 4) ADATFORRÁSOK / DATA SOURCES
+# 4) DATA SOURCES
 # --------------------------------------------------------------------------
-# HU: A "Felhasznált technológiák / adatok" fejezet innen tölthető ki.
-# EN: The "Technologies / data used" chapter can be filled in from here.
 DATASETS = {
     "booking": {
         "role": "analysed data (unlabelled for sentiment)",
@@ -416,7 +329,7 @@ DATASETS = {
         "role": "training data for labelling approach B only",
         "source": "kaggle",
         "id": "costastziouvas/hotel-reviews-aspects-sentiments-and-topics",
-        "license": "check on the Kaggle page and document it",
+        "license": "CC BY-NC 4.0",
         "size": "23,113 annotated sentences",
     },
 }

@@ -1,24 +1,9 @@
-"""
-models_classical.py — TF-IDF + klasszikus gépi tanulás a BERT-címkéken.
-                      TF-IDF + classical machine learning on the BERT labels.
+"""TF-IDF and classical classifiers trained on the BERT labels.
 
-HU: SZEREP A PROGRAMBAN: a BERT pontos, de lassú és nehezen értelmezhető. A
-    klasszikus modellek ("tanítvány" modellek) a BERT-címkéket tanulják meg:
-      • gyorsak (másodpercek), CPU-n is futnak -> új vélemények olcsó címkézése;
-      • a súlyaik közvetlenül megmutatják, MELY SZAVAK döntenek.
-    FIGYELEM: a teszthalmazon mért pontosság itt a BERT-címkékkel való EGYEZÉS
-    (tudásdesztilláció), nem a valódi pontosság — azt a gold mintán kell mérni.
-EN: ROLE IN THE PROGRAM: BERT is accurate but slow and hard to interpret. The
-    classical ("student") models learn the BERT labels:
-      • they are fast (seconds), run on a CPU -> cheap labelling of new reviews;
-      • their weights directly show WHICH WORDS decide.
-    WARNING: the test accuracy here is AGREEMENT with the BERT labels (knowledge
-    distillation), not true accuracy — that has to be measured on the gold sample.
-
-HU: A TF-IDF és az osztályozó egy Pipeline-ban van: így a teszthalmaz semmilyen
-    információja nem szivárog a szókincsbe / IDF-súlyokba.
-EN: TF-IDF and the classifier are in one Pipeline: no information from the test
-    set leaks into the vocabulary / IDF weights.
+The student models are fast, run on a CPU and their weights show which terms drive a
+class. Their test score measures agreement with the BERT labels, not accuracy; accuracy
+is measured on the gold sample. TF-IDF and the classifier form one pipeline, so the
+vocabulary is built from the training data only.
 """
 
 from __future__ import annotations
@@ -44,16 +29,11 @@ DEFAULT_LABEL_COL = "label_final"
 
 def make_vectorizer(**overrides) -> TfidfVectorizer:
     """
-    HU: TF-IDF a config.py beállításaival:
-          ngram_range=(1,2) — szavak ÉS szópárok ("not clean" csak bigramként létezik)
-          min_df=3          — 3 dokumentumnál ritkább szó zaj
-          max_df=0.9        — a szinte mindenhol előforduló szó ("hotel") nem informatív
-          sublinear_tf=True — 1 + log(tf): tompítja a sokszor ismételt szavakat
-    EN: TF-IDF with the config.py settings:
-          ngram_range=(1,2) — words AND word pairs ("not clean" exists only as a bigram)
-          min_df=3          — a word rarer than 3 documents is noise
-          max_df=0.9        — a word present almost everywhere ("hotel") is uninformative
-          sublinear_tf=True — 1 + log(tf): damps words repeated many times
+    TF-IDF with the config.py settings:
+      ngram_range=(1,2) - words and word pairs ("not clean" exists only as a bigram)
+      min_df=3          - a word rarer than 3 documents is noise
+      max_df=0.9        - a word present almost everywhere ("hotel") is uninformative
+      sublinear_tf=True - 1 + log(tf): damps words repeated many times
     """
     params = dict(max_features=CFG.tfidf_max_features, ngram_range=CFG.tfidf_ngram_range,
                   min_df=CFG.tfidf_min_df, max_df=CFG.tfidf_max_df,
@@ -64,10 +44,8 @@ def make_vectorizer(**overrides) -> TfidfVectorizer:
 
 def get_classifier(name: str, class_weight: str | None = "balanced"):
     """
-    HU: class_weight="balanced": a ritkább osztály hibája nagyobb súlyt kap
-        (a MultinomialNB ezt nem támogatja).
-    EN: class_weight="balanced": errors on the rarer class get a larger weight
-        (MultinomialNB does not support it).
+    class_weight="balanced": errors on the rarer class get a larger weight
+    (MultinomialNB does not support it).
     """
     name = name.lower()
     if name in {"nb", "naive_bayes", "multinomialnb"}:
@@ -90,10 +68,8 @@ def train_and_evaluate_all(train_df: pd.DataFrame, val_df: pd.DataFrame, text_co
                            label_col: str = DEFAULT_LABEL_COL, model_names: list[str] | None = None,
                            save: bool = True) -> tuple[pd.DataFrame, dict]:
     """
-    HU: Mindhárom modell tanítása (train) és értékelése (val). A teszthalmazhoz
-        csak a végső modellválasztás után nyúlunk, egyszer.
-    EN: Train all three models (train) and evaluate them (val). The test set is
-        touched only once, after the final model selection.
+    Train all three models (train) and evaluate them (val). The test set is
+    touched only once, after the final model selection.
 
     Returns: (summary table, {model name: fitted pipeline})
     """
@@ -132,10 +108,8 @@ def load_model(name: str) -> Pipeline:
 def preprocessing_ablation(train_df: pd.DataFrame, val_df: pd.DataFrame, model_name: str = "logreg",
                            label_col: str = DEFAULT_LABEL_COL) -> pd.DataFrame:
     """
-    HU: Ablációs vizsgálat: ugyanaz a modell különböző előfeldolgozással és
-        TF-IDF-beállítással. Megmutatja, melyik tervezési döntés mennyit ér.
-    EN: Ablation study: the same model with different preprocessing and TF-IDF
-        settings. Shows how much each design decision is worth.
+    Ablation study: the same model with different preprocessing and TF-IDF
+    settings. Shows how much each design decision is worth.
     """
     from .evaluation import compute_metrics
     from .preprocessing import clean_text_classic
@@ -167,8 +141,7 @@ def preprocessing_ablation(train_df: pd.DataFrame, val_df: pd.DataFrame, model_n
 
 def top_features_per_class(pipe: Pipeline, top_n: int = 20) -> pd.DataFrame:
     """
-    HU: A lineáris modell legnagyobb súlyú kifejezései osztályonként (LogReg / LinearSVC).
-    EN: Highest-weighted terms of the linear model per class (LogReg / LinearSVC).
+    Highest-weighted terms of the linear model per class (LogReg / LinearSVC).
     """
     clf = pipe.named_steps["clf"]
     if not hasattr(clf, "coef_"):

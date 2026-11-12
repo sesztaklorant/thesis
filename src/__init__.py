@@ -1,21 +1,16 @@
-"""
-Hotelvélemények szövegalapú szentiment-címkézése és elemzése BERT-tel
-Text-based sentiment labelling and analysis of hotel reviews with BERT
+"""Text-based sentiment labelling and analysis of hotel reviews with BERT.
 
-HU: A forrásmodulok belépési pontja. Használat a notebooks/ mappából:
-EN: Entry point of the source modules. Usage from the notebooks/ folder:
+The notebooks import the modules after adding the project root to the path:
 
     import sys; sys.path.insert(0, "..")
     from src.config import CFG, PATHS
-    from src import data_loading, preprocessing, bert_labelling, label_validation
 """
 
 __version__ = "0.2.0"
 
 import logging
 
-# HU: Egységes naplózás minden modulban (melyik lépés fut, hol tart).
-# EN: Uniform logging in every module (which step is running, how far along).
+# Uniform logging in every module (which step is running, how far along).
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s | %(levelname)-7s | %(name)s | %(message)s",
@@ -25,8 +20,7 @@ logging.basicConfig(
 
 def set_seed(seed: int | None = None) -> int:
     """
-    HU: Minden véletlenszám-generátor rögzítése egy hívással (a notebook ELSŐ cellájában).
-    EN: Fix every random number generator with one call (in the FIRST notebook cell).
+    Fix every random number generator with one call (in the first notebook cell).
     """
     import os
     import random

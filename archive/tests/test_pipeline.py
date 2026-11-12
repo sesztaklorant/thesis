@@ -1,16 +1,10 @@
-"""
-test_pipeline.py — Quick smoke test on synthetic data.
+"""Smoke test on synthetic data.
 
-Run from the project root:
+600 generated reviews go through cleaning, labelling, splitting, TF-IDF with three
+classifiers, evaluation and the aspect analysis. The test checks that the code runs,
+not the quality of the results.
+
     python tests/test_pipeline.py
-
-What does it do? It generates 600 fake hotel reviews and runs the whole
-pipeline on them: cleaning -> labelling -> split -> TF-IDF + 3 models
--> evaluation -> ABSA. If this runs through, your environment is fine and
-you can safely start on the real data.
-
-It does not test the quality of the model (on synthetic data the result is
-irrelevant), but that the CODE runs through without errors.
 """
 
 import sys
@@ -60,13 +54,13 @@ def make_fake_reviews(n: int = 600, seed: int = 42) -> pd.DataFrame:
     rows = []
     for _ in range(n):
         r = rng.random()
-        if r < 0.5:            # positive
+        if r < 0.5:  # positive
             text = " ".join(rng.choice(pos_bits, size=rng.integers(2, 4), replace=False))
             score = rng.uniform(9.0, 10.0)
-        elif r < 0.8:          # negative
+        elif r < 0.8:  # negative
             text = " ".join(rng.choice(neg_bits, size=rng.integers(2, 4), replace=False))
             score = rng.uniform(2.5, 6.8)
-        else:                  # neutral
+        else:  # neutral
             text = " ".join(rng.choice(neu_bits, size=rng.integers(2, 4), replace=False))
             score = rng.uniform(7.2, 8.8)
         rows.append({"text": text, "score": round(float(score), 1)})
@@ -107,7 +101,7 @@ def main() -> int:
     assert abs(len(tr) / total - 0.60) < 0.02, "The train share is not 60%"
     ok(f"split: {len(tr)} / {len(va)} / {len(te)} (60/20/20)")
 
-    # does stratification really work?
+    # stratification keeps the class shares
     p_all = (df["sentiment"].astype(str) == "positive").mean()
     p_te = (te["sentiment"].astype(str) == "positive").mean()
     assert abs(p_all - p_te) < 0.03, "The stratified split did not keep the proportions"
@@ -135,8 +129,8 @@ def main() -> int:
     ok(f"error analysis: {len(errs)} examples collected")
 
     # On the synthetic data the model is flawless, so the call above runs on
-    # an empty table — which hid the pandas 3.0 column loss. So it is also
-    # run DELIBERATELY with bad predictions, and the columns are checked.
+    # an empty table - which hid the pandas 3.0 column loss. So it is also
+    # run deliberately with bad predictions, and the columns are checked.
     rng_err = np.random.default_rng(0)
     bad_pred = rng_err.choice(list(CFG.labels), size=len(te))
     errs_bad = ev.error_analysis(te, bad_pred, text_col="text", n_examples=3)

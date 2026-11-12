@@ -1,21 +1,8 @@
-"""
-aspects.py — Kulcsszavas aspektus-felismerés és aspektus × szentiment elemzés.
-             Keyword-based aspect detection and aspect × sentiment analysis.
+"""Keyword-based aspect detection and aspect-level sentiment.
 
-HU: Egy véleményben több, ellentétes vélemény is lehet ("a szoba szuper, a
-    reggeli rossz"), ezért az aspektusokat MONDATSZINTEN vizsgáljuk:
-      1. mondatokra bontás (preprocessing.explode_to_sentences);
-      2. aspektus-felismerés kulcsszólistával (ez a lista módszertani döntés,
-         a dolgozat mellékletébe kerül);
-      3. a mondat szentimentje a mondatszintű BERT-előrejelzésből
-         (bert_labelling.predict_sentences) VAGY a Booking-mező polaritásából.
-EN: One review can contain several opposite opinions ("the room is great, the
-    breakfast is bad"), so aspects are examined at SENTENCE level:
-      1. sentence splitting (preprocessing.explode_to_sentences);
-      2. aspect detection with a keyword list (a methodological decision that
-         goes into the thesis appendix);
-      3. the sentence sentiment comes from the sentence-level BERT prediction
-         (bert_labelling.predict_sentences) OR from the polarity of the Booking field.
+A review can contain opposite opinions ("the room is great, the breakfast is bad"),
+so aspects are assigned to sentences. The sentence sentiment comes either from the
+sentence-level BERT prediction or from the Booking field the sentence was written in.
 """
 
 from __future__ import annotations
@@ -32,7 +19,7 @@ log = logging.getLogger(__name__)
 
 
 # ==========================================================================
-# 1) ASPEKTUS-SZÓTÁR / ASPECT LEXICON
+# 1) ASPECT LEXICON
 # ==========================================================================
 ASPECT_KEYWORDS: dict[str, list[str]] = {
     "room": ["room", "rooms", "bedroom", "suite", "bed", "beds", "mattress", "pillow", "pillows",
@@ -63,8 +50,7 @@ ASPECT_KEYWORDS: dict[str, list[str]] = {
                         "worth", "cost", "affordable", "rate", "charge", "extra charge", "hidden fee"],
 }
 
-# HU: Szóhatárral, hogy a "bar" ne illeszkedjen a "barely"-re.
-# EN: With word boundaries, so that "bar" does not match inside "barely".
+# With word boundaries, so that "bar" does not match inside "barely".
 _ASPECT_PATTERNS = {
     aspect: re.compile(r"\b(" + "|".join(re.escape(k) for k in sorted(kws, key=len, reverse=True)) + r")\b",
                        flags=re.IGNORECASE)
@@ -73,14 +59,14 @@ _ASPECT_PATTERNS = {
 
 
 def detect_aspects(text: str) -> list[str]:
-    """HU: A szövegben előforduló aspektusok. / EN: The aspects occurring in the text."""
+    """The aspects occurring in the text."""
     if not isinstance(text, str) or not text:
         return []
     return [a for a, pattern in _ASPECT_PATTERNS.items() if pattern.search(text)]
 
 
 def add_aspect_columns(df: pd.DataFrame, text_col: str = "sentence") -> pd.DataFrame:
-    """HU: aspektusonként 0/1 oszlop (aspect_room, ...). / EN: one 0/1 column per aspect (aspect_room, ...)."""
+    """One 0/1 column per aspect (aspect_room, ...)."""
     out = df.copy()
     out["aspects"] = out[text_col].map(detect_aspects)
     for aspect in CFG.aspects:
@@ -90,19 +76,15 @@ def add_aspect_columns(df: pd.DataFrame, text_col: str = "sentence") -> pd.DataF
 
 
 # ==========================================================================
-# 2) MONDATOK A BOOKING-MEZŐKBŐL / SENTENCES FROM THE BOOKING FIELDS
+# 2) SENTENCES FROM THE BOOKING FIELDS
 # ==========================================================================
 def explode_by_polarity(df: pd.DataFrame, pos_col: str = "review_positive",
                         neg_col: str = "review_negative", min_words: int = 3) -> pd.DataFrame:
     """
-    HU: Mondatok a review_positive / review_negative mezőkből, a mező polaritásával.
-        Ez nem emberi annotáció, de a vendég döntése (melyik mezőbe ír) — jó
-        független összevetési alap a BERT mondatszintű címkéihez.
-        Korlát: nincs semleges osztály.
-    EN: Sentences from the review_positive / review_negative fields with the
-        field's polarity. Not human annotation, but the guest's own choice (which
-        field to write in) — a good independent reference for the BERT sentence
-        labels. Limitation: there is no neutral class.
+    Sentences from the review_positive / review_negative fields with the
+    field's polarity. This is not a human annotation but the guest's own choice (which
+    field to write in) - a good independent reference for the BERT sentence
+    labels. Limitation: there is no neutral class.
     """
     meta = [c for c in ["review_id", "score", "label_final", "accommodation_type",
                         "accommodation_country", "guest_type"] if c in df.columns]
@@ -125,13 +107,10 @@ def explode_by_polarity(df: pd.DataFrame, pos_col: str = "review_positive",
 def aspect_sentiment_table(sent_df: pd.DataFrame, label_col: str, min_count: int = 30,
                            aspects: list[str] | None = None, prefix: str = "aspect_") -> pd.DataFrame:
     """
-    HU: Aspektusonként: hány mondat említi, és mi a szentiment-eloszlás ezekben.
-        neg_lift > 1: az aspektus a panaszokat hajtja; < 1: az elégedettséget.
-    EN: Per aspect: how many sentences mention it and the sentiment distribution in them.
-        neg_lift > 1: the aspect drives complaints; < 1: drives satisfaction.
+    Per aspect: how many sentences mention it and the sentiment distribution in them.
+    neg_lift > 1: the aspect drives complaints; < 1: drives satisfaction.
 
-    HU: aspects / prefix: a tanult modell oszlopaihoz (aspect_model) pl. prefix="asp_".
-    EN: aspects / prefix: for the learned model's columns (aspect_model), e.g. prefix="asp_".
+    aspects / prefix: for the learned model's columns (aspect_model), e.g. prefix="asp_".
     """
     labels = sent_df[label_col].astype(str)
     base_neg, base_pos = (labels == "negative").mean(), (labels == "positive").mean()
@@ -157,7 +136,7 @@ def aspect_sentiment_table(sent_df: pd.DataFrame, label_col: str, min_count: int
 
 def plot_aspect_sentiment(table: pd.DataFrame, title: str = "Sentiment distribution per aspect",
                           save_as: str | None = None):
-    """HU: Halmozott oszlopdiagram aspektusonként. / EN: Stacked bar chart per aspect."""
+    """Stacked bar chart per aspect."""
     import matplotlib.pyplot as plt
     from .evaluation import save_figure
 
@@ -184,7 +163,7 @@ def plot_aspect_sentiment(table: pd.DataFrame, title: str = "Sentiment distribut
 
 
 # ==========================================================================
-# 4) SZÖVEGES BIZONYÍTÉK / TEXTUAL EVIDENCE
+# 4) TEXTUAL EVIDENCE
 # ==========================================================================
 _NEGATORS = {"no", "not", "never", "without", "lack", "lacked", "lacking",
              "n't", "nothing", "none", "hardly", "barely"}
@@ -192,8 +171,7 @@ _NEGATORS = {"no", "not", "never", "without", "lack", "lacked", "lacking",
 
 def extract_evidence(sentence: str, aspect: str, window: int = 4) -> list[str]:
     """
-    HU: A kulcsszó körüli ±window szavas környezet (egyszerű "szöveges bizonyíték").
-    EN: The ±window word context around the keyword (simple "textual evidence").
+    The ±window word context around the keyword (simple "textual evidence").
     """
     if aspect not in ASPECT_KEYWORDS or not isinstance(sentence, str):
         return []
@@ -205,7 +183,7 @@ def extract_evidence(sentence: str, aspect: str, window: int = 4) -> list[str]:
 
 
 def has_negation(text: str) -> bool:
-    """HU: Van-e tagadás a szövegrészben? / EN: Is there a negation in the snippet?"""
+    """True if the snippet contains a negation."""
     if not isinstance(text, str):
         return False
     tokens = {t.lower().strip(".,!?;:") for t in text.split()}

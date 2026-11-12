@@ -1,22 +1,9 @@
-"""
-preprocessing.py — Szövegtisztítás, szűrés, mondatokra bontás, felosztás.
-                   Text cleaning, filtering, sentence splitting, data split.
+"""Text cleaning, filtering, sentence and clause splitting, data splits.
 
-HU: Két SZÁNDÉKOSAN eltérő tisztítási út:
-    (A) TF-IDF-hez: agresszív normalizálás (kisbetű, írásjelek, stopszavak,
-        lemmatizálás) — a szózsák-modellnek a zajcsökkentés segít.
-    (B) BERT-hez: MINIMÁLIS tisztítás. A transzformer a kontextusból tanul; ha
-        a tagadást kivennénk ("not clean" -> "clean"), az ellenkezőjét tanítanánk.
-EN: Two INTENTIONALLY different cleaning paths:
-    (A) For TF-IDF: aggressive normalisation (lowercase, punctuation, stopwords,
-        lemmatisation) — noise reduction helps the bag-of-words model.
-    (B) For BERT: MINIMAL cleaning. The transformer learns from context; removing
-        the negation ("not clean" -> "clean") would teach the opposite.
-
-HU: FONTOS VÁLTOZÁS: ez a modul már NEM készít szentiment-címkét a pontszámból.
-    A címkéket a bert_labelling.py állítja elő a SZÖVEGBŐL.
-EN: IMPORTANT CHANGE: this module no longer derives sentiment labels from the
-    score. Labels are produced from the TEXT by bert_labelling.py.
+Two cleaning paths are used: a full one for TF-IDF (lower case, punctuation, stop words,
+lemmatisation) and a minimal one for BERT, which needs the original wording and the
+negations. Sentiment labels are not derived from the score here; they come from
+bert_labelling.py.
 """
 
 from __future__ import annotations
@@ -34,7 +21,7 @@ log = logging.getLogger(__name__)
 
 
 # ==========================================================================
-# 1) SZÖVEGTISZTÍTÁS / TEXT CLEANING
+# 1) TEXT CLEANING
 # ==========================================================================
 _URL_RE = re.compile(r"https?://\S+|www\.\S+")
 _EMAIL_RE = re.compile(r"\S+@\S+\.\S+")
@@ -45,12 +32,9 @@ _NON_ALPHA_RE = re.compile(r"[^a-z\s']")
 
 def clean_text_minimal(text: str) -> str:
     """
-    HU: (B) út — BERT-hez. Csak a valódi zaj megy ki (HTML, URL, e-mail);
-        írásjel, nagybetű, emoji és tagadás MARAD. Első lépés a HTML-entitások
-        dekódolása (wouldn&#39;t -> wouldn't), különben a tagadás elveszne.
-    EN: Path (B) — for BERT. Only real noise is removed (HTML, URL, e-mail);
-        punctuation, capitals, emojis and negations STAY. The first step decodes
-        HTML entities (wouldn&#39;t -> wouldn't), otherwise the negation is lost.
+    Path (B) - for BERT. Only real noise is removed (HTML, URL, e-mail);
+    punctuation, capitals, emojis and negations stay. The first step decodes
+    HTML entities (wouldn&#39;t -> wouldn't), otherwise the negation is lost.
     """
     if not isinstance(text, str):
         return ""
@@ -71,11 +55,8 @@ def clean_text_classic(
     keep_negations: bool = True,
 ) -> str:
     """
-    HU: (A) út — TF-IDF-hez. Minden lépés külön kapcsolható (ablációs vizsgálathoz).
-        keep_negations=True: a tagadószavakat (not, no, never...) a stopszó-szűrő
-        NEM dobja ki.
-    EN: Path (A) — for TF-IDF. Every step can be switched separately (for ablation).
-        keep_negations=True: the stopword filter does NOT drop negation words.
+    Path (A) - for TF-IDF. Every step can be switched separately (for ablation).
+    keep_negations=True: the stopword filter does not drop negation words.
     """
     if not isinstance(text, str):
         return ""
@@ -94,8 +75,7 @@ def clean_text_classic(
     return " ".join(tokens)
 
 
-# HU: NLTK-erőforrások lusta betöltése (csak ha tényleg kell).
-# EN: Lazy loading of NLTK resources (only when really needed).
+# Lazy loading of NLTK resources (only when really needed).
 _STOPWORDS_CACHE: dict[bool, set[str]] = {}
 _LEMMATIZER = None
 
@@ -118,9 +98,8 @@ def _get_stopwords(keep_negations: bool = True) -> set[str]:
         except LookupError:
             nltk.download("stopwords", quiet=True)
             words = set(stopwords.words("english"))
-    except Exception:                                             # noqa: BLE001
-        # HU: Tartalék lista, ha az NLTK nem érhető el (ezt a dolgozatban jelezni kell).
-        # EN: Fallback list if NLTK is unavailable (to be stated in the thesis).
+    except Exception:  # noqa: BLE001
+        # Fallback list if NLTK is unavailable.
         log.warning("NLTK stopword list not available, using a built-in minimal list.")
         words = {"the", "a", "an", "and", "or", "of", "to", "in", "is", "was",
                  "it", "we", "i", "for", "on", "with", "at", "this", "that"}
@@ -132,8 +111,7 @@ def _get_stopwords(keep_negations: bool = True) -> set[str]:
 
 class _NaiveLemmatizer:
     """
-    HU: Tartalék lemmatizáló, ha az NLTK WordNet nem érhető el (csak a leggyakoribb végződések).
-    EN: Fallback lemmatiser if NLTK WordNet is unavailable (only the most common endings).
+    Fallback lemmatiser if NLTK WordNet is unavailable (only the most common endings).
     """
 
     def lemmatize(self, word: str) -> str:
@@ -159,26 +137,23 @@ def _get_lemmatizer():
                 nltk.download("omw-1.4", quiet=True)
             _LEMMATIZER = WordNetLemmatizer()
             _LEMMATIZER.lemmatize("tests")
-        except Exception:                                         # noqa: BLE001
+        except Exception:  # noqa: BLE001
             log.warning("NLTK WordNet not available — using the simple fallback lemmatiser.")
             _LEMMATIZER = _NaiveLemmatizer()
     return _LEMMATIZER
 
 
 # ==========================================================================
-# 2) MONDATOKRA BONTÁS / SENTENCE SPLITTING
+# 2) SENTENCE SPLITTING
 # ==========================================================================
 _SENT_SPLIT_RE = re.compile(r"(?<=[.!?])\s+|\s*\n+\s*")
 
 
 def split_sentences(text: str, min_words: int = 2) -> list[str]:
     """
-    HU: Egyszerű mondatbontás. Hotelvéleményekre jellemzően elég, mert rövidek.
-        Ha egy szöveg egyetlen mondatot sem ad (pl. írásjel nélküli rövid szöveg),
-        az egész szöveget adja vissza, így egyetlen vélemény sem vész el.
-    EN: Simple sentence splitting, usually enough for short hotel reviews.
-        If a text yields no sentence (e.g. short text without punctuation), the
-        whole text is returned, so no review is lost.
+    Simple sentence splitting, usually enough for short hotel reviews.
+    If a text yields no sentence (e.g. short text without punctuation), the
+    whole text is returned, so no review is lost.
     """
     if not isinstance(text, str) or not text.strip():
         return []
@@ -190,8 +165,7 @@ def split_sentences(text: str, min_words: int = 2) -> list[str]:
 def explode_to_sentences(df: pd.DataFrame, text_col: str = "text_bert",
                          id_col: str = "review_id", min_words: int = 2) -> pd.DataFrame:
     """
-    HU: Véleményszintű tábla -> mondatszintű tábla (review_id, sentence_idx, sentence).
-    EN: Review-level table -> sentence-level table (review_id, sentence_idx, sentence).
+    Review-level table -> sentence-level table (review_id, sentence_idx, sentence).
     """
     out = df[[id_col, text_col]].copy()
     out["sentence"] = out[text_col].map(lambda t: split_sentences(t, min_words))
@@ -200,12 +174,9 @@ def explode_to_sentences(df: pd.DataFrame, text_col: str = "text_bert",
     return out.reset_index(drop=True)
 
 
-# HU: Tagmondat-határok: mondatvég, sortörés, pontosvessző, és az ellentétes kötőszavak
-#     ("but", "however", "although", "though", "except"). Egy tagmondatba így jellemzően
-#     EGY állítás kerül: "great location but the room was dirty" -> két egység.
-# EN: Clause boundaries: sentence end, line break, semicolon, and contrastive conjunctions
-#     ("but", "however", "although", "though", "except"). One clause thus typically holds
-#     ONE statement: "great location but the room was dirty" -> two units.
+# Clause boundaries: sentence end, line break, semicolon, and contrastive conjunctions
+# ("but", "however", "although", "though", "except"). One clause thus typically holds
+# one statement: "great location but the room was dirty" -> two units.
 _CLAUSE_SPLIT_RE = re.compile(
     r"(?<=[.!?])\s+|\s*\n+\s*|\s*;\s*|,?\s+(?:but|however|although|though|except)\s+",
     flags=re.IGNORECASE,
@@ -214,10 +185,8 @@ _CLAUSE_SPLIT_RE = re.compile(
 
 def split_clauses(text: str, min_words: int = 2) -> list[str]:
     """
-    HU: Tagmondatokra bontás (finomabb, mint a split_sentences). A min_words-nél rövidebb
-        darabok kimaradnak ("Nothing.", "Ok") — ezekben nincs elemezhető tartalom.
-    EN: Splitting into clauses (finer than split_sentences). Pieces shorter than min_words
-        are dropped ("Nothing.", "Ok") — they contain no analysable content.
+    Splitting into clauses (finer than split_sentences). Pieces shorter than min_words
+    are dropped ("Nothing.", "Ok") - they contain no analysable content.
     """
     if not isinstance(text, str) or not text.strip():
         return []
@@ -227,14 +196,10 @@ def split_clauses(text: str, min_words: int = 2) -> list[str]:
 
 def split_list_items(clause: str, min_words: int = 2) -> list[str]:
     """
-    HU: FELSOROLÁS bontása vesszők mentén: "Great location, friendly staff, clean rooms" -> három
-        egység. A dicséretek jellemzően ilyen listák; egyben hagyva a témamodell "location / staff /
-        clean" vegyes témákat ad. A min_words-nél rövidebb darab a KÖVETKEZŐHÖZ tapad (az utolsó az
-        előzőhöz): "Clean, comfortable, great location" így egyben marad.
-    EN: Splitting an ENUMERATION at commas: "Great location, friendly staff, clean rooms" -> three
-        units. Praise typically comes as such lists; left together, the topic model gives mixed
-        "location / staff / clean" topics. A piece shorter than min_words sticks to the NEXT one (the
-        last to the previous one): "Clean, comfortable, great location" thus stays together.
+    Splitting an enumeration at commas: "Great location, friendly staff, clean rooms" -> three
+    units. Praise typically comes as such lists; left together, the topic model gives mixed
+    "location / staff / clean" topics. A piece shorter than min_words sticks to the next one (the
+    last to the previous one): "Clean, comfortable, great location" thus stays together.
     """
     pieces = [p.strip(" .-") for p in clause.split(",")]
     pieces = [p for p in pieces if p]
@@ -259,19 +224,13 @@ def build_field_units(df: pd.DataFrame, fields: tuple[str, ...] = ("review_posit
                       id_col: str = "review_id", min_words: int = 2,
                       list_fields: tuple[str, ...] | None = None) -> pd.DataFrame:
     """
-    HU: Elemzési egységek MEZŐNKÉNT: a Booking dicséret- és panaszmezőjét külön bontjuk
-        tagmondatokra, így a kettő soha nem olvad egy "mondatba" (ez okozta a vegyes témákat).
-        field_polarity = melyik mezőből jön (a vendég saját besorolása).
-    EN: Analysis units PER FIELD: Booking's praise and complaint fields are split into clauses
-        separately, so the two never merge into one "sentence" (this caused the mixed topics).
-        field_polarity = which field it comes from (the guest's own classification).
+    Analysis units per field: Booking's praise and complaint fields are split into clauses
+    separately, so the two never merge into one "sentence" (this caused the mixed topics).
+    field_polarity = which field it comes from (the guest's own classification).
 
-    HU: list_fields: ezekben a mezőkben a felsorolásokat is szétbontjuk (split_list_items); alapból
-        a dicséretmezőben, ha CFG.split_praise_lists igaz. A panaszmezőt NEM bontjuk vesszőnél,
-        mert ott a vessző többnyire egy panaszon belüli tagolás.
-    EN: list_fields: in these fields enumerations are split too (split_list_items); by default the
-        praise field, if CFG.split_praise_lists is true. The complaint field is NOT split at commas,
-        because there a comma usually structures a single complaint.
+    list_fields: in these fields enumerations are split too (split_list_items); by default the
+    praise field, if CFG.split_praise_lists is true. The complaint field is not split at commas,
+    because there a comma usually structures a single complaint.
 
     Returns: review_id | field | field_polarity | unit_idx | sentence
     """
@@ -303,19 +262,14 @@ def build_field_units(df: pd.DataFrame, fields: tuple[str, ...] = ("review_posit
 
 
 # ==========================================================================
-# 3) SOR-SZINTŰ SZŰRÉS / ROW-LEVEL FILTERING
+# 3) ROW-LEVEL FILTERING
 # ==========================================================================
 # --------------------------------------------------------------------------
-# HU: NEM-PANASZ egységek: a panaszmezőbe írt "nothing", "no complaints", "all was perfect"
-#     stb. Ezek nem panaszok, de a tagadás miatt a modell gyakran negatívnak olvassa őket, és
-#     az altéma-modellben külön "szemét-témát" alkotnak. Az egységet vesszők/pontok mentén
-#     részekre vágjuk; csak akkor nem-panasz, ha MINDEN része illik valamelyik mintára
-#     (így a "nothing works" vagy a "nothing to eat nearby" panasz marad).
-# EN: NON-COMPLAINT units: "nothing", "no complaints", "all was perfect" etc. written into the
-#     complaint field. They are not complaints, but because of the negation the model often
-#     reads them as negative and they form a separate "junk topic" in the subtopic model. The
-#     unit is cut into parts at commas/full stops; it is a non-complaint only if EVERY part
-#     matches one of the patterns (so "nothing works" or "nothing to eat nearby" stays).
+# Non-complaint units: "nothing", "no complaints", "all was perfect" etc. written into the
+# complaint field. They are not complaints, but because of the negation the model often
+# reads them as negative and they form a separate "junk topic" in the subtopic model. The
+# unit is cut into parts at commas/full stops; it is a non-complaint only if every part
+# matches one of the patterns (so "nothing works" or "nothing to eat nearby" stays).
 # --------------------------------------------------------------------------
 _FILLER = r"(?:really|absolutely|honestly|literally|just|at all|whatsoever|in particular|so far|to be honest|tbh)"
 _NON_COMPLAINT_PARTS = [
@@ -329,15 +283,14 @@ _NON_COMPLAINT_PARTS = [
     r"not applicable|nothing comes to mind|all good|all perfect|everything ok",
 ]
 _NON_COMPLAINT_RE = re.compile(r"^(?:" + "|".join(_NON_COMPLAINT_PARTS) + r")$", re.IGNORECASE)
-# HU: "...not the hotel's fault" — a vendég maga mondja, hogy nem a szálláshely hibája (nem kezelhető panasz).
-# EN: "...not the hotel's fault" — the guest says it is not the property's fault (not an actionable complaint).
+# "...not the hotel's fault" - the guest says it is not the property's fault (not an actionable complaint).
 _NOT_THEIR_FAULT_RE = re.compile(
     r"\b(?:not|no|nothing|wasn'?t|isn'?t|was not|is not)\b[^.]{0,25}\b(?:hotel|hotels|property|host|hosts|staff|"
     r"owner|owners|apartment|place)'?s?\b[^.]{0,10}\bfault\b", re.IGNORECASE)
 
 
 def is_non_complaint(text: str) -> bool:
-    """HU: Igaz, ha az egység nem valódi panasz (lásd fent). / EN: True if the unit is not a real complaint (see above)."""
+    """True if the unit is not a real complaint (see above)."""
     if not isinstance(text, str):
         return True
     norm = re.sub(r"[!?:\"()*~]+", " ", text.lower().replace("’", "'"))
@@ -349,7 +302,7 @@ def is_non_complaint(text: str) -> bool:
 
 
 def non_complaint_mask(texts: pd.Series) -> pd.Series:
-    """HU: Logikai maszk egy szöveg-oszlopra. / EN: Boolean mask for a text column."""
+    """Boolean mask for a text column."""
     return texts.map(is_non_complaint).astype(bool)
 
 
@@ -362,10 +315,8 @@ def filter_reviews(
     verbose: bool = True,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
-    HU: Sor-szintű szűrés. Visszaadja a szűrt táblát ÉS a szűrési naplót (melyik
-        lépés hány sort vitt el) — ez a napló táblázatként a dolgozatba kerül.
-    EN: Row-level filtering. Returns the filtered table AND the filtering log (how
-        many rows each step removed) — this log goes into the thesis as a table.
+    Row-level filtering. Returns the filtered table and the filtering log (how
+    many rows each step removed).
     """
     steps: list[tuple[str, int]] = [("start", len(df))]
     df = df.copy()
@@ -394,10 +345,8 @@ def filter_reviews(
 
 def is_probably_english(texts: pd.Series, min_ratio: float = 0.90) -> pd.Series:
     """
-    HU: Gyors heurisztika: a BETŰK legalább 90%-a ASCII. Csak a betűket nézzük,
-        így az emojik (amelyek szentimentet hordoznak) nem dobják ki a szöveget.
-    EN: Quick heuristic: at least 90% of the LETTERS are ASCII. Only letters are
-        considered, so emojis (which carry sentiment) do not drop the text.
+    Quick heuristic: at least 90% of the letters are ASCII. Only letters are
+    considered, so emojis (which carry sentiment) do not cause a text to be dropped.
     """
     def ratio(text: str) -> float:
         letters = [c for c in text if c.isalpha()]
@@ -411,13 +360,11 @@ def is_probably_english(texts: pd.Series, min_ratio: float = 0.90) -> pd.Series:
 def truncation_report(df: pd.DataFrame, max_length: int, text_col: str = "text_bert",
                       tokens_per_word: float = 1.3) -> pd.DataFrame:
     """
-    HU: Becslés: a vélemények hány százalékát vágja le a BERT max_length korlátja
-        (angolban 1 szó ≈ 1,3 token). A 02-es notebook a valódi tokenizálóval is méri.
-    EN: Estimate what share of reviews BERT's max_length limit truncates (in English
-        1 word ≈ 1.3 tokens). Notebook 02 also measures it with the real tokenizer.
+    Estimate what share of reviews BERT's max_length limit truncates (in English
+    1 word ≈ 1.3 tokens). Notebook 02 also measures it with the real tokenizer.
     """
     est_tokens = df[text_col].fillna("").str.split().str.len() * tokens_per_word
-    truncated = est_tokens > (max_length - 2)        # HU/EN: [CLS] + [SEP]
+    truncated = est_tokens > (max_length - 2)  # [CLS] + [SEP]
     return pd.DataFrame({
         "share": [(~truncated).mean(), truncated.mean()],
         "count": [int((~truncated).sum()), int(truncated.sum())],
@@ -425,15 +372,13 @@ def truncation_report(df: pd.DataFrame, max_length: int, text_col: str = "text_b
 
 
 # ==========================================================================
-# 4) A TELJES ELŐKÉSZÍTÉS / THE FULL PREPARATION
+# 4) THE FULL PREPARATION
 # ==========================================================================
 def build_dataset(df_raw: pd.DataFrame, classic_clean: bool = True,
                   minimal_clean: bool = True) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
-    HU: Nyers tábla -> előkészített tábla (címkék NÉLKÜL).
-        Új oszlopok: text_bert (BERT-hez), text_clean (TF-IDF-hez), n_words, n_chars.
-    EN: Raw table -> prepared table (WITHOUT labels).
-        New columns: text_bert (for BERT), text_clean (for TF-IDF), n_words, n_chars.
+    Raw table -> prepared table (without labels).
+    New columns: text_bert (for BERT), text_clean (for TF-IDF), n_words, n_chars.
 
     Returns: (prepared table, filtering log)
     """
@@ -450,7 +395,7 @@ def build_dataset(df_raw: pd.DataFrame, classic_clean: bool = True,
 
 
 # ==========================================================================
-# 5) FELOSZTÁS A KLASSZIKUS MODELLEKHEZ / SPLIT FOR THE CLASSICAL MODELS
+# 5) SPLIT FOR THE CLASSICAL MODELS
 # ==========================================================================
 def train_val_test_split(
     df: pd.DataFrame,
@@ -461,8 +406,7 @@ def train_val_test_split(
     stratify: bool = True,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
-    HU: Rétegzett 60/20/20 felosztás (az osztályarányok minden részben azonosak).
-    EN: Stratified 60/20/20 split (class proportions are equal in every part).
+    Stratified 60/20/20 split (class proportions are equal in every part).
     """
     from sklearn.model_selection import train_test_split
 
@@ -481,10 +425,8 @@ def train_val_test_split(
 def balance_classes(df: pd.DataFrame, label_col: str, max_per_class: int | None = None,
                     seed: int = CFG.random_seed) -> pd.DataFrame:
     """
-    HU: Osztályonként legfeljebb max_per_class példa (None = a legkisebb osztály mérete).
-        CSAK tanítóhalmazon! A validációs/teszthalmaz a valós eloszlást tükrözze.
-    EN: At most max_per_class examples per class (None = size of the smallest class).
-        ONLY on a training set! Validation/test must reflect the real distribution.
+    At most max_per_class examples per class (None = size of the smallest class).
+    only on a training set; validation and test keep the real distribution.
     """
     counts = df[label_col].value_counts()
     cap = int(counts.min()) if max_per_class is None else int(max_per_class)

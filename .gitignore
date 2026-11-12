@@ -1,10 +1,18 @@
 .venv/
 __pycache__/
 .ipynb_checkpoints/
-data/raw/*.csv
-data/raw/*.parquet
-data/raw/hrast/*.csv
+
+# Datasets and generated data (see data/raw/booking/README.md and data/raw/hrast/README.md)
+data/raw/**/*.csv
+data/raw/**/*.parquet
+data/interim/*
 data/processed/*
 data/labels/*
 results/models/*
+
+# Large files of earlier versions
+archive/data/labels/
+archive/data/processed/
+archive/results/models/
+
 !**/.gitkeep

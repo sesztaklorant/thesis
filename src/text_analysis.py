@@ -1,30 +1,9 @@
-"""
-text_analysis.py — Megkülönböztető kifejezések és tagadás-elemzés.
-                   Distinctive terms and negation analysis.
+"""Distinctive terms and negation analysis.
 
-HU: A puszta gyakoriság használhatatlan (minden osztályban ugyanazok vezetnek:
-    room, location, staff). A kérdés az, hogy egy kifejezés GYAKORIBB-E az adott
-    osztályban, MINT A TÖBBIBEN. Erre a súlyozott log-odds arányt használjuk
-    (Monroe, Colaresi & Quinn, 2008, "Fightin' Words"):
-      1. log-odds: hányszor valószínűbb a kifejezés ebben az osztályban;
-      2. z-pontszám: a becslés szórásával osztva a ritka kifejezések véletlen
-         kiugrásait visszanyomjuk.
-EN: Plain frequency is useless (the same words lead in every class: room,
-    location, staff). The question is whether a term is MORE frequent in the
-    class THAN IN THE OTHERS. We use the weighted log-odds ratio
-    (Monroe, Colaresi & Quinn, 2008, "Fightin' Words"):
-      1. log-odds: how many times more likely the term is in this class;
-      2. z-score: dividing by the standard deviation of the estimate suppresses
-         chance spikes of rare terms.
-
-HU: A címkeoszlop tetszőleges lehet (label_final, A_label, ...), így ugyanaz az
-    elemzés lefuttatható bármelyik címkeforrásra.
-EN: The label column can be anything (label_final, A_label, ...), so the same
-    analysis can be run for any label source.
-
-Monroe, B. L., Colaresi, M. P., & Quinn, K. M. (2008). Fightin' words: Lexical feature
-selection and evaluation for identifying the content of political conflict.
-Political Analysis, 16(4), 372–403. https://doi.org/10.1093/pan/mpn018
+Raw frequencies show the same words in every class (room, location, staff), so terms
+are ranked by the weighted log-odds ratio with an informative Dirichlet prior
+(Monroe, Colaresi & Quinn, 2008). The z-score of the log-odds suppresses chance peaks
+of rare terms. The label column can be any label source.
 """
 
 from __future__ import annotations
@@ -42,16 +21,14 @@ log = logging.getLogger(__name__)
 
 
 # ==========================================================================
-# 1) MEGKÜLÖNBÖZTETŐ KIFEJEZÉSEK / DISTINCTIVE TERMS
+# 1) DISTINCTIVE TERMS
 # ==========================================================================
 def distinctive_terms(texts: pd.Series, labels: pd.Series, ngram_range: tuple[int, int] = (1, 2),
                       top_n: int = 20, min_count: int = 30, alpha: float = 0.01,
                       max_features: int = 60_000) -> pd.DataFrame:
     """
-    HU: Osztályonként a legjellemzőbb kifejezések (hosszú formátumú tábla).
-        alpha: simítás (nullával osztás ellen, ritka kifejezések tompítása).
-    EN: The most characteristic terms per class (long-format table).
-        alpha: smoothing (against division by zero, damps rare terms).
+    The most characteristic terms per class (long-format table).
+    alpha: smoothing (against division by zero, damps rare terms).
 
     Returns: sentiment | rank | term | z_score | count_in_class | count_elsewhere | ratio
     """
@@ -93,7 +70,7 @@ def distinctive_terms(texts: pd.Series, labels: pd.Series, ngram_range: tuple[in
 
 
 def plot_distinctive_terms(table: pd.DataFrame, top_n: int = 15, save_as: str | None = None):
-    """HU: Vízszintes oszlopdiagram osztályonként (z-pontszám). / EN: Horizontal bar chart per class (z-score)."""
+    """Horizontal bar chart per class (z-score)."""
     import matplotlib.pyplot as plt
 
     classes = [c for c in CFG.labels if c in set(table["sentiment"])]
@@ -115,12 +92,9 @@ def plot_distinctive_terms(table: pd.DataFrame, top_n: int = 15, save_as: str | 
 def top_frequent_terms(texts: pd.Series, labels: pd.Series, ngram_range: tuple[int, int] = (1, 2),
                        top_n: int = 20, min_count: int = 30) -> pd.DataFrame:
     """
-    HU: A NAIV megközelítés: osztályonként a leggyakoribb kifejezések (puszta darabszám,
-        súlyozás nélkül). Ugyanazzal a szókinccsel számol, mint a distinctive_terms(),
-        így a kettő közvetlenül összevethető.
-    EN: The NAIVE approach: the most frequent terms per class (plain counts, no
-        weighting). Uses the same vocabulary as distinctive_terms(), so the two are
-        directly comparable.
+    The naive approach: the most frequent terms per class (plain counts, no
+    weighting). Uses the same vocabulary as distinctive_terms(), so the two are
+    directly comparable.
 
     Returns: sentiment | rank | term | count | share_in_class
     """
@@ -145,16 +119,11 @@ def top_frequent_terms(texts: pd.Series, labels: pd.Series, ngram_range: tuple[i
 
 def top_list_overlap(freq_table: pd.DataFrame, dist_table: pd.DataFrame, top_n: int = 15) -> pd.DataFrame:
     """
-    HU: Mennyire ugyanazok a toplisták a három osztályban? Ha a gyakorisági lista
-        osztályonként szinte azonos, az nem mond semmit arról, MI különbözteti meg
-        az osztályokat — a z-pontszámos listának viszont alig lehet közös eleme.
-          shared_by_all_classes — hány kifejezés szerepel mindhárom toplistán
-          mean_pairwise_jaccard — a listák páronkénti átfedése (0 = semmi, 1 = azonos)
-    EN: How similar are the top lists across the three classes? If the frequency lists
-        are nearly identical, they say nothing about WHAT distinguishes the classes —
-        the z-score lists should hardly share any term.
-          shared_by_all_classes — how many terms are on all three top lists
-          mean_pairwise_jaccard — pairwise overlap of the lists (0 = none, 1 = identical)
+    Overlap of the top lists of the three classes. Nearly identical frequency lists
+    say nothing about what distinguishes the classes, while the z-score lists share
+    few terms.
+      shared_by_all_classes - how many terms are on all three top lists
+      mean_pairwise_jaccard - pairwise overlap of the lists (0 = none, 1 = identical)
     """
     import itertools
 
@@ -175,18 +144,12 @@ def top_list_overlap(freq_table: pd.DataFrame, dist_table: pd.DataFrame, top_n: 
 def plot_frequency_vs_distinctive(freq_table: pd.DataFrame, dist_table: pd.DataFrame, top_n: int = 15,
                                   min_z: float = 3.0, save_as: str | None = None):
     """
-    HU: Két soros ábra ugyanazon a szókincsen:
-          felső sor — leggyakoribb kifejezések (darabszám);
-          alsó sor  — legmegkülönböztetőbb kifejezések (z-pontszám).
-        A felső sorban a TELI szín azokat a kifejezéseket jelöli, amelyek az alsó
-        (z-pontszámos) toplistán is szerepelnek (z ≥ min_z); a HALVÁNY = gyakori, de nem
-        jellemző (mindenhol előfordul). Így ránézésre látszik, mit "nyer" a súlyozás.
-    EN: Two-row figure on the same vocabulary:
-          top row    — most frequent terms (count);
-          bottom row — most distinctive terms (z-score).
-        In the top row FULL colour marks the terms that are also on the bottom (z-score)
-        top list (z ≥ min_z); PALE = frequent but not characteristic (occurs everywhere).
-        This shows at a glance what the weighting "gains".
+    Two-row figure on the same vocabulary:
+      top row    - most frequent terms (count);
+      bottom row - most distinctive terms (z-score).
+    In the top row full colour marks the terms that are also on the bottom (z-score)
+    top list (z ≥ min_z); pale = frequent but not characteristic (occurs everywhere).
+    This shows at a glance what the weighting "gains".
     """
     import matplotlib.pyplot as plt
     from matplotlib.colors import to_rgba
@@ -197,14 +160,12 @@ def plot_frequency_vs_distinctive(freq_table: pd.DataFrame, dist_table: pd.DataF
     axes = np.atleast_2d(axes)
 
     for j, cls in enumerate(classes):
-        # HU: "Megkülönböztető" = a z-pontszámos toplistán van ÉS z ≥ min_z (valóban felülreprezentált).
-        # EN: "Distinctive" = on the z-score top list AND z ≥ min_z (truly over-represented).
+        # "Distinctive" = on the z-score top list and z ≥ min_z (truly over-represented).
         sub = dist_table[(dist_table["sentiment"] == cls) & (dist_table["rank"] <= top_n)]
         distinctive = set(sub.loc[sub["z_score"] >= min_z, "term"])
 
         top = freq_table[(freq_table["sentiment"] == cls) & (freq_table["rank"] <= top_n)].sort_values("count")
-        # HU: Teli szín = megkülönböztető is; halvány = csak gyakori (minden osztályban az).
-        # EN: Full colour = also distinctive; pale = only frequent (frequent in every class).
+        # Full colour = also distinctive; pale = only frequent (frequent in every class).
         colors = [to_rgba(SENTIMENT_COLORS[cls], 1.0 if t in distinctive else 0.25) for t in top["term"]]
         ax = axes[0, j]
         ax.barh(top["term"], top["count"], color=colors, height=0.72)
@@ -234,7 +195,7 @@ def plot_frequency_vs_distinctive(freq_table: pd.DataFrame, dist_table: pd.DataF
 
 
 # ==========================================================================
-# 2) TAGADÁS-ELEMZÉS / NEGATION ANALYSIS
+# 2) NEGATION ANALYSIS
 # ==========================================================================
 NEGATORS = ["not", "no", "never", "without", "nothing", "hardly", "barely",
             "didn't", "wasn't", "weren't", "isn't", "aren't", "couldn't",
@@ -244,10 +205,8 @@ NEGATORS = ["not", "no", "never", "without", "nothing", "hardly", "barely",
 def negation_bigrams(texts: pd.Series, labels: pd.Series, top_n: int = 25,
                      min_count: int = 20) -> pd.DataFrame:
     """
-    HU: Tagadással kezdődő szópárok ("not clean", "no hot water") és osztályeloszlásuk.
-        neg_lift = a szópár negatív aránya / az átlagos negatív arány.
-    EN: Word pairs starting with a negation ("not clean", "no hot water") and their
-        class distribution. neg_lift = negative share of the pair / average negative share.
+    Word pairs starting with a negation ("not clean", "no hot water") and their
+    class distribution. neg_lift = negative share of the pair / average negative share.
     """
     from sklearn.feature_extraction.text import CountVectorizer
 
@@ -276,12 +235,9 @@ def negation_bigrams(texts: pd.Series, labels: pd.Series, top_n: int = 25,
 def compare_with_without_negation(texts: pd.Series, labels: pd.Series,
                                   words: list[str] | None = None) -> pd.DataFrame:
     """
-    HU: Ugyanaz a szó önmagában vs. tagadva: az előfordulások hány %-a esik negatív
-        véleménybe? A nagy különbség számszerű bizonyíték arra, hogy az egyszavas
-        (unigram) reprezentáció információt veszít.
-    EN: The same word on its own vs. negated: what % of the occurrences fall into
-        negative reviews? A large difference is quantitative evidence that the
-        single-word (unigram) representation loses information.
+    Share of negative reviews among the occurrences of a word on its own and negated.
+    A large difference shows that the single-word (unigram) representation loses
+    information.
     """
     words = words or ["good", "clean", "comfortable", "friendly", "helpful", "nice",
                       "quiet", "great", "big", "working", "hot water", "problem", "recommend"]
@@ -311,7 +267,7 @@ def compare_with_without_negation(texts: pd.Series, labels: pd.Series,
 
 
 def plot_negation_effect(table: pd.DataFrame, save_as: str | None = None):
-    """HU: Páros pontdiagram: szó önmagában vs. tagadva. / EN: Dumbbell plot: word on its own vs. negated."""
+    """Dumbbell plot: word on its own vs. negated."""
     import matplotlib.pyplot as plt
 
     if table.empty:
@@ -341,8 +297,7 @@ def plot_negation_effect(table: pd.DataFrame, save_as: str | None = None):
 # ==========================================================================
 def ngram_level_comparison(texts: pd.Series, labels: pd.Series, min_count: int = 30) -> pd.DataFrame:
     """
-    HU: Mennyivel "megkülönböztetőbb" a szókincs szópárokkal / hármasokkal?
-    EN: How much more "distinctive" does the vocabulary become with pairs / triples?
+    Distinctiveness of the vocabulary with single words, pairs and triples.
     """
     rows = []
     for name, rng in [("unigram (1,1)", (1, 1)), ("uni+bigram (1,2)", (1, 2)),

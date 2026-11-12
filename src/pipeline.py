@@ -1,24 +1,14 @@
-"""
-pipeline.py — A program parancssori belépési pontja. / Command-line entry point of the program.
+"""Command-line entry point. Each step starts from the saved output of the previous one.
 
-HU: A notebookok lépésenként, magyarázattal futtatják a folyamatot; ez a modul
-    UGYANEZT a folyamatot egy paranccsal is futtathatóvá teszi (pl. Colabon vagy
-    éjszakai futtatásra). Minden lépés az előző lépés MENTETT kimenetéből indul,
-    így bármelyik lépés külön is újrafuttatható.
-EN: The notebooks run the process step by step with explanations; this module
-    makes THE SAME process runnable with one command (e.g. on Colab or as an
-    overnight run). Every step starts from the SAVED output of the previous step,
-    so any step can be re-run on its own.
-
-    python -m src.pipeline prepare          # 1) betöltés + tisztítás / load + clean
-    python -m src.pipeline label-a          # 2) (A) zero-shot címkézés / labelling
-    python -m src.pipeline train-b          # 3) (B) BERT tanítása HRAST-on / train on HRAST
-    python -m src.pipeline label-b          # 4) (B) címkézés / labelling
-    python -m src.pipeline train-c          # 5) (C) önképzés / self-training
-    python -m src.pipeline label-c          # 6) (C) címkézés / labelling
-    python -m src.pipeline combine          # 7) végső címke / final label
-    python -m src.pipeline export-gold      # 8) kézi annotációs minta / manual annotation sample
-    python -m src.pipeline all              # 1–7 egymás után / in sequence
+    python -m src.pipeline prepare       # load and clean the Booking data
+    python -m src.pipeline label-a       # (A) zero-shot labelling
+    python -m src.pipeline train-b       # (B) fine-tuning on HRAST
+    python -m src.pipeline label-b       # (B) labelling
+    python -m src.pipeline train-c       # (C) self-training
+    python -m src.pipeline label-c       # (C) labelling
+    python -m src.pipeline combine       # final label
+    python -m src.pipeline export-gold   # manual annotation sample
+    python -m src.pipeline all           # steps prepare ... combine in sequence
 """
 
 from __future__ import annotations
@@ -40,10 +30,10 @@ LABELLED = PATHS.processed / "booking_labelled"
 
 
 # ==========================================================================
-# LÉPÉSEK / STEPS
+# STEPS
 # ==========================================================================
 def step_prepare() -> pd.DataFrame:
-    """HU: Betöltés, szűrés, tisztítás, munkahalmaz kijelölése. / EN: Load, filter, clean, select the working set."""
+    """Load, filter, clean, select the working set."""
     from .data_loading import load_booking, write_frame
     from .evaluation import save_table
     from .preprocessing import build_dataset
@@ -52,8 +42,7 @@ def step_prepare() -> pd.DataFrame:
     write_frame(prepared, PREPARED)
     save_table(filter_log.set_index("step"), "01_filtering_log")
 
-    # HU: Mindhárom megközelítés UGYANAZON a munkahalmazon fut, különben nem összevethetők.
-    # EN: All three approaches run on THE SAME working set, otherwise they are not comparable.
+    # All three approaches run on the same working set, otherwise they are not comparable.
     n = CFG.labelling_sample_size
     working = prepared.sample(n, random_state=CFG.random_seed) if n and n < len(prepared) else prepared
     write_frame(working.reset_index(drop=True), WORKING_SET)
@@ -92,7 +81,7 @@ def step_label_b() -> pd.DataFrame:
 
 
 def _load_available_labels(approaches=("A", "B", "C")) -> pd.DataFrame:
-    """HU: Az elérhető címketáblák összefűzése review_id szerint. / EN: Join the available label tables on review_id."""
+    """Join the available label tables on review_id."""
     from .bert_labelling import load_labels
     from .data_loading import frame_exists
 
@@ -123,7 +112,7 @@ def step_label_c() -> pd.DataFrame:
 
 
 def step_combine() -> pd.DataFrame:
-    """HU: Végső címke + összefűzés a véleményekkel. / EN: Final label + join with the reviews."""
+    """Final label + join with the reviews."""
     from .bert_labelling import combine_approaches, save_labels
     from .data_loading import write_frame
 
@@ -150,10 +139,8 @@ STEPS = {
 
 def run_all() -> None:
     """
-    HU: 1–7 egymás után. Ha a HRAST nem érhető el, a (B) kimarad, és a (C) csak
-        az (A)-ból tanul — a folyamat nem áll le.
-    EN: Steps 1–7 in sequence. If HRAST is unavailable, (B) is skipped and (C)
-        learns from (A) only — the process does not stop.
+    Steps 1–7 in sequence. If HRAST is unavailable, (B) is skipped and (C)
+    learns from (A) only - the process does not stop.
     """
     step_prepare()
     step_label_a()
