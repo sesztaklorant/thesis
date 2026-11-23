@@ -255,9 +255,8 @@ def run_chunked(texts: pd.Series, predict_fn: Callable[[list[str]], np.ndarray],
                 cache_name: str | None, chunk_size: int = CFG.inference_chunk_size) -> np.ndarray:
     """
     Chunked, resumable prediction. Each chunk is saved to a .npy file
-    (data/labels/cache/<name>/); after an interrupted run (e.g. a Colab
-    disconnect) the finished chunks are loaded, only the missing ones are
-    computed. The cache fingerprint covers the input and the model (name +
+    (data/labels/cache/<name>/); after an interrupted run the finished chunks
+    are loaded and only the missing ones are computed. The cache fingerprint covers the input and the model (name +
     modification time): if either changes (e.g. a retrained (B) model), the
     old chunks are deleted.
     """

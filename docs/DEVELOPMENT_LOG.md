@@ -40,7 +40,7 @@ The development state was tagged `v0.3-sample20k` (Git commit `d9db3e0d`).
 
 The program ran on the full data (203,328 reviews after filtering). Model (B) was not retrained because it learns only from HRAST. Model (C) labelled the full data with the model trained in the development run on 10,744 pseudo-labelled reviews, so the gold sample results did not change.
 
-The manual check covered 2 × 800 clauses (20 per subtopic in the four largest aspects) with a precision of 0.840 for complaints and 0.927 for praise. The 188 negative and 191 positive clusters received 167 + 167 English names (`src/topic_names.py`). This state was tagged `v1.0-full` (commit `f6c9a0a9`).
+The manual check covered 2 × 800 clauses (20 per subtopic in the four largest aspects) with a precision of 0.840 for complaints and 0.928 for praise. The 188 negative and 191 positive clusters received 167 + 167 English names (`src/topic_names.py`). This state was tagged `v1.0-full` (commit `f6c9a0a9`).
 
 ## November 2026: additional checks
 

@@ -118,7 +118,7 @@ class Config:
     num_epochs: int = 3
     weight_decay: float = 0.01
     warmup_ratio: float = 0.1
-    batch_size: int = 32  # Colab T4 (16 GB)
+    batch_size: int = 32  # GPUs with 8 GB or more
     local_batch_size: int = 4  # own GPU (4 GB)
     local_grad_accum: int = 8  # 4 × 8 = 32 effective batch
     small_gpu_vram_gb: float = 8.0  # below this the "local" setting applies

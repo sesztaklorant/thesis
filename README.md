@@ -64,7 +64,7 @@ pip install torch torchvision --index-url https://download.pytorch.org/whl/cu132
 python -c "import torch; print(torch.__version__, torch.cuda.is_available())"
 ```
 
-On a 4 GB GPU the training uses a batch of 4 with 8 accumulation steps (effective batch 32), on a Colab T4 a batch of 32 (`local_batch_size`, `local_grad_accum` and `batch_size` in `src/config.py`).
+On a GPU with less than 8 GB of memory, such as the 4 GB laptop GPU used in the project, the training uses a batch of 4 with 8 accumulation steps, which gives an effective batch of 32 (`local_batch_size` and `local_grad_accum` in `src/config.py`).
 
 ## Run order
 
@@ -80,8 +80,6 @@ On a 4 GB GPU the training uses a batch of 4 with 8 accumulation steps (effectiv
 Notebook 05 runs once with `SENTIMENT = "negative"` and once with `SENTIMENT = "positive"`. Steps 1–2 can also be run from the command line (`python -m src.pipeline all`, the individual steps are listed in `src/pipeline.py`).
 
 Models (B), (C) and the 2/a aspect model are trained once and reused when they exist in `results/models/` (`RETRAIN_B = False`, `RETRAIN_C = False` in notebook 02). Predictions are saved in chunks under `data/labels/cache/`, so an interrupted notebook continues from the last saved chunk when it is run again.
-
-Notebook 02 can also run on Google Colab: with the `CODE` folder in `MyDrive/THESIS/CODE`, the first cell mounts Google Drive and sets `PROJECT_DIR`.
 
 ## Final settings
 
